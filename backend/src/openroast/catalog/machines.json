@@ -31,15 +31,15 @@
             "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
-            {"name": "Gas %", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Airflow %", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner %", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Airflow", "channel": "airflow", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "V.Press", "channel": "vpress", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         },
         {
@@ -67,15 +67,15 @@
             "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
-            {"name": "Gas %", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Airflow %", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner %", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Airflow", "channel": "airflow", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "V.Press", "channel": "vpress", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         },
         {
@@ -103,15 +103,15 @@
             "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
-            {"name": "Gas %", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Airflow %", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner %", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Airflow", "channel": "airflow", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "V.Press", "channel": "vpress", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         },
         {
@@ -139,15 +139,15 @@
             "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
-            {"name": "Gas %", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Airflow %", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner %", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Airflow", "channel": "airflow", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "V.Press", "channel": "vpress", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         }
       ]
