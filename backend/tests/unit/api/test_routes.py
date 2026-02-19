@@ -10,15 +10,17 @@ if TYPE_CHECKING:
     from pathlib import Path
 from httpx import ASGITransport, AsyncClient
 
-from openroast.api.routes import init_storage
+from openroast.api.routes import init_machine_storage, init_storage
+from openroast.core.machine_storage import MachineStorage
 from openroast.core.storage import ProfileStorage
 from openroast.main import app
 
 
 @pytest.fixture(autouse=True)
 def _setup_storage(tmp_path: Path) -> None:
-    """Use a temp directory for profile storage in all tests."""
+    """Use a temp directory for storage in all tests."""
     init_storage(ProfileStorage(tmp_path / "profiles"))
+    init_machine_storage(MachineStorage(tmp_path / "machines"))
 
 
 @pytest.fixture
@@ -35,11 +37,204 @@ class TestHealthEndpoint:
         assert resp.json() == {"status": "ok"}
 
 
+# --- Catalog endpoints ---
+
+
+class TestCatalogEndpoints:
+    async def test_list_manufacturers(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/catalog/manufacturers")
+        assert resp.status_code == 200
+        mfrs = resp.json()
+        assert isinstance(mfrs, list)
+        assert len(mfrs) > 0
+        ids = {m["id"] for m in mfrs}
+        assert "carmomaq" in ids
+        assert "giesen" in ids
+
+    async def test_manufacturer_has_model_count(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/catalog/manufacturers")
+        mfr = next(m for m in resp.json() if m["id"] == "carmomaq")
+        assert "model_count" in mfr
+        assert mfr["model_count"] >= 1
+
+    async def test_list_models(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/catalog/manufacturers/carmomaq/models")
+        assert resp.status_code == 200
+        models = resp.json()
+        assert len(models) >= 1
+        ids = {m["id"] for m in models}
+        assert "carmomaq-stratto-2.0" in ids
+
+    async def test_list_models_nonexistent_manufacturer(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/catalog/manufacturers/nonexistent/models")
+        assert resp.status_code == 404
+
+    async def test_get_model(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/catalog/manufacturers/carmomaq/models/carmomaq-stratto-2.0")
+        assert resp.status_code == 200
+        model = resp.json()
+        assert model["name"] == "Stratto 2.0"
+        assert model["protocol"] == "modbus_tcp"
+
+    async def test_get_model_nonexistent(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/catalog/manufacturers/carmomaq/models/nonexistent")
+        assert resp.status_code == 404
+
+
+# --- Machines CRUD ---
+
+
 class TestMachinesEndpoint:
     async def test_list_machines_empty(self, client: AsyncClient) -> None:
         resp = await client.get("/api/machines")
         assert resp.status_code == 200
         assert resp.json() == []
+
+    async def test_create_machine(self, client: AsyncClient) -> None:
+        payload = {
+            "name": "My Stratto",
+            "protocol": "modbus_tcp",
+            "connection": {
+                "type": "modbus_tcp",
+                "host": "192.168.5.11",
+                "port": 502,
+            },
+        }
+        resp = await client.post("/api/machines", json=payload)
+        assert resp.status_code == 201
+        assert "id" in resp.json()
+
+    async def test_get_machine(self, client: AsyncClient) -> None:
+        payload = {
+            "name": "My Stratto",
+            "protocol": "modbus_tcp",
+            "connection": {
+                "type": "modbus_tcp",
+                "host": "192.168.5.11",
+                "port": 502,
+            },
+        }
+        create_resp = await client.post("/api/machines", json=payload)
+        machine_id = create_resp.json()["id"]
+
+        resp = await client.get(f"/api/machines/{machine_id}")
+        assert resp.status_code == 200
+        assert resp.json()["name"] == "My Stratto"
+
+    async def test_get_nonexistent_machine(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/machines/nonexistent")
+        assert resp.status_code == 404
+
+    async def test_delete_machine(self, client: AsyncClient) -> None:
+        payload = {
+            "name": "Delete Me",
+            "protocol": "serial",
+            "connection": {"type": "serial", "comport": "/dev/ttyUSB0"},
+        }
+        create_resp = await client.post("/api/machines", json=payload)
+        machine_id = create_resp.json()["id"]
+
+        resp = await client.delete(f"/api/machines/{machine_id}")
+        assert resp.status_code == 204
+
+        resp = await client.get(f"/api/machines/{machine_id}")
+        assert resp.status_code == 404
+
+    async def test_delete_nonexistent_machine(self, client: AsyncClient) -> None:
+        resp = await client.delete("/api/machines/nonexistent")
+        assert resp.status_code == 404
+
+    async def test_list_after_create(self, client: AsyncClient) -> None:
+        payload = {
+            "name": "Listed Machine",
+            "protocol": "modbus_tcp",
+            "connection": {"type": "modbus_tcp"},
+        }
+        await client.post("/api/machines", json=payload)
+        resp = await client.get("/api/machines")
+        machines = resp.json()
+        assert len(machines) == 1
+        assert machines[0]["name"] == "Listed Machine"
+
+    async def test_update_machine(self, client: AsyncClient) -> None:
+        payload = {
+            "name": "Original",
+            "protocol": "modbus_tcp",
+            "connection": {"type": "modbus_tcp", "host": "10.0.0.1"},
+        }
+        create_resp = await client.post("/api/machines", json=payload)
+        machine_id = create_resp.json()["id"]
+
+        update_payload = {
+            "id": machine_id,
+            "name": "Updated",
+            "protocol": "modbus_tcp",
+            "connection": {"type": "modbus_tcp", "host": "10.0.0.2"},
+        }
+        resp = await client.put(f"/api/machines/{machine_id}", json=update_payload)
+        assert resp.status_code == 200
+        assert resp.json()["name"] == "Updated"
+
+        # Verify persisted
+        resp = await client.get(f"/api/machines/{machine_id}")
+        assert resp.json()["connection"]["host"] == "10.0.0.2"
+
+    async def test_update_nonexistent_machine(self, client: AsyncClient) -> None:
+        payload = {
+            "name": "Ghost",
+            "protocol": "serial",
+            "connection": {"type": "serial"},
+        }
+        resp = await client.put("/api/machines/nonexistent", json=payload)
+        assert resp.status_code == 404
+
+
+class TestCreateFromCatalog:
+    async def test_create_from_catalog(self, client: AsyncClient) -> None:
+        payload = {
+            "manufacturer_id": "carmomaq",
+            "model_id": "carmomaq-stratto-2.0",
+            "name": "My Stratto",
+        }
+        resp = await client.post("/api/machines/from-catalog", json=payload)
+        assert resp.status_code == 201
+        body = resp.json()
+        assert "id" in body
+        assert body["machine"]["name"] == "My Stratto"
+        assert body["machine"]["protocol"] == "modbus_tcp"
+        assert body["machine"]["catalog_manufacturer_id"] == "carmomaq"
+
+    async def test_create_from_catalog_default_name(self, client: AsyncClient) -> None:
+        payload = {
+            "manufacturer_id": "giesen",
+            "model_id": "giesen-wxa",
+        }
+        resp = await client.post("/api/machines/from-catalog", json=payload)
+        assert resp.status_code == 201
+        assert resp.json()["machine"]["name"] == "WxA (all sizes)"
+
+    async def test_create_from_nonexistent_catalog(self, client: AsyncClient) -> None:
+        payload = {
+            "manufacturer_id": "nonexistent",
+            "model_id": "nonexistent",
+        }
+        resp = await client.post("/api/machines/from-catalog", json=payload)
+        assert resp.status_code == 404
+
+    async def test_created_machine_is_persisted(self, client: AsyncClient) -> None:
+        payload = {
+            "manufacturer_id": "hottop",
+            "model_id": "hottop-2k-plus",
+        }
+        resp = await client.post("/api/machines/from-catalog", json=payload)
+        machine_id = resp.json()["id"]
+
+        resp = await client.get(f"/api/machines/{machine_id}")
+        assert resp.status_code == 200
+        assert resp.json()["protocol"] == "serial"
+
+
+# --- Profiles CRUD (existing tests) ---
 
 
 class TestProfilesEndpoint:
@@ -116,7 +311,6 @@ class TestProfilesEndpoint:
         resp = await client.delete(f"/api/profiles/{profile_id}")
         assert resp.status_code == 204
 
-        # Verify it's gone
         resp = await client.get(f"/api/profiles/{profile_id}")
         assert resp.status_code == 404
 

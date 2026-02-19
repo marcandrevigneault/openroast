@@ -5,8 +5,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from openroast.api.routes import init_storage
+from openroast.api.routes import init_machine_storage, init_storage
 from openroast.api.routes import router as api_router
+from openroast.core.machine_storage import MachineStorage
 from openroast.core.storage import ProfileStorage
 from openroast.ws.live import router as ws_router
 
@@ -23,9 +24,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialise file-based profile storage
-_data_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
-init_storage(ProfileStorage(_data_dir))
+# Initialise file-based storage
+_data_root = Path(__file__).resolve().parent.parent.parent / "data"
+init_storage(ProfileStorage(_data_root / "profiles"))
+init_machine_storage(MachineStorage(_data_root / "machines"))
 
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router, prefix="/ws")
