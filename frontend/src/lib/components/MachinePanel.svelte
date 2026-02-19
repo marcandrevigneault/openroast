@@ -1,8 +1,10 @@
 <script lang="ts">
 	import type { MachineState } from '$lib/stores/machine';
 	import type { RoastEventType } from '$lib/types/ws-messages';
+	import { DEFAULT_CHART_OPTIONS, type ChartOptions, type ControlPoint } from '$lib/stores/chart-options';
 	import TemperatureDisplay from './TemperatureDisplay.svelte';
 	import RoastChart from './RoastChart.svelte';
+	import ChartOptionsMenu from './ChartOptionsMenu.svelte';
 	import ControlSlider from './ControlSlider.svelte';
 	import EventButtons from './EventButtons.svelte';
 	import SessionControls from './SessionControls.svelte';
@@ -10,19 +12,34 @@
 
 	interface Props {
 		machine: MachineState;
+		controlHistory?: ControlPoint[];
+		chartOptions?: ChartOptions;
 		onstart?: () => void;
 		onstop?: () => void;
 		onrecord?: () => void;
 		onstoprecord?: () => void;
 		onmark?: (eventType: RoastEventType) => void;
 		oncontrol?: (channel: string, value: number) => void;
+		onchartoptionschange?: (options: ChartOptions) => void;
 	}
 
-	let { machine, onstart, onstop, onrecord, onstoprecord, onmark, oncontrol }: Props = $props();
+	let {
+		machine, controlHistory = [], chartOptions,
+		onstart, onstop, onrecord, onstoprecord, onmark, oncontrol,
+		onchartoptionschange
+	}: Props = $props();
 
 	let burner = $state(0);
 	let airflow = $state(50);
 	let drum = $state(60);
+
+	let localChartOptions = $state({ ...DEFAULT_CHART_OPTIONS });
+	let effectiveOptions = $derived(chartOptions ?? localChartOptions);
+
+	function handleChartOptionsChange(opts: ChartOptions) {
+		localChartOptions = opts;
+		onchartoptionschange?.(opts);
+	}
 
 	let isRecording = $derived(machine.sessionState === 'recording');
 	let isActive = $derived(machine.sessionState !== 'idle' && machine.sessionState !== 'finished');
@@ -51,7 +68,10 @@
 				/>
 			</div>
 
-			<RoastChart history={machine.history} />
+			<div class="chart-row">
+				<RoastChart history={machine.history} {controlHistory} options={effectiveOptions} />
+				<ChartOptionsMenu options={effectiveOptions} onchange={handleChartOptionsChange} />
+			</div>
 
 			<div class="controls-row">
 				<SessionControls
@@ -152,6 +172,17 @@
 	.temp-row {
 		display: flex;
 		gap: 12px;
+	}
+
+	.chart-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 4px;
+	}
+
+	.chart-row :global(.chart-container) {
+		flex: 1;
+		min-width: 0;
 	}
 
 	.controls-row {
