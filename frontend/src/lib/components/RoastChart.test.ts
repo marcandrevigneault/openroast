@@ -156,7 +156,8 @@ describe("RoastChart", () => {
     });
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent?.trim());
-    expect(textContent).not.toContain("25");
+    // Right axis labels (0, 25, 50, 75, 100) should not be present
+    // when no RoR or controls enabled. Check for "75" which only appears on right axis.
     expect(textContent).not.toContain("75");
   });
 

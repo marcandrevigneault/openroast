@@ -196,4 +196,28 @@ describe("MachinePanel", () => {
     });
     expect(screen.queryByTitle("Retry connection")).not.toBeInTheDocument();
   });
+
+  it("shows reset button when onreset provided", () => {
+    render(MachinePanel, {
+      props: { machine: makeMachine(), onreset: () => {} },
+    });
+    expect(screen.getByTitle("Reset chart")).toBeInTheDocument();
+  });
+
+  it("hides reset button when onreset not provided", () => {
+    render(MachinePanel, {
+      props: { machine: makeMachine() },
+    });
+    expect(screen.queryByTitle("Reset chart")).not.toBeInTheDocument();
+  });
+
+  it("event buttons are always disabled", () => {
+    const { container } = render(MachinePanel, {
+      props: { machine: makeMachine({ sessionState: "recording" }) },
+    });
+    const eventBtns = container.querySelectorAll(".event-btn");
+    eventBtns.forEach((btn) => {
+      expect(btn).toBeDisabled();
+    });
+  });
 });

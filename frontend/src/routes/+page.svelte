@@ -259,6 +259,19 @@
     }
   }
 
+  function handleReset(id: string) {
+    const current = machineStates.get(id);
+    if (!current) return;
+    machineStates.set(id, {
+      ...current,
+      history: [],
+      controlHistory: [],
+      extraChannelHistory: [],
+      events: [],
+      currentTemp: null,
+    });
+  }
+
   function handleControl(id: string, channel: string, value: number) {
     const client = wsClients.get(id);
     if (!client) return;
@@ -346,6 +359,7 @@
           onmark={(eventType) => handleMark(m.id, eventType)}
           oncontrol={(channel, value) => handleControl(m.id, channel, value)}
           onchartoptionschange={(opts) => handleChartOptionsChange(m.id, opts)}
+          onreset={() => handleReset(m.id)}
           onretry={() => handleRetryConnection(m.id)}
           onsettingssaved={(machine) => handleSettingsSaved(m.id, machine)}
           onremove={() => handleRemoveMachine(m.id)}

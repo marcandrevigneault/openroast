@@ -184,31 +184,51 @@ describe("processMessage", () => {
       expect(result.sessionState).toBe("monitoring");
     });
 
-    it("clears history, events, controlHistory, and extraChannelHistory when recording starts", () => {
+    it("keeps last 5s of history rebased to t=0 when recording starts", () => {
       let state = baseState();
-      state = processMessage(state, {
-        type: "temperature",
-        timestamp_ms: 1000,
-        et: 200,
-        bt: 180,
-        et_ror: 0,
-        bt_ror: 0,
-        extra_channels: { Inlet: 250 },
-      });
+      // Add data at 1s, 3s, 8s (only 3s and 8s are within last 5s of t=8)
+      for (const ts of [1000, 3000, 8000]) {
+        state = processMessage(state, {
+          type: "temperature",
+          timestamp_ms: ts,
+          et: 200,
+          bt: 180,
+          et_ror: 0,
+          bt_ror: 0,
+          extra_channels: { Inlet: 250 },
+        });
+        state = recordControlChange(state, "burner", 80, ts);
+      }
       state = processMessage(state, {
         type: "event",
         event_type: "CHARGE",
-        timestamp_ms: 1000,
+        timestamp_ms: 5000,
         auto_detected: false,
         bt_at_event: 180,
         et_at_event: 200,
       });
-      state = recordControlChange(state, "burner", 80, 1000);
-      expect(state.history).toHaveLength(1);
+      expect(state.history).toHaveLength(3);
       expect(state.events).toHaveLength(1);
-      expect(state.controlHistory).toHaveLength(1);
-      expect(state.extraChannelHistory).toHaveLength(1);
 
+      state = processMessage(state, {
+        type: "state",
+        state: "recording",
+        previous_state: "monitoring",
+      });
+      // Only points at 3000 and 8000 kept (cutoff = 8000 - 5000 = 3000)
+      // Rebased by offset 3000: 3000→0, 8000→5000
+      expect(state.history).toHaveLength(2);
+      expect(state.history[0].timestamp_ms).toBe(0);
+      expect(state.history[1].timestamp_ms).toBe(5000);
+      expect(state.events).toEqual([]);
+      expect(state.controlHistory).toHaveLength(2);
+      expect(state.controlHistory[0].timestamp_ms).toBe(0);
+      expect(state.extraChannelHistory).toHaveLength(2);
+      expect(state.extraChannelHistory[0].timestamp_ms).toBe(0);
+    });
+
+    it("clears all history when recording starts with no data", () => {
+      let state = baseState();
       state = processMessage(state, {
         type: "state",
         state: "recording",
