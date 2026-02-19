@@ -16,9 +16,11 @@
 		onstoprecord?: () => void;
 		onmark?: (eventType: RoastEventType) => void;
 		oncontrol?: (channel: string, value: number) => void;
+		onremove?: () => void;
 	}
 
-	let { machine, onstart, onstop, onrecord, onstoprecord, onmark, oncontrol }: Props = $props();
+	let { machine, onstart, onstop, onrecord, onstoprecord, onmark, oncontrol, onremove }: Props =
+		$props();
 
 	let burner = $state(0);
 	let airflow = $state(50);
@@ -31,7 +33,12 @@
 <div class="machine-panel">
 	<div class="panel-header">
 		<h2 class="machine-name">{machine.machineName}</h2>
-		<ConnectionStatus driverState={machine.driverState} sessionState={machine.sessionState} />
+		<div class="header-right">
+			<ConnectionStatus driverState={machine.driverState} sessionState={machine.sessionState} />
+			{#if onremove}
+				<button class="btn-remove" onclick={onremove} title="Remove machine">✕</button>
+			{/if}
+		</div>
 	</div>
 
 	<div class="panel-body">
@@ -134,6 +141,29 @@
 		font-weight: 600;
 		color: #e0e0e0;
 		margin: 0;
+	}
+
+	.header-right {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.btn-remove {
+		background: transparent;
+		border: 1px solid transparent;
+		color: #666;
+		font-size: 0.9rem;
+		cursor: pointer;
+		padding: 2px 6px;
+		border-radius: 4px;
+		line-height: 1;
+	}
+
+	.btn-remove:hover {
+		color: #f44336;
+		border-color: #f44336;
+		background: rgba(244, 67, 54, 0.1);
 	}
 
 	.panel-body {
