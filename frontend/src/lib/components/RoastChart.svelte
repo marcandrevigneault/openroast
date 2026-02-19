@@ -42,12 +42,12 @@
   const ET_ROR_COLOR = "#ffab91";
   const BT_ROR_COLOR = "#90caf9";
   const CONTROL_COLORS = [
-    "#ff7043",
-    "#4fc3f7",
-    "#81c784",
-    "#ffab91",
-    "#ce93d8",
-    "#fff176",
+    "#e6c229",
+    "#66bb6a",
+    "#ab47bc",
+    "#26c6da",
+    "#ef5350",
+    "#8d6e63",
   ];
   const EXTRA_CHANNEL_COLOR = "#a5d6a7";
   const GRID_COLOR = "#1e1e3a";
@@ -371,8 +371,8 @@
           d={cp.path}
           fill="none"
           stroke={cp.color}
-          stroke-width="1"
-          opacity="0.4"
+          stroke-width="1.5"
+          opacity="0.7"
         />
       {/if}
     {/each}

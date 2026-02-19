@@ -77,7 +77,7 @@ def _provision_machine(
         )
 
     machine = SavedMachine(
-        name=f"{model.name} (Simulator)",
+        name=model.name,
         catalog_manufacturer_id=manufacturer_id,
         catalog_model_id=model_id,
         protocol=model.protocol,

@@ -56,12 +56,12 @@
   }: Props = $props();
 
   const CONTROL_COLORS = [
-    "#ff7043",
-    "#4fc3f7",
-    "#81c784",
-    "#ffab91",
-    "#ce93d8",
-    "#fff176",
+    "#e6c229",
+    "#66bb6a",
+    "#ab47bc",
+    "#26c6da",
+    "#ef5350",
+    "#8d6e63",
   ];
 
   let sliderValues = $state<Record<string, number>>({});

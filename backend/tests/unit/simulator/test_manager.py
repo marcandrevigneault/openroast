@@ -57,7 +57,7 @@ class TestSimulatorManager:
         try:
             assert info.catalog_id == "test-sim"
             assert info.port == port
-            assert info.name == "Test Simulator (Simulator)"
+            assert info.name == "Test Simulator"
 
             running = manager.list_running()
             assert len(running) == 1
@@ -107,7 +107,7 @@ class TestSimulatorManager:
             # Check that a SavedMachine was created in storage
             saved = storage.get(info.machine_id)
             assert saved is not None
-            assert saved.name == "Test Simulator (Simulator)"
+            assert saved.name == "Test Simulator"
             assert saved.connection.host == "127.0.0.1"  # type: ignore[union-attr]
             assert saved.connection.port == port  # type: ignore[union-attr]
         finally:
