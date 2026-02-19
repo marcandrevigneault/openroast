@@ -12,6 +12,7 @@
   import EventButtons from "./EventButtons.svelte";
   import SessionControls from "./SessionControls.svelte";
   import ConnectionStatus from "./ConnectionStatus.svelte";
+  import ExtraChannelsBar from "./ExtraChannelsBar.svelte";
   import SaveProfileForm from "./SaveProfileForm.svelte";
 
   interface Props {
@@ -55,16 +56,21 @@
     "#fff176",
   ];
 
-  // Dynamic slider values keyed by channel name
   let sliderValues = $state<Record<string, number>>({});
   let saving = $state(false);
   let saved = $state(false);
+  let controlsOpen = $state(false);
 
+  // svelte-ignore state_referenced_locally
+  const initControlChannels = machine.controls.map(
+    (c: { channel: string }) => c.channel,
+  );
+  // svelte-ignore state_referenced_locally
+  const initExtraChannelNames = machine.extraChannels.map(
+    (c: { name: string }) => c.name,
+  );
   let localChartOptions = $state(
-    createChartOptions(
-      machine.controls.map((c: { channel: string }) => c.channel),
-      machine.extraChannels.map((c: { name: string }) => c.name),
-    ),
+    createChartOptions(initControlChannels, initExtraChannelNames),
   );
   let effectiveOptions = $derived(chartOptions ?? localChartOptions);
 
@@ -92,8 +98,27 @@
 </script>
 
 <div class="machine-panel">
+  <!-- Compact header: name, temps, status, remove -->
   <div class="panel-header">
-    <h2 class="machine-name">{machine.machineName}</h2>
+    <div class="header-left">
+      <h2 class="machine-name">{machine.machineName}</h2>
+      <div class="header-temps">
+        <TemperatureDisplay
+          label="ET"
+          value={machine.currentTemp?.et ?? null}
+          ror={machine.currentTemp?.et_ror ?? null}
+          color="#ff7043"
+          compact
+        />
+        <TemperatureDisplay
+          label="BT"
+          value={machine.currentTemp?.bt ?? null}
+          ror={machine.currentTemp?.bt_ror ?? null}
+          color="#42a5f5"
+          compact
+        />
+      </div>
+    </div>
     <div class="header-right">
       <ConnectionStatus
         driverState={machine.driverState}
@@ -107,92 +132,90 @@
     </div>
   </div>
 
-  <div class="panel-body">
-    <div class="left-column">
-      <div class="temp-row">
-        <TemperatureDisplay
-          label="ET"
-          value={machine.currentTemp?.et ?? null}
-          ror={machine.currentTemp?.et_ror ?? null}
-          color="#ff7043"
-        />
-        <TemperatureDisplay
-          label="BT"
-          value={machine.currentTemp?.bt ?? null}
-          ror={machine.currentTemp?.bt_ror ?? null}
-          color="#42a5f5"
-        />
-      </div>
-
-      <div class="chart-row">
-        <RoastChart
-          history={machine.history}
-          controlHistory={machine.controlHistory}
-          controls={machine.controls}
-          extraChannelHistory={machine.extraChannelHistory}
-          extraChannels={machine.extraChannels}
-          options={effectiveOptions}
-        />
-        <ChartOptionsMenu
-          options={effectiveOptions}
-          controls={machine.controls}
-          extraChannels={machine.extraChannels}
-          onchange={handleChartOptionsChange}
-        />
-      </div>
-
-      <div class="controls-row">
-        <SessionControls
-          sessionState={machine.sessionState}
-          {onstart}
-          {onstop}
-          {onrecord}
-          {onstoprecord}
-        />
-        <EventButtons
-          disabled={!isRecording}
-          events={machine.events}
-          {onmark}
-        />
-      </div>
-    </div>
-
-    <div class="right-column">
-      <div class="sliders">
-        {#each machine.controls as ctrl (ctrl.channel)}
-          <ControlSlider
-            label={ctrl.name}
-            value={sliderValues[ctrl.channel] ?? ctrl.min}
-            min={ctrl.min}
-            max={ctrl.max}
-            step={ctrl.step}
-            unit={ctrl.unit}
-            color={CONTROL_COLORS[
-              machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
-            ]}
-            disabled={!isConnected}
-            onchange={(v) => {
-              sliderValues[ctrl.channel] = v;
-              oncontrol?.(ctrl.channel, v);
-            }}
-          />
-        {/each}
-        {#if machine.controls.length === 0}
-          <p class="no-controls">No controls configured</p>
-        {/if}
-      </div>
-
-      {#if machine.error}
-        <div class="error-banner">
-          {machine.error}
-        </div>
-      {/if}
-
-      {#if showSaveForm}
-        <SaveProfileForm onsave={handleSave} {saving} {saved} />
-      {/if}
+  <!-- Full-width chart -->
+  <div class="chart-section">
+    <RoastChart
+      history={machine.history}
+      controlHistory={machine.controlHistory}
+      controls={machine.controls}
+      extraChannelHistory={machine.extraChannelHistory}
+      extraChannels={machine.extraChannels}
+      options={effectiveOptions}
+    />
+    <div class="chart-toolbar">
+      <ChartOptionsMenu
+        options={effectiveOptions}
+        controls={machine.controls}
+        extraChannels={machine.extraChannels}
+        onchange={handleChartOptionsChange}
+      />
     </div>
   </div>
+
+  <!-- Extra channels bar -->
+  <ExtraChannelsBar
+    channels={machine.extraChannels}
+    values={machine.currentExtraChannels}
+  />
+
+  <!-- Session controls + event buttons in one compact row -->
+  <div class="actions-row">
+    <SessionControls
+      sessionState={machine.sessionState}
+      {onstart}
+      {onstop}
+      {onrecord}
+      {onstoprecord}
+    />
+    <EventButtons disabled={!isRecording} events={machine.events} {onmark} />
+  </div>
+
+  <!-- Collapsible controls drawer -->
+  {#if machine.controls.length > 0}
+    <div class="controls-section">
+      <button
+        class="controls-toggle"
+        onclick={() => (controlsOpen = !controlsOpen)}
+        aria-label="Toggle controls"
+      >
+        Controls
+        <span class="toggle-arrow" class:open={controlsOpen}>&#9662;</span>
+      </button>
+
+      {#if controlsOpen}
+        <div class="controls-drawer">
+          {#each machine.controls as ctrl (ctrl.channel)}
+            <ControlSlider
+              label={ctrl.name}
+              value={sliderValues[ctrl.channel] ?? ctrl.min}
+              min={ctrl.min}
+              max={ctrl.max}
+              step={ctrl.step}
+              unit={ctrl.unit}
+              color={CONTROL_COLORS[
+                machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
+              ]}
+              disabled={!isConnected}
+              onchange={(v) => {
+                sliderValues[ctrl.channel] = v;
+                oncontrol?.(ctrl.channel, v);
+              }}
+            />
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {/if}
+
+  {#if machine.error}
+    <div class="error-banner">
+      {machine.error}
+    </div>
+  {/if}
+
+  {#if showSaveForm}
+    <SaveProfileForm onsave={handleSave} {saving} {saved} />
+  {/if}
 </div>
 
 <style>
@@ -200,29 +223,45 @@
     background: #12122a;
     border: 1px solid #2a2a4a;
     border-radius: 12px;
-    padding: 16px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
   }
 
+  /* --- Header --- */
   .panel-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
   }
 
   .machine-name {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #e0e0e0;
     margin: 0;
+    white-space: nowrap;
+  }
+
+  .header-temps {
+    display: flex;
+    gap: 16px;
   }
 
   .header-right {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
   }
 
   .btn-remove {
@@ -242,63 +281,71 @@
     background: rgba(244, 67, 54, 0.1);
   }
 
-  .panel-body {
-    display: flex;
-    gap: 16px;
+  /* --- Chart --- */
+  .chart-section {
+    position: relative;
   }
 
-  .chart-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 4px;
+  .chart-section :global(.chart-container) {
+    width: 100%;
   }
 
-  .chart-row :global(.chart-container) {
-    flex: 1;
-    min-width: 0;
+  .chart-toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
   }
 
-  .left-column {
-    flex: 1;
+  /* --- Actions row --- */
+  .actions-row {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-width: 0;
-  }
-
-  .temp-row {
-    display: flex;
-    gap: 12px;
-  }
-
-  .controls-row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
+    gap: 8px;
+    align-items: center;
     flex-wrap: wrap;
   }
 
-  .right-column {
-    width: 200px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  /* --- Controls drawer --- */
+  .controls-section {
+    border-top: 1px solid #2a2a4a;
+    padding-top: 4px;
   }
 
-  .sliders {
+  .controls-toggle {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    padding: 4px 0;
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 4px;
   }
 
-  .no-controls {
-    color: #666;
-    font-size: 0.75rem;
-    text-align: center;
-    margin: 8px 0;
+  .controls-toggle:hover {
+    color: #ccc;
   }
 
+  .toggle-arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+    font-size: 0.65rem;
+  }
+
+  .toggle-arrow.open {
+    transform: rotate(180deg);
+  }
+
+  .controls-drawer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0 16px;
+    padding-top: 4px;
+  }
+
+  /* --- Error & misc --- */
   .error-banner {
     background: #3e1111;
     border: 1px solid #f44336;

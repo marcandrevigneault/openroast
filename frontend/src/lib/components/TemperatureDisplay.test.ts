@@ -56,4 +56,42 @@ describe("TemperatureDisplay", () => {
     });
     expect(screen.getByText("--- /min")).toBeInTheDocument();
   });
+
+  // Compact mode tests
+  it("renders compact layout when compact prop is true", () => {
+    const { container } = render(TemperatureDisplay, {
+      props: { label: "ET", value: 210.5, ror: 8.2, compact: true },
+    });
+    expect(container.querySelector(".temp-compact")).toBeTruthy();
+    expect(container.querySelector(".temp-display")).toBeNull();
+  });
+
+  it("renders full layout by default", () => {
+    const { container } = render(TemperatureDisplay, {
+      props: { label: "ET", value: 210.5, ror: 8.2 },
+    });
+    expect(container.querySelector(".temp-display")).toBeTruthy();
+    expect(container.querySelector(".temp-compact")).toBeNull();
+  });
+
+  it("shows value in compact mode", () => {
+    render(TemperatureDisplay, {
+      props: { label: "ET", value: 210.5, ror: 8.2, compact: true },
+    });
+    expect(screen.getByText("210.5")).toBeInTheDocument();
+  });
+
+  it("shows RoR in compact mode", () => {
+    render(TemperatureDisplay, {
+      props: { label: "ET", value: 210.5, ror: 8.2, compact: true },
+    });
+    expect(screen.getByText("+8.2/min")).toBeInTheDocument();
+  });
+
+  it("shows --- value in compact mode when null", () => {
+    render(TemperatureDisplay, {
+      props: { label: "ET", value: null, ror: null, compact: true },
+    });
+    expect(screen.getByText("---")).toBeInTheDocument();
+  });
 });
