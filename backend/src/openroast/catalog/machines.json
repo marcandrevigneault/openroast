@@ -24,11 +24,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
@@ -59,11 +59,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
@@ -95,11 +95,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
@@ -131,11 +131,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
@@ -170,11 +170,11 @@
           },
           "et": {
             "name": "ET",
-            "s7": {"area": 6, "db_nr": 2, "start": 38, "type": 0, "mode": 1, "div": 0}
+            "s7": {"area": 6, "db_nr": 2, "start": 36, "type": 0, "mode": 1, "div": 0}
           },
           "bt": {
             "name": "BT",
-            "s7": {"area": 6, "db_nr": 2, "start": 36, "type": 0, "mode": 1, "div": 0}
+            "s7": {"area": 6, "db_nr": 2, "start": 38, "type": 0, "mode": 1, "div": 0}
           },
           "extra_channels": [
             {"name": "Exhaust", "s7": {"area": 6, "db_nr": 2, "start": 48, "type": 0, "mode": 0, "div": 0}},
@@ -205,11 +205,11 @@
           },
           "et": {
             "name": "ET",
-            "s7": {"area": 6, "db_nr": 3, "start": 116, "type": 1, "mode": 1, "div": 0}
+            "s7": {"area": 6, "db_nr": 3, "start": 112, "type": 1, "mode": 1, "div": 0}
           },
           "bt": {
             "name": "BT",
-            "s7": {"area": 6, "db_nr": 3, "start": 112, "type": 1, "mode": 1, "div": 0}
+            "s7": {"area": 6, "db_nr": 3, "start": 116, "type": 1, "mode": 1, "div": 0}
           },
           "extra_channels": [
             {"name": "Exhaust", "s7": {"area": 6, "db_nr": 2, "start": 48, "type": 0, "mode": 0, "div": 0}},
@@ -221,7 +221,7 @@
             {"name": "Power %", "s7": {"area": 6, "db_nr": 2, "start": 54, "type": 0, "mode": 0, "div": 0}}
           ],
           "controls": [
-            {"name": "Power", "channel": "power", "command": "setDBint(2,16,{})", "min": 80, "max": 150, "step": 1, "unit": "Pa"},
+            {"name": "Gas", "channel": "gas", "command": "setDBint(2,16,{})", "min": 80, "max": 150, "step": 1, "unit": "Pa"},
             {"name": "Airflow", "channel": "airflow", "command": "setDBint(2,18,{})", "min": 36, "max": 51, "step": 1, "unit": "Hz"},
             {"name": "Drum", "channel": "drum", "command": "setDBint(2,10,{})", "min": 0, "max": 250, "step": 1, "unit": ""},
             {"name": "Cooling", "channel": "cooling", "command": "setDBint(2,14,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
@@ -252,11 +252,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 768, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}
+            "modbus": {"address": 774, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 774, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}
+            "modbus": {"address": 768, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}
           },
           "extra_channels": [
             {"name": "Inlet", "modbus": {"address": 770, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
@@ -290,11 +290,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 52, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 52, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": [
             {"name": "Slider 1", "channel": "slider1", "command": "writeSingle([1,1,{}])", "min": 0, "max": 100, "step": 1, "unit": ""},
@@ -319,11 +319,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 52, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 52, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": []
         },
@@ -345,11 +345,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 10, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 10, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": [
             {"name": "Slider 1", "channel": "slider1", "command": "writeSingle([1,20,{}])", "min": 60, "max": 100, "step": 1, "unit": ""},
@@ -382,11 +382,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
+            "modbus": {"address": 4, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 4, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
+            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
           },
           "extra_channels": [
             {"name": "Inlet", "modbus": {"address": 2, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}},
@@ -416,11 +416,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
+            "modbus": {"address": 4, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 4, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
+            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}
           },
           "extra_channels": [
             {"name": "Inlet", "modbus": {"address": 2, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}},
@@ -457,11 +457,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 289, "code": 4, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 290, "code": 4, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 290, "code": 4, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 289, "code": 4, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": false}
           },
           "controls": []
         }
@@ -522,9 +522,12 @@
           },
           "et": {
             "name": "ET",
+            "modbus": {"address": 12393, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
+          },
+          "bt": {
+            "name": "BT",
             "modbus": {"address": 12392, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
           },
-          "bt": null,
           "extra_channels": [
             {"name": "Drum", "modbus": {"address": 12391, "code": 3, "device_id": 1, "divisor": 1, "mode": "", "is_float": false, "is_bcd": false}}
           ],
@@ -711,11 +714,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": []
         },
@@ -737,11 +740,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 6, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 7, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 7, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 6, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": []
         }
@@ -770,11 +773,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 4098, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 4096, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 4096, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 4098, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "extra_channels": [
             {"name": "IT", "modbus": {"address": 4099, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}},
@@ -882,11 +885,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 2, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 2, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 0, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": []
         }
