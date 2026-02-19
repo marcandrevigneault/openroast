@@ -2,14 +2,27 @@ import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/svelte";
 import RoastChart from "./RoastChart.svelte";
 import type { TemperaturePoint } from "$lib/stores/machine";
+import {
+  DEFAULT_CHART_OPTIONS,
+  type ControlPoint,
+} from "$lib/stores/chart-options";
 
 function makePoints(count: number): TemperaturePoint[] {
   return Array.from({ length: count }, (_, i) => ({
     timestamp_ms: i * 1000,
     et: 200 + i * 0.5,
     bt: 160 + i * 0.8,
-    et_ror: 5,
-    bt_ror: 8,
+    et_ror: 5 + i * 0.1,
+    bt_ror: 8 + i * 0.1,
+  }));
+}
+
+function makeControlPoints(count: number): ControlPoint[] {
+  return Array.from({ length: count }, (_, i) => ({
+    timestamp_ms: i * 1000,
+    burner: 70 + i,
+    airflow: 50,
+    drum: 60,
   }));
 }
 
@@ -29,16 +42,14 @@ describe("RoastChart", () => {
   it("renders temperature grid lines", () => {
     const { container } = render(RoastChart, { props: { history: [] } });
     const lines = container.querySelectorAll("line");
-    // Should have horizontal grid lines (temp) + vertical (time) + axis lines
     expect(lines.length).toBeGreaterThan(2);
   });
 
-  it("renders ET path with data", () => {
+  it("renders ET and BT paths with data", () => {
     const { container } = render(RoastChart, {
       props: { history: makePoints(20) },
     });
     const paths = container.querySelectorAll("path");
-    // Should have ET and BT paths
     expect(paths.length).toBe(2);
   });
 
@@ -53,11 +64,10 @@ describe("RoastChart", () => {
       props: { history: makePoints(5) },
     });
     const circles = container.querySelectorAll("circle");
-    // Should have ET and BT endpoint markers
     expect(circles.length).toBe(2);
   });
 
-  it("renders legend items", () => {
+  it("renders dynamic legend", () => {
     const { container } = render(RoastChart, { props: { history: [] } });
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent);
@@ -74,18 +84,96 @@ describe("RoastChart", () => {
     expect(svg?.getAttribute("height")).toBe("250");
   });
 
-  it("shows latest ET and BT values", () => {
-    const points = makePoints(10);
-    const lastPoint = points[points.length - 1];
-    const { container } = render(RoastChart, { props: { history: points } });
+  it("hides ET path when showET is false", () => {
+    const opts = { ...DEFAULT_CHART_OPTIONS, showET: false };
+    const { container } = render(RoastChart, {
+      props: { history: makePoints(20), options: opts },
+    });
+    const paths = container.querySelectorAll("path");
+    // Only BT path should render
+    expect(paths.length).toBe(1);
+  });
+
+  it("hides BT path when showBT is false", () => {
+    const opts = { ...DEFAULT_CHART_OPTIONS, showBT: false };
+    const { container } = render(RoastChart, {
+      props: { history: makePoints(20), options: opts },
+    });
+    const paths = container.querySelectorAll("path");
+    expect(paths.length).toBe(1);
+  });
+
+  it("shows RoR paths when enabled", () => {
+    const opts = {
+      ...DEFAULT_CHART_OPTIONS,
+      showETRor: true,
+      showBTRor: true,
+    };
+    const { container } = render(RoastChart, {
+      props: { history: makePoints(20), options: opts },
+    });
+    const paths = container.querySelectorAll("path");
+    // ET + BT + ET RoR + BT RoR = 4 paths
+    expect(paths.length).toBe(4);
+  });
+
+  it("shows control paths when enabled", () => {
+    const opts = {
+      ...DEFAULT_CHART_OPTIONS,
+      showBurner: true,
+      showAirflow: true,
+    };
+    const { container } = render(RoastChart, {
+      props: {
+        history: makePoints(20),
+        controlHistory: makeControlPoints(20),
+        options: opts,
+      },
+    });
+    const paths = container.querySelectorAll("path");
+    // ET + BT + Burner + Airflow = 4 paths
+    expect(paths.length).toBe(4);
+  });
+
+  it("shows right Y-axis when RoR or controls enabled", () => {
+    const opts = { ...DEFAULT_CHART_OPTIONS, showETRor: true };
+    const { container } = render(RoastChart, {
+      props: { history: makePoints(20), options: opts },
+    });
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent?.trim());
-    // Should show "ET <value>" and "BT <value>"
-    expect(
-      textContent.some((t) => t?.includes(`ET ${lastPoint.et.toFixed(1)}`)),
-    ).toBe(true);
-    expect(
-      textContent.some((t) => t?.includes(`BT ${lastPoint.bt.toFixed(1)}`)),
-    ).toBe(true);
+    // Right axis shows percentage labels
+    expect(textContent).toContain("0");
+    expect(textContent).toContain("100");
+  });
+
+  it("hides right Y-axis when no secondary curves enabled", () => {
+    const { container } = render(RoastChart, {
+      props: { history: makePoints(5) },
+    });
+    const texts = container.querySelectorAll("text");
+    const textContent = Array.from(texts).map((t) => t.textContent?.trim());
+    // Should not have right-axis labels like "25", "75"
+    expect(textContent).not.toContain("25");
+    expect(textContent).not.toContain("75");
+  });
+
+  it("legend shows only visible curves", () => {
+    const opts = {
+      ...DEFAULT_CHART_OPTIONS,
+      showET: true,
+      showBT: false,
+      showBurner: true,
+    };
+    const { container } = render(RoastChart, {
+      props: { history: [], options: opts },
+    });
+    const texts = container.querySelectorAll("text");
+    const legendTexts = Array.from(texts)
+      .map((t) => t.textContent?.trim())
+      .filter((t) => t === "ET" || t === "BT" || t === "Burner");
+    expect(legendTexts).toContain("ET");
+    expect(legendTexts).toContain("Burner");
+    expect(legendTexts).not.toContain("BT");
   });
 });
