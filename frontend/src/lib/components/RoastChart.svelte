@@ -54,11 +54,6 @@
   const AXIS_COLOR = "#444";
   const TEXT_COLOR = "#888";
 
-  // Temperature range (left Y-axis)
-  const T_MIN = 50;
-  const T_MAX = 300;
-  const T_STEP = 50;
-
   // RoR / Control range (right Y-axis)
   const R_MIN = 0;
   const R_MAX = 100;
@@ -66,6 +61,33 @@
   // Derived dimensions
   let plotW = $derived(width - PADDING.left - PADDING.right);
   let plotH = $derived(height - PADDING.top - PADDING.bottom);
+
+  // Dynamic temperature range (left Y-axis) — fits to data
+  let tempRange = $derived(() => {
+    const temps: number[] = [];
+    for (const p of history) {
+      if (options.showET) temps.push(p.et);
+      if (options.showBT) temps.push(p.bt);
+    }
+    // Include visible extra channels
+    for (const ep of extraChannelHistory) {
+      for (const ch of extraChannels) {
+        if (options.showExtraChannels[ch.name] && ch.name in ep.values) {
+          temps.push(ep.values[ch.name]);
+        }
+      }
+    }
+    if (temps.length === 0) return { min: 0, max: 300, step: 50 };
+
+    const rawMin = Math.min(...temps);
+    const rawMax = Math.max(...temps);
+    const padding = Math.max(25, (rawMax - rawMin) * 0.1);
+    const min = Math.max(0, Math.floor((rawMin - padding) / 25) * 25);
+    const max = Math.max(min + 50, Math.ceil((rawMax + padding) / 25) * 25);
+    const range = max - min;
+    const step = range <= 150 ? 25 : range <= 300 ? 50 : 100;
+    return { min, max, step };
+  });
 
   // Time range: auto-expand
   let maxTimeMs = $derived(
@@ -81,7 +103,8 @@
   }
 
   function yScale(temp: number): number {
-    return PADDING.top + plotH - ((temp - T_MIN) / (T_MAX - T_MIN)) * plotH;
+    const { min, max } = tempRange();
+    return PADDING.top + plotH - ((temp - min) / (max - min)) * plotH;
   }
 
   function yScaleRight(val: number): number {
@@ -154,21 +177,21 @@
       .map((p, i) => {
         const x = xScale(p.timestamp_ms);
         // Extra channels are temperature-like — use left Y-axis
-        const y = yScale(
-          Math.max(T_MIN, Math.min(T_MAX, p.values[channelName])),
-        );
+        const { min: tMin, max: tMax } = tempRange();
+        const y = yScale(Math.max(tMin, Math.min(tMax, p.values[channelName])));
         return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
       })
       .join(" ");
   }
 
   // Grid lines
-  let tempGridLines = $derived(
-    Array.from(
-      { length: Math.floor((T_MAX - T_MIN) / T_STEP) + 1 },
-      (_, i) => T_MIN + i * T_STEP,
-    ),
-  );
+  let tempGridLines = $derived(() => {
+    const { min, max, step } = tempRange();
+    return Array.from(
+      { length: Math.floor((max - min) / step) + 1 },
+      (_, i) => min + i * step,
+    );
+  });
 
   let timeGridLines = $derived(() => {
     const interval = timeRangeMs <= 120000 ? 30000 : 60000;
@@ -274,7 +297,7 @@
     <rect x="0" y="0" {width} {height} fill="#0d0d1a" rx="8" />
 
     <!-- Grid: horizontal (temperature) -->
-    {#each tempGridLines as temp (temp)}
+    {#each tempGridLines() as temp (temp)}
       {@const y = yScale(temp)}
       <line
         x1={PADDING.left}

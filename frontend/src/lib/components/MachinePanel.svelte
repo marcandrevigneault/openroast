@@ -29,6 +29,7 @@
     onmark?: (eventType: RoastEventType) => void;
     oncontrol?: (channel: string, value: number) => void;
     onchartoptionschange?: (options: ChartOptions) => void;
+    onreset?: () => void;
     onremove?: () => void;
     onretry?: () => void;
     onsettingssaved?: (machine: SavedMachine) => void;
@@ -49,6 +50,7 @@
     onmark,
     oncontrol,
     onchartoptionschange,
+    onreset,
     onremove,
     onretry,
     onsettingssaved,
@@ -88,7 +90,6 @@
     onchartoptionschange?.(opts);
   }
 
-  let isRecording = $derived(machine.sessionState === "recording");
   let isConnected = $derived(machine.driverState === "connected");
   let showRetryButton = $derived(
     machine.driverState === "error" || machine.driverState === "disconnected",
@@ -197,6 +198,11 @@
       options={effectiveOptions}
     />
     <div class="chart-toolbar">
+      {#if onreset}
+        <button class="btn-chart-reset" onclick={onreset} title="Reset chart"
+          >&#8634;</button
+        >
+      {/if}
       <ChartOptionsMenu
         options={effectiveOptions}
         controls={machine.controls}
@@ -221,7 +227,7 @@
       {onrecord}
       {onstoprecord}
     />
-    <EventButtons disabled={!isRecording} events={machine.events} {onmark} />
+    <EventButtons disabled={true} events={machine.events} {onmark} />
   </div>
 
   <!-- Controls -->
@@ -375,6 +381,25 @@
     position: absolute;
     top: 8px;
     right: 8px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .btn-chart-reset {
+    background: transparent;
+    border: 1px solid #2a2a4a;
+    border-radius: 4px;
+    color: #888;
+    font-size: 1rem;
+    padding: 2px 6px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .btn-chart-reset:hover {
+    color: #ccc;
+    border-color: #444;
   }
 
   /* --- Actions row --- */
