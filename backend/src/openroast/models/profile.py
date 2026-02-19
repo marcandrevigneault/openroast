@@ -13,6 +13,8 @@ class TemperaturePoint(BaseModel):
     timestamp_ms: float = Field(ge=0, description="Milliseconds since roast start")
     et: float = Field(description="Environment temperature (Celsius)")
     bt: float = Field(description="Bean temperature (Celsius)")
+    et_ror: float = Field(default=0.0, description="ET rate of rise (°C/min)")
+    bt_ror: float = Field(default=0.0, description="BT rate of rise (°C/min)")
 
 
 class RoastEvent(BaseModel):
