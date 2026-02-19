@@ -93,7 +93,7 @@ class BaseDriver(ABC):
 
         Args:
             channel: Control channel name (e.g., "burner", "airflow", "fan").
-            value: Normalized value 0.0–1.0.
+            value: Normalized value 0.0-1.0.
 
         Raises:
             NotImplementedError: If the driver does not support control output.

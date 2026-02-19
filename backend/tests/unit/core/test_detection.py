@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from openroast.core.detection import check_bt_break, find_turning_point
 
 

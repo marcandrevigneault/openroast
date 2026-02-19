@@ -7,17 +7,16 @@ frontend/src/lib/types/ws-messages.ts.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field
-
 
 # ──────────────────────────────────────────────
 # Shared enums
 # ──────────────────────────────────────────────
 
-class RoastEventType(str, Enum):
+class RoastEventType(StrEnum):
     """Known roast event types."""
 
     CHARGE = "CHARGE"
@@ -31,7 +30,7 @@ class RoastEventType(str, Enum):
     TP = "TP"
 
 
-class SessionStateValue(str, Enum):
+class SessionStateValue(StrEnum):
     """Session state values matching core.session.SessionState."""
 
     IDLE = "idle"
@@ -40,13 +39,13 @@ class SessionStateValue(str, Enum):
     FINISHED = "finished"
 
 
-class AlarmSeverity(str, Enum):
+class AlarmSeverity(StrEnum):
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
 
 
-class DriverStateValue(str, Enum):
+class DriverStateValue(StrEnum):
     """Driver connection states matching drivers.base.ConnectionState."""
 
     DISCONNECTED = "disconnected"
@@ -55,7 +54,7 @@ class DriverStateValue(str, Enum):
     ERROR = "error"
 
 
-class CommandAction(str, Enum):
+class CommandAction(StrEnum):
     START_MONITORING = "start_monitoring"
     START_RECORDING = "start_recording"
     STOP_RECORDING = "stop_recording"
@@ -64,7 +63,7 @@ class CommandAction(str, Enum):
     SYNC = "sync"
 
 
-class ReplayAction(str, Enum):
+class ReplayAction(StrEnum):
     START = "start"
     PAUSE = "pause"
     RESUME = "resume"
