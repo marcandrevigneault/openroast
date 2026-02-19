@@ -28,6 +28,7 @@
     oncontrol?: (channel: string, value: number) => void;
     onchartoptionschange?: (options: ChartOptions) => void;
     onremove?: () => void;
+    onretry?: () => void;
     onsettingssaved?: (machine: SavedMachine) => void;
     onsave?: (data: {
       name: string;
@@ -47,6 +48,7 @@
     oncontrol,
     onchartoptionschange,
     onremove,
+    onretry,
     onsettingssaved,
     onsave,
   }: Props = $props();
@@ -221,7 +223,10 @@
 
   {#if machine.error}
     <div class="error-banner">
-      {machine.error}
+      <span>{machine.error}</span>
+      {#if onretry}
+        <button class="btn-retry" onclick={onretry}>Retry</button>
+      {/if}
     </div>
   {/if}
 
@@ -392,5 +397,25 @@
     padding: 8px 12px;
     color: #ff8a80;
     font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .btn-retry {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .btn-retry:hover {
+    background: #e53935;
   }
 </style>

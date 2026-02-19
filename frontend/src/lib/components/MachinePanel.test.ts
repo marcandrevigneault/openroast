@@ -186,4 +186,34 @@ describe("MachinePanel", () => {
     render(MachinePanel, { props: { machine: makeMachine() } });
     expect(screen.getByTitle("Machine settings")).toBeInTheDocument();
   });
+
+  it("shows Retry button in error banner when onretry provided", () => {
+    render(MachinePanel, {
+      props: {
+        machine: makeMachine({ error: "Connection failed" }),
+        onretry: () => {},
+      },
+    });
+    expect(screen.getByText("Retry")).toBeInTheDocument();
+  });
+
+  it("calls onretry when Retry button clicked", async () => {
+    const onretry = vi.fn();
+    render(MachinePanel, {
+      props: {
+        machine: makeMachine({ error: "Connection failed" }),
+        onretry,
+      },
+    });
+    await fireEvent.click(screen.getByText("Retry"));
+    expect(onretry).toHaveBeenCalledOnce();
+  });
+
+  it("hides Retry button when onretry not provided", () => {
+    render(MachinePanel, {
+      props: { machine: makeMachine({ error: "Connection failed" }) },
+    });
+    expect(screen.getByText("Connection failed")).toBeInTheDocument();
+    expect(screen.queryByText("Retry")).not.toBeInTheDocument();
+  });
 });

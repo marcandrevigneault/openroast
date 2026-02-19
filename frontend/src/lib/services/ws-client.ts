@@ -133,6 +133,16 @@ export class WSClient {
     }, delay);
   }
 
+  retryNow(): void {
+    this.cancelReconnect();
+    this.reconnectDelay = MIN_RECONNECT_MS;
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+    this.connect();
+  }
+
   private cancelReconnect(): void {
     if (this.reconnectTimer !== null) {
       clearTimeout(this.reconnectTimer);
