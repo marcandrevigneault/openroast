@@ -1,9 +1,13 @@
 """FastAPI application entry point."""
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from openroast.api.routes import init_storage
 from openroast.api.routes import router as api_router
+from openroast.core.storage import ProfileStorage
 from openroast.ws.live import router as ws_router
 
 app = FastAPI(
@@ -18,6 +22,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialise file-based profile storage
+_data_dir = Path(__file__).resolve().parent.parent.parent / "data" / "profiles"
+init_storage(ProfileStorage(_data_dir))
 
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router, prefix="/ws")
