@@ -9,6 +9,7 @@
 	import EventButtons from './EventButtons.svelte';
 	import SessionControls from './SessionControls.svelte';
 	import ConnectionStatus from './ConnectionStatus.svelte';
+	import SaveProfileForm from './SaveProfileForm.svelte';
 
 	interface Props {
 		machine: MachineState;
@@ -21,17 +22,20 @@
 		onmark?: (eventType: RoastEventType) => void;
 		oncontrol?: (channel: string, value: number) => void;
 		onchartoptionschange?: (options: ChartOptions) => void;
+		onsave?: (data: { name: string; beanName: string; beanWeight: number }) => void;
 	}
 
 	let {
 		machine, controlHistory = [], chartOptions,
 		onstart, onstop, onrecord, onstoprecord, onmark, oncontrol,
-		onchartoptionschange
+		onchartoptionschange, onsave
 	}: Props = $props();
 
 	let burner = $state(0);
 	let airflow = $state(50);
 	let drum = $state(60);
+	let saving = $state(false);
+	let saved = $state(false);
 
 	let localChartOptions = $state({ ...DEFAULT_CHART_OPTIONS });
 	let effectiveOptions = $derived(chartOptions ?? localChartOptions);
@@ -43,6 +47,16 @@
 
 	let isRecording = $derived(machine.sessionState === 'recording');
 	let isConnected = $derived(machine.driverState === 'connected');
+	let showSaveForm = $derived(
+		machine.sessionState === 'finished' && machine.history.length > 0 && !saved
+	);
+
+	function handleSave(data: { name: string; beanName: string; beanWeight: number }) {
+		saving = true;
+		onsave?.(data);
+		saving = false;
+		saved = true;
+	}
 </script>
 
 <div class="machine-panel">
@@ -127,6 +141,10 @@
 				<div class="error-banner">
 					{machine.error}
 				</div>
+			{/if}
+
+			{#if showSaveForm}
+				<SaveProfileForm onsave={handleSave} {saving} {saved} />
 			{/if}
 		</div>
 	</div>
