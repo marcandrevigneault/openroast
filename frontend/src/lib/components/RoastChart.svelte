@@ -245,8 +245,7 @@
       .filter((ctrl) => options.showControls[ctrl.channel])
       .map((ctrl) => ({
         path: buildDynamicControlPath(controlHistory, ctrl.channel, ctrl),
-        color:
-          CONTROL_COLORS[uniqueControls.indexOf(ctrl) % CONTROL_COLORS.length],
+        color: CONTROL_COLORS[controls.indexOf(ctrl) % CONTROL_COLORS.length],
         label: ctrl.name,
       })),
   );
