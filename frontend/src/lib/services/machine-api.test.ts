@@ -6,10 +6,12 @@ import {
   getMachine,
   createFromCatalog,
   createCustomMachine,
+  updateMachine,
   deleteMachine,
   connectMachine,
   disconnectMachine,
   getMachineStatus,
+  type SavedMachine,
 } from "./machine-api";
 
 describe("machine-api", () => {
@@ -165,6 +167,36 @@ describe("machine-api", () => {
           protocol: "modbus_tcp",
           connection: {},
         }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("updateMachine", () => {
+    it("sends PUT to /api/machines/{id}", async () => {
+      const machine = {
+        id: "m1",
+        name: "Updated",
+        protocol: "modbus_tcp",
+        connection: { type: "modbus_tcp", host: "10.0.0.1", port: 502 },
+        sampling_interval_ms: 3000,
+        controls: [],
+        extra_channels: [],
+      };
+      mockFetch(machine);
+
+      const result = await updateMachine("m1", machine);
+      expect(result).toEqual(machine);
+      expect(fetch).toHaveBeenCalledWith("/api/machines/m1", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(machine),
+      });
+    });
+
+    it("throws on error", async () => {
+      mockFetch(null, 404);
+      await expect(
+        updateMachine("m1", {} as unknown as SavedMachine),
       ).rejects.toThrow();
     });
   });

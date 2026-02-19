@@ -14,6 +14,8 @@
   import ConnectionStatus from "./ConnectionStatus.svelte";
   import ExtraChannelsBar from "./ExtraChannelsBar.svelte";
   import SaveProfileForm from "./SaveProfileForm.svelte";
+  import MachineSettingsPanel from "./MachineSettingsPanel.svelte";
+  import type { SavedMachine } from "$lib/services/machine-api";
 
   interface Props {
     machine: MachineState;
@@ -26,6 +28,7 @@
     oncontrol?: (channel: string, value: number) => void;
     onchartoptionschange?: (options: ChartOptions) => void;
     onremove?: () => void;
+    onsettingssaved?: (machine: SavedMachine) => void;
     onsave?: (data: {
       name: string;
       beanName: string;
@@ -44,6 +47,7 @@
     oncontrol,
     onchartoptionschange,
     onremove,
+    onsettingssaved,
     onsave,
   }: Props = $props();
 
@@ -60,6 +64,7 @@
   let saving = $state(false);
   let saved = $state(false);
   let controlsOpen = $state(false);
+  let settingsOpen = $state(false);
 
   // svelte-ignore state_referenced_locally
   const initControlChannels = machine.controls.map(
@@ -124,6 +129,13 @@
         driverState={machine.driverState}
         sessionState={machine.sessionState}
       />
+      <button
+        class="btn-settings"
+        onclick={() => (settingsOpen = true)}
+        title="Machine settings"
+      >
+        &#9881;
+      </button>
       {#if onremove}
         <button class="btn-remove" onclick={onremove} title="Remove machine"
           >✕</button
@@ -216,6 +228,16 @@
   {#if showSaveForm}
     <SaveProfileForm onsave={handleSave} {saving} {saved} />
   {/if}
+
+  <MachineSettingsPanel
+    machineId={machine.machineId}
+    open={settingsOpen}
+    onclose={() => (settingsOpen = false)}
+    onsaved={(m) => {
+      settingsOpen = false;
+      onsettingssaved?.(m);
+    }}
+  />
 </div>
 
 <style>
@@ -262,6 +284,23 @@
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
+  }
+
+  .btn-settings {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #666;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .btn-settings:hover {
+    color: #4fc3f7;
+    border-color: #4fc3f7;
+    background: rgba(79, 195, 247, 0.1);
   }
 
   .btn-remove {

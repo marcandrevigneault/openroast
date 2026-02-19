@@ -181,4 +181,9 @@ describe("MachinePanel", () => {
     await fireEvent.click(screen.getByTitle("Remove machine"));
     expect(onremove).toHaveBeenCalledOnce();
   });
+
+  it("shows settings gear button", () => {
+    render(MachinePanel, { props: { machine: makeMachine() } });
+    expect(screen.getByTitle("Machine settings")).toBeInTheDocument();
+  });
 });

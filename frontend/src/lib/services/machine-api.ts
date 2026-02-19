@@ -133,6 +133,19 @@ export async function createCustomMachine(
   return { id: data.id, machine };
 }
 
+export async function updateMachine(
+  machineId: string,
+  machine: SavedMachine,
+): Promise<SavedMachine> {
+  const resp = await fetch(`${BASE}/machines/${machineId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(machine),
+  });
+  if (!resp.ok) throw new Error(`Failed to update machine: ${resp.status}`);
+  return resp.json();
+}
+
 export async function deleteMachine(machineId: string): Promise<void> {
   const resp = await fetch(`${BASE}/machines/${machineId}`, {
     method: "DELETE",
