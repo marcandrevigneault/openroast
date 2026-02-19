@@ -30,7 +30,20 @@ const MOCK_MACHINE: SavedMachine = {
       unit: "%",
     },
   ],
-  extra_channels: [{ name: "Inlet" }],
+  extra_channels: [
+    {
+      name: "Inlet",
+      modbus: {
+        address: 48,
+        code: 3,
+        device_id: 1,
+        divisor: 1,
+        mode: "C",
+        is_float: false,
+        is_bcd: false,
+      },
+    },
+  ],
 };
 
 describe("MachineSettingsPanel", () => {
@@ -123,6 +136,24 @@ describe("MachineSettingsPanel", () => {
 
     expect(mockUpdateMachine).toHaveBeenCalledWith("m1", expect.anything());
     expect(onsaved).toHaveBeenCalledWith(updatedMachine);
+  });
+
+  it("preserves extra channel register config on save", async () => {
+    mockUpdateMachine.mockResolvedValue(MOCK_MACHINE);
+
+    renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    await fireEvent.click(screen.getByText("Save"));
+
+    const savedMachine = mockUpdateMachine.mock.calls[0][1] as SavedMachine;
+    const savedChannel = savedMachine.extra_channels[0] as Record<
+      string,
+      unknown
+    >;
+    expect(savedChannel.name).toBe("Inlet");
+    expect(savedChannel.modbus).toEqual(
+      expect.objectContaining({ address: 48, code: 3 }),
+    );
   });
 
   it("disables Save button when name is empty", async () => {

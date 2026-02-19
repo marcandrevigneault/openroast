@@ -34,7 +34,7 @@
   let port = $state(502);
   let samplingInterval = $state(3000);
   let controls = $state<CatalogControl[]>([]);
-  let extraChannelNames = $state<string[]>([]);
+  let extraChannels = $state<Record<string, unknown>[]>([]);
 
   let isSerial = $derived(protocol === "serial");
 
@@ -54,9 +54,7 @@
       protocol = m.protocol;
       samplingInterval = m.sampling_interval_ms;
       controls = [...(m.controls ?? [])];
-      extraChannelNames = (m.extra_channels ?? []).map(
-        (ch) => (ch as { name?: string }).name ?? "",
-      );
+      extraChannels = (m.extra_channels ?? []).map((ch) => ({ ...ch }));
 
       // Extract connection params
       const conn = m.connection ?? {};
@@ -98,9 +96,9 @@
         connection: buildConnectionConfig(),
         sampling_interval_ms: samplingInterval,
         controls,
-        extra_channels: extraChannelNames
-          .filter((n) => n.trim())
-          .map((n) => ({ name: n.trim() })),
+        extra_channels: extraChannels.filter(
+          (ch) => ((ch as { name?: string }).name ?? "").trim() !== "",
+        ),
       };
       const result = await updateMachine(machineId, updated);
       onsaved(result);
@@ -132,11 +130,11 @@
   }
 
   function addExtraChannel() {
-    extraChannelNames = [...extraChannelNames, ""];
+    extraChannels = [...extraChannels, { name: "" }];
   }
 
   function removeExtraChannel(index: number) {
-    extraChannelNames = extraChannelNames.filter((_, i) => i !== index);
+    extraChannels = extraChannels.filter((_, i) => i !== index);
   }
 
   function handleKeydown(e: KeyboardEvent) {
@@ -266,11 +264,11 @@
               <h4>Extra Channels</h4>
               <button class="btn-add" onclick={addExtraChannel}>+ Add</button>
             </div>
-            {#each extraChannelNames as _chName, i (i)}
+            {#each extraChannels as _ch, i (i)}
               <div class="inline-item">
                 <input
                   type="text"
-                  bind:value={extraChannelNames[i]}
+                  bind:value={extraChannels[i].name}
                   placeholder="Channel name"
                 />
                 <button
@@ -280,7 +278,7 @@
                 >
               </div>
             {/each}
-            {#if extraChannelNames.length === 0}
+            {#if extraChannels.length === 0}
               <p class="empty-hint">No extra channels configured.</p>
             {/if}
           </section>
