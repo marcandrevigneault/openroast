@@ -1,15 +1,23 @@
 <script lang="ts">
-  import type { TemperaturePoint } from "$lib/stores/machine";
+  import type {
+    TemperaturePoint,
+    ControlPoint,
+    ControlConfig,
+    ExtraChannelConfig,
+    ExtraChannelPoint,
+  } from "$lib/stores/machine";
   import { formatTime } from "$lib/stores/machine";
   import {
     DEFAULT_CHART_OPTIONS,
     type ChartOptions,
-    type ControlPoint,
   } from "$lib/stores/chart-options";
 
   interface Props {
     history: TemperaturePoint[];
     controlHistory?: ControlPoint[];
+    controls?: ControlConfig[];
+    extraChannelHistory?: ExtraChannelPoint[];
+    extraChannels?: ExtraChannelConfig[];
     options?: ChartOptions;
     width?: number;
     height?: number;
@@ -18,6 +26,9 @@
   let {
     history,
     controlHistory = [],
+    controls = [],
+    extraChannelHistory = [],
+    extraChannels = [],
     options = DEFAULT_CHART_OPTIONS,
     width = 800,
     height = 350,
@@ -29,9 +40,15 @@
   const BT_COLOR = "#42a5f5";
   const ET_ROR_COLOR = "#ffab91";
   const BT_ROR_COLOR = "#90caf9";
-  const BURNER_COLOR = "#ff7043";
-  const AIRFLOW_COLOR = "#4fc3f7";
-  const DRUM_COLOR = "#81c784";
+  const CONTROL_COLORS = [
+    "#ff7043",
+    "#4fc3f7",
+    "#81c784",
+    "#ffab91",
+    "#ce93d8",
+    "#fff176",
+  ];
+  const EXTRA_CHANNEL_COLOR = "#a5d6a7";
   const GRID_COLOR = "#1e1e3a";
   const AXIS_COLOR = "#444";
   const TEXT_COLOR = "#888";
@@ -102,17 +119,43 @@
       .join(" ");
   }
 
-  // Build SVG path for control values
-  function buildControlPath(
+  // Build SVG path for dynamic control values
+  function buildDynamicControlPath(
     points: ControlPoint[],
-    accessor: (p: ControlPoint) => number,
+    channel: string,
+    ctrl: ControlConfig,
   ): string {
     if (points.length === 0) return "";
     return points
+      .filter((p) => channel in p.values)
       .map((p, i) => {
         const x = xScale(p.timestamp_ms);
-        const val = Math.max(R_MIN, Math.min(R_MAX, accessor(p)));
-        const y = yScaleRight(val);
+        // Normalize from native range to 0-100 for the right axis
+        const normalized =
+          ctrl.max !== ctrl.min
+            ? ((p.values[channel] - ctrl.min) / (ctrl.max - ctrl.min)) * 100
+            : 0;
+        const clamped = Math.max(R_MIN, Math.min(R_MAX, normalized));
+        const y = yScaleRight(clamped);
+        return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(" ");
+  }
+
+  // Build SVG path for extra channel values (scaled to right axis as raw values)
+  function buildExtraChannelPath(
+    points: ExtraChannelPoint[],
+    channelName: string,
+  ): string {
+    if (points.length === 0) return "";
+    return points
+      .filter((p) => channelName in p.values)
+      .map((p, i) => {
+        const x = xScale(p.timestamp_ms);
+        // Extra channels are temperature-like — use left Y-axis
+        const y = yScale(
+          Math.max(T_MIN, Math.min(T_MAX, p.values[channelName])),
+        );
         return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
       })
       .join(" ");
@@ -151,26 +194,31 @@
     options.showBTRor ? buildRorPath(history, (p) => p.bt_ror) : "",
   );
 
-  // Control curves
-  let burnerPath = $derived(
-    options.showBurner ? buildControlPath(controlHistory, (p) => p.burner) : "",
+  // Dynamic control curves
+  let controlPaths = $derived(
+    controls
+      .filter((ctrl) => options.showControls[ctrl.channel])
+      .map((ctrl) => ({
+        path: buildDynamicControlPath(controlHistory, ctrl.channel, ctrl),
+        color: CONTROL_COLORS[controls.indexOf(ctrl) % CONTROL_COLORS.length],
+        label: ctrl.name,
+      })),
   );
-  let airflowPath = $derived(
-    options.showAirflow
-      ? buildControlPath(controlHistory, (p) => p.airflow)
-      : "",
-  );
-  let drumPath = $derived(
-    options.showDrum ? buildControlPath(controlHistory, (p) => p.drum) : "",
+
+  // Dynamic extra channel curves
+  let extraChannelPaths = $derived(
+    extraChannels
+      .filter((ch) => options.showExtraChannels[ch.name])
+      .map((ch) => ({
+        path: buildExtraChannelPath(extraChannelHistory, ch.name),
+        color: EXTRA_CHANNEL_COLOR,
+        label: ch.name,
+      })),
   );
 
   // Whether the right Y-axis is needed
   let showRightAxis = $derived(
-    options.showETRor ||
-      options.showBTRor ||
-      options.showBurner ||
-      options.showAirflow ||
-      options.showDrum,
+    options.showETRor || options.showBTRor || controlPaths.length > 0,
   );
 
   // Current values for readout
@@ -179,19 +227,22 @@
   );
 
   // Dynamic legend entries
-  let legendEntries = $derived(
-    (
-      [
-        options.showET && { label: "ET", color: ET_COLOR },
-        options.showBT && { label: "BT", color: BT_COLOR },
-        options.showETRor && { label: "ET RoR", color: ET_ROR_COLOR },
-        options.showBTRor && { label: "BT RoR", color: BT_ROR_COLOR },
-        options.showBurner && { label: "Burner", color: BURNER_COLOR },
-        options.showAirflow && { label: "Airflow", color: AIRFLOW_COLOR },
-        options.showDrum && { label: "Drum", color: DRUM_COLOR },
-      ] as ({ label: string; color: string } | false)[]
-    ).filter(Boolean) as { label: string; color: string }[],
-  );
+  let legendEntries = $derived(() => {
+    const entries: { label: string; color: string }[] = [];
+    if (options.showET) entries.push({ label: "ET", color: ET_COLOR });
+    if (options.showBT) entries.push({ label: "BT", color: BT_COLOR });
+    if (options.showETRor)
+      entries.push({ label: "ET RoR", color: ET_ROR_COLOR });
+    if (options.showBTRor)
+      entries.push({ label: "BT RoR", color: BT_ROR_COLOR });
+    for (const cp of controlPaths) {
+      entries.push({ label: cp.label, color: cp.color });
+    }
+    for (const ep of extraChannelPaths) {
+      entries.push({ label: ep.label, color: ep.color });
+    }
+    return entries;
+  });
 </script>
 
 <div class="chart-container">
@@ -290,37 +341,32 @@
       {/each}
     {/if}
 
-    <!-- Control curves (behind temperature curves) -->
-    {#if burnerPath}
-      <path
-        d={burnerPath}
-        fill="none"
-        stroke={BURNER_COLOR}
-        stroke-width="1"
-        stroke-dasharray="none"
-        opacity="0.4"
-      />
-    {/if}
-    {#if airflowPath}
-      <path
-        d={airflowPath}
-        fill="none"
-        stroke={AIRFLOW_COLOR}
-        stroke-width="1"
-        stroke-dasharray="none"
-        opacity="0.4"
-      />
-    {/if}
-    {#if drumPath}
-      <path
-        d={drumPath}
-        fill="none"
-        stroke={DRUM_COLOR}
-        stroke-width="1"
-        stroke-dasharray="none"
-        opacity="0.4"
-      />
-    {/if}
+    <!-- Dynamic control curves (behind temperature curves) -->
+    {#each controlPaths as cp (cp.label)}
+      {#if cp.path}
+        <path
+          d={cp.path}
+          fill="none"
+          stroke={cp.color}
+          stroke-width="1"
+          opacity="0.4"
+        />
+      {/if}
+    {/each}
+
+    <!-- Dynamic extra channel curves -->
+    {#each extraChannelPaths as ep (ep.label)}
+      {#if ep.path}
+        <path
+          d={ep.path}
+          fill="none"
+          stroke={ep.color}
+          stroke-width="1.5"
+          stroke-dasharray="6,3"
+          opacity="0.6"
+        />
+      {/if}
+    {/each}
 
     <!-- RoR curves -->
     {#if etRorPath}
@@ -377,7 +423,7 @@
     {/if}
 
     <!-- Dynamic legend -->
-    {#each legendEntries as entry, i (entry.label)}
+    {#each legendEntries() as entry, i (entry.label)}
       {@const lx = PADDING.left + 10 + i * 55}
       <rect
         x={lx}

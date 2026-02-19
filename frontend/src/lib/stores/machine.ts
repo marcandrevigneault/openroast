@@ -28,9 +28,25 @@ export interface RoastEvent {
 
 export interface ControlPoint {
   timestamp_ms: number;
-  burner: number;
-  airflow: number;
-  drum: number;
+  values: Record<string, number>;
+}
+
+export interface ControlConfig {
+  name: string;
+  channel: string;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+}
+
+export interface ExtraChannelConfig {
+  name: string;
+}
+
+export interface ExtraChannelPoint {
+  timestamp_ms: number;
+  values: Record<string, number>;
 }
 
 export interface MachineState {
@@ -43,12 +59,18 @@ export interface MachineState {
   events: RoastEvent[];
   controlHistory: ControlPoint[];
   currentControls: ControlPoint | null;
+  controls: ControlConfig[];
+  extraChannels: ExtraChannelConfig[];
+  extraChannelHistory: ExtraChannelPoint[];
+  currentExtraChannels: Record<string, number>;
   error: string | null;
 }
 
 export function createInitialState(
   machineId: string,
   machineName: string,
+  controls: ControlConfig[] = [],
+  extraChannels: ExtraChannelConfig[] = [],
 ): MachineState {
   return {
     machineId,
@@ -60,6 +82,10 @@ export function createInitialState(
     events: [],
     controlHistory: [],
     currentControls: null,
+    controls,
+    extraChannels,
+    extraChannelHistory: [],
+    currentExtraChannels: {},
     error: null,
   };
 }
@@ -81,10 +107,19 @@ export function processMessage(
         et_ror: msg.et_ror,
         bt_ror: msg.bt_ror,
       };
+      const extras = msg.extra_channels;
+      const hasExtras = Object.keys(extras).length > 0;
       return {
         ...state,
         currentTemp: point,
         history: [...state.history, point],
+        currentExtraChannels: hasExtras ? extras : state.currentExtraChannels,
+        extraChannelHistory: hasExtras
+          ? [
+              ...state.extraChannelHistory,
+              { timestamp_ms: msg.timestamp_ms, values: extras },
+            ]
+          : state.extraChannelHistory,
         error: null,
       };
     }
@@ -110,6 +145,7 @@ export function processMessage(
         history: isNewRecording ? [] : state.history,
         events: isNewRecording ? [] : state.events,
         controlHistory: isNewRecording ? [] : state.controlHistory,
+        extraChannelHistory: isNewRecording ? [] : state.extraChannelHistory,
       };
     }
     case "connection":
@@ -123,18 +159,15 @@ export function processMessage(
         error: msg.message,
       };
     case "control_ack": {
-      const controls = state.currentControls ?? {
+      const prev = state.currentControls ?? {
         timestamp_ms: 0,
-        burner: 0,
-        airflow: 0,
-        drum: 0,
+        values: {},
       };
       return {
         ...state,
         currentControls: {
-          ...controls,
           timestamp_ms: state.currentTemp?.timestamp_ms ?? 0,
-          [msg.channel]: msg.value,
+          values: { ...prev.values, [msg.channel]: msg.value },
         },
       };
     }
@@ -154,16 +187,10 @@ export function recordControlChange(
   value: number,
   timestamp_ms: number,
 ): MachineState {
-  const base = state.currentControls ?? {
-    timestamp_ms: 0,
-    burner: 0,
-    airflow: 0,
-    drum: 0,
-  };
+  const prevValues = state.currentControls?.values ?? {};
   const point: ControlPoint = {
-    ...base,
     timestamp_ms,
-    [channel]: value,
+    values: { ...prevValues, [channel]: value },
   };
   return {
     ...state,

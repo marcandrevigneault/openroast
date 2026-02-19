@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/svelte";
 import RoastChart from "./RoastChart.svelte";
-import type { TemperaturePoint } from "$lib/stores/machine";
-import {
-  DEFAULT_CHART_OPTIONS,
-  type ControlPoint,
-} from "$lib/stores/chart-options";
+import type {
+  TemperaturePoint,
+  ControlPoint,
+  ControlConfig,
+} from "$lib/stores/machine";
+import { DEFAULT_CHART_OPTIONS } from "$lib/stores/chart-options";
 
 function makePoints(count: number): TemperaturePoint[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -20,11 +21,14 @@ function makePoints(count: number): TemperaturePoint[] {
 function makeControlPoints(count: number): ControlPoint[] {
   return Array.from({ length: count }, (_, i) => ({
     timestamp_ms: i * 1000,
-    burner: 70 + i,
-    airflow: 50,
-    drum: 60,
+    values: { burner: 70 + i, airflow: 50 },
   }));
 }
+
+const TEST_CONTROLS: ControlConfig[] = [
+  { name: "Burner", channel: "burner", min: 0, max: 100, step: 5, unit: "%" },
+  { name: "Airflow", channel: "airflow", min: 0, max: 100, step: 5, unit: "%" },
+];
 
 describe("RoastChart", () => {
   it("renders SVG element", () => {
@@ -120,13 +124,13 @@ describe("RoastChart", () => {
   it("shows control paths when enabled", () => {
     const opts = {
       ...DEFAULT_CHART_OPTIONS,
-      showBurner: true,
-      showAirflow: true,
+      showControls: { burner: true, airflow: true },
     };
     const { container } = render(RoastChart, {
       props: {
         history: makePoints(20),
         controlHistory: makeControlPoints(20),
+        controls: TEST_CONTROLS,
         options: opts,
       },
     });
@@ -142,7 +146,6 @@ describe("RoastChart", () => {
     });
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent?.trim());
-    // Right axis shows percentage labels
     expect(textContent).toContain("0");
     expect(textContent).toContain("100");
   });
@@ -153,7 +156,6 @@ describe("RoastChart", () => {
     });
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent?.trim());
-    // Should not have right-axis labels like "25", "75"
     expect(textContent).not.toContain("25");
     expect(textContent).not.toContain("75");
   });
@@ -163,10 +165,14 @@ describe("RoastChart", () => {
       ...DEFAULT_CHART_OPTIONS,
       showET: true,
       showBT: false,
-      showBurner: true,
+      showControls: { burner: true },
     };
     const { container } = render(RoastChart, {
-      props: { history: [], options: opts },
+      props: {
+        history: [],
+        controls: TEST_CONTROLS,
+        options: opts,
+      },
     });
     const texts = container.querySelectorAll("text");
     const legendTexts = Array.from(texts)

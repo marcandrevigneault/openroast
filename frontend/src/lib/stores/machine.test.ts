@@ -5,8 +5,6 @@ import {
   recordControlChange,
   formatTime,
   type MachineState,
-  type TemperaturePoint,
-  type ControlPoint,
 } from "./machine";
 import type { ServerMessage } from "$lib/types/ws-messages";
 
@@ -23,6 +21,27 @@ describe("createInitialState", () => {
     expect(state.error).toBeNull();
     expect(state.controlHistory).toEqual([]);
     expect(state.currentControls).toBeNull();
+    expect(state.controls).toEqual([]);
+    expect(state.extraChannels).toEqual([]);
+    expect(state.extraChannelHistory).toEqual([]);
+    expect(state.currentExtraChannels).toEqual({});
+  });
+
+  it("accepts controls and extra channels", () => {
+    const controls = [
+      {
+        name: "Burner",
+        channel: "burner",
+        min: 0,
+        max: 100,
+        step: 5,
+        unit: "%",
+      },
+    ];
+    const extraChannels = [{ name: "Inlet" }];
+    const state = createInitialState("m1", "Test", controls, extraChannels);
+    expect(state.controls).toEqual(controls);
+    expect(state.extraChannels).toEqual(extraChannels);
   });
 });
 
@@ -84,6 +103,37 @@ describe("processMessage", () => {
       });
       expect(result.error).toBeNull();
     });
+
+    it("captures extra channels from temperature message", () => {
+      const result = processMessage(baseState(), {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Inlet: 250, Exhaust: 180 },
+      });
+      expect(result.currentExtraChannels).toEqual({ Inlet: 250, Exhaust: 180 });
+      expect(result.extraChannelHistory).toHaveLength(1);
+      expect(result.extraChannelHistory[0].values).toEqual({
+        Inlet: 250,
+        Exhaust: 180,
+      });
+    });
+
+    it("does not add to extraChannelHistory when no extra channels", () => {
+      const result = processMessage(baseState(), {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+      });
+      expect(result.extraChannelHistory).toHaveLength(0);
+    });
   });
 
   describe("event messages", () => {
@@ -134,9 +184,8 @@ describe("processMessage", () => {
       expect(result.sessionState).toBe("monitoring");
     });
 
-    it("clears history, events, and controlHistory when recording starts", () => {
+    it("clears history, events, controlHistory, and extraChannelHistory when recording starts", () => {
       let state = baseState();
-      // Add some history
       state = processMessage(state, {
         type: "temperature",
         timestamp_ms: 1000,
@@ -144,7 +193,7 @@ describe("processMessage", () => {
         bt: 180,
         et_ror: 0,
         bt_ror: 0,
-        extra_channels: {},
+        extra_channels: { Inlet: 250 },
       });
       state = processMessage(state, {
         type: "event",
@@ -158,8 +207,8 @@ describe("processMessage", () => {
       expect(state.history).toHaveLength(1);
       expect(state.events).toHaveLength(1);
       expect(state.controlHistory).toHaveLength(1);
+      expect(state.extraChannelHistory).toHaveLength(1);
 
-      // Start recording -> clears
       state = processMessage(state, {
         type: "state",
         state: "recording",
@@ -168,6 +217,7 @@ describe("processMessage", () => {
       expect(state.history).toEqual([]);
       expect(state.events).toEqual([]);
       expect(state.controlHistory).toEqual([]);
+      expect(state.extraChannelHistory).toEqual([]);
     });
 
     it("preserves history for non-recording state changes", () => {
@@ -239,7 +289,7 @@ describe("processMessage", () => {
         message: "ok",
       });
       expect(result.currentControls).toBeTruthy();
-      expect(result.currentControls!.burner).toBe(50);
+      expect(result.currentControls!.values.burner).toBe(50);
     });
 
     it("preserves other channels on control_ack", () => {
@@ -258,8 +308,8 @@ describe("processMessage", () => {
         applied: true,
         message: "ok",
       });
-      expect(state.currentControls!.burner).toBe(80);
-      expect(state.currentControls!.airflow).toBe(60);
+      expect(state.currentControls!.values.burner).toBe(80);
+      expect(state.currentControls!.values.airflow).toBe(60);
     });
 
     it("returns state unchanged for replay", () => {
@@ -288,29 +338,28 @@ describe("recordControlChange", () => {
   it("appends control point to history", () => {
     const state = recordControlChange(baseState(), "burner", 75, 5000);
     expect(state.controlHistory).toHaveLength(1);
-    expect(state.controlHistory[0].burner).toBe(75);
+    expect(state.controlHistory[0].values.burner).toBe(75);
     expect(state.controlHistory[0].timestamp_ms).toBe(5000);
   });
 
   it("updates currentControls", () => {
     const state = recordControlChange(baseState(), "airflow", 60, 3000);
     expect(state.currentControls).toBeTruthy();
-    expect(state.currentControls!.airflow).toBe(60);
+    expect(state.currentControls!.values.airflow).toBe(60);
   });
 
   it("preserves other channels from previous controls", () => {
     let state = recordControlChange(baseState(), "burner", 80, 1000);
     state = recordControlChange(state, "airflow", 50, 2000);
-    expect(state.currentControls!.burner).toBe(80);
-    expect(state.currentControls!.airflow).toBe(50);
+    expect(state.currentControls!.values.burner).toBe(80);
+    expect(state.currentControls!.values.airflow).toBe(50);
     expect(state.controlHistory).toHaveLength(2);
   });
 
-  it("defaults missing channels to 0", () => {
+  it("starts with empty values when no previous controls", () => {
     const state = recordControlChange(baseState(), "drum", 90, 1000);
-    expect(state.currentControls!.burner).toBe(0);
-    expect(state.currentControls!.airflow).toBe(0);
-    expect(state.currentControls!.drum).toBe(90);
+    expect(state.currentControls!.values.drum).toBe(90);
+    expect(state.currentControls!.values.burner).toBeUndefined();
   });
 });
 

@@ -68,10 +68,35 @@
     return client;
   }
 
+  function toControlConfigs(machine: SavedMachine) {
+    return (machine.controls ?? []).map((c) => ({
+      name: c.name,
+      channel: c.channel,
+      min: c.min,
+      max: c.max,
+      step: c.step,
+      unit: c.unit,
+    }));
+  }
+
+  function toExtraChannelConfigs(machine: SavedMachine) {
+    return (machine.extra_channels ?? []).map((ch) => ({
+      name: (ch as { name?: string }).name ?? "Unknown",
+    }));
+  }
+
   async function handleAddMachine(machine: SavedMachine) {
     const id = machine.id;
     dashboard = addMachine(dashboard, { id, name: machine.name });
-    machineStates.set(id, createInitialState(id, machine.name));
+    machineStates.set(
+      id,
+      createInitialState(
+        id,
+        machine.name,
+        toControlConfigs(machine),
+        toExtraChannelConfigs(machine),
+      ),
+    );
 
     // Connect to the machine and start WebSocket
     try {
@@ -154,14 +179,20 @@
 
   function handleControl(id: string, channel: string, value: number) {
     const client = wsClients.get(id);
-    if (client) {
-      // Normalize 0-100 slider value to 0.0-1.0
-      client.send({
-        type: "control",
-        channel,
-        value: value / 100,
-      });
-    }
+    if (!client) return;
+
+    // Normalize native slider value to 0.0-1.0 using control config
+    const state = machineStates.get(id);
+    const ctrl = state?.controls.find((c) => c.channel === channel);
+    const min = ctrl?.min ?? 0;
+    const max = ctrl?.max ?? 100;
+    const normalized = max !== min ? (value - min) / (max - min) : 0;
+
+    client.send({
+      type: "control",
+      channel,
+      value: normalized,
+    });
   }
 
   async function loadSavedMachines() {
@@ -176,7 +207,12 @@
           });
           machineStates.set(
             machine.id,
-            createInitialState(machine.id, machine.name),
+            createInitialState(
+              machine.id,
+              machine.name,
+              toControlConfigs(machine),
+              toExtraChannelConfigs(machine),
+            ),
           );
         } catch {
           // Skip machines we can't load

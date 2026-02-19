@@ -1,11 +1,21 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/svelte";
 import MachinePanel from "./MachinePanel.svelte";
-import { createInitialState, type MachineState } from "$lib/stores/machine";
+import {
+  createInitialState,
+  type MachineState,
+  type ControlConfig,
+} from "$lib/stores/machine";
+
+const TEST_CONTROLS: ControlConfig[] = [
+  { name: "Burner", channel: "burner", min: 0, max: 100, step: 5, unit: "%" },
+  { name: "Airflow", channel: "airflow", min: 0, max: 100, step: 5, unit: "%" },
+  { name: "Drum", channel: "drum", min: 0, max: 100, step: 5, unit: "" },
+];
 
 function makeMachine(overrides: Partial<MachineState> = {}): MachineState {
   return {
-    ...createInitialState("m1", "Test Roaster"),
+    ...createInitialState("m1", "Test Roaster", TEST_CONTROLS),
     driverState: "connected",
     sessionState: "monitoring",
     ...overrides,
@@ -48,11 +58,17 @@ describe("MachinePanel", () => {
     expect(screen.getByText("190.7")).toBeInTheDocument();
   });
 
-  it("renders slider controls", () => {
+  it("renders dynamic slider controls from machine config", () => {
     render(MachinePanel, { props: { machine: makeMachine() } });
     expect(screen.getByText("Burner")).toBeInTheDocument();
     expect(screen.getByText("Airflow")).toBeInTheDocument();
     expect(screen.getByText("Drum")).toBeInTheDocument();
+  });
+
+  it("shows no-controls message when no controls configured", () => {
+    const machine = makeMachine({ controls: [] });
+    render(MachinePanel, { props: { machine } });
+    expect(screen.getByText("No controls configured")).toBeInTheDocument();
   });
 
   it("renders event buttons", () => {
