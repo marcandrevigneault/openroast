@@ -16,6 +16,7 @@
     listMachines,
     connectMachine,
     disconnectMachine,
+    deleteMachine,
     getMachine,
     type SavedMachine,
   } from "$lib/services/machine-api";
@@ -168,6 +169,13 @@
       await disconnectMachine(id);
     } catch {
       // Best-effort disconnect
+    }
+
+    // Delete the saved machine file so it doesn't reappear on refresh
+    try {
+      await deleteMachine(id);
+    } catch {
+      // Best-effort delete
     }
 
     machineStates.delete(id);
