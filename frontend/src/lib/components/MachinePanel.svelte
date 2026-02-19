@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { MachineState } from '$lib/stores/machine';
-	import type { SessionState, DriverState, RoastEventType } from '$lib/types/ws-messages';
+	import type { RoastEventType } from '$lib/types/ws-messages';
 	import TemperatureDisplay from './TemperatureDisplay.svelte';
 	import RoastChart from './RoastChart.svelte';
 	import ControlSlider from './ControlSlider.svelte';

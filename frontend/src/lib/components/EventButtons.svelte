@@ -32,7 +32,7 @@
 </script>
 
 <div class="event-buttons">
-	{#each EVENT_BUTTONS as btn}
+	{#each EVENT_BUTTONS as btn (btn.type)}
 		{@const marked = isMarked(btn.type)}
 		{@const time = getEventTime(btn.type)}
 		<button

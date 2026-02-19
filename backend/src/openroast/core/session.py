@@ -27,7 +27,7 @@ class RoastSession:
     State machine: IDLE → MONITORING → RECORDING → FINISHED
     """
 
-    __slots__ = ["_state", "_data", "_events", "_machine_name"]
+    __slots__ = ["_data", "_events", "_machine_name", "_state"]
 
     def __init__(self, machine_name: str = "") -> None:
         self._state = SessionState.IDLE

@@ -83,14 +83,14 @@
 		<rect x="0" y="0" {width} {height} fill="#0d0d1a" rx="8" />
 
 		<!-- Grid: horizontal (temperature) -->
-		{#each tempGridLines as temp}
+		{#each tempGridLines as temp (temp)}
 			{@const y = yScale(temp)}
 			<line x1={PADDING.left} y1={y} x2={width - PADDING.right} y2={y} stroke={GRID_COLOR} stroke-width="1" />
 			<text x={PADDING.left - 8} y={y + 4} fill={TEXT_COLOR} font-size="11" text-anchor="end">{temp}</text>
 		{/each}
 
 		<!-- Grid: vertical (time) -->
-		{#each timeGridLines() as t}
+		{#each timeGridLines() as t (t)}
 			{@const x = xScale(t)}
 			<line x1={x} y1={PADDING.top} x2={x} y2={height - PADDING.bottom} stroke={GRID_COLOR} stroke-width="1" />
 			<text x={x} y={height - PADDING.bottom + 20} fill={TEXT_COLOR} font-size="11" text-anchor="middle">{formatTime(t)}</text>

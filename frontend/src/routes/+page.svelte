@@ -2,7 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import type { MachineState } from '$lib/stores/machine';
 	import { createInitialState, processMessage } from '$lib/stores/machine';
-	import type { RoastEventType, ServerMessage } from '$lib/types/ws-messages';
+	import type { RoastEventType } from '$lib/types/ws-messages';
 	import { generateDemoPoints } from '$lib/stores/demo';
 	import MachinePanel from '$lib/components/MachinePanel.svelte';
 
