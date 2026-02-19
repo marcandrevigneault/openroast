@@ -1,22 +1,25 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import config from "../../../vite.config";
 
 /**
  * Validates that vite.config.ts has the required proxy configuration
  * so that /api and /ws requests are forwarded to the FastAPI backend.
  */
 describe("Vite proxy configuration", () => {
-  const configPath = resolve(process.cwd(), "vite.config.ts");
-  const configSource = readFileSync(configPath, "utf-8");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const resolved = config as any;
+  const proxy = resolved.server?.proxy;
 
   it("proxies /api to backend", () => {
-    expect(configSource).toContain('"/api"');
-    expect(configSource).toContain("http://localhost:8000");
+    expect(proxy).toBeDefined();
+    expect(proxy["/api"]).toBeDefined();
+    expect(proxy["/api"].target).toBe("http://localhost:8000");
   });
 
   it("proxies /ws to backend with WebSocket support", () => {
-    expect(configSource).toContain('"/ws"');
-    expect(configSource).toMatch(/ws:\s*true/);
+    expect(proxy["/ws"]).toBeDefined();
+    expect(proxy["/ws"].target).toBe("http://localhost:8000");
+    expect(proxy["/ws"].ws).toBe(true);
   });
 });
