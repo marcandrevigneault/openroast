@@ -40,3 +40,6 @@ Thumbs.db
 # Database
 *.db
 *.sqlite3
+
+# Runtime data (saved machines, profiles, etc.)
+backend/data/
