@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, HTTPException
@@ -12,13 +13,17 @@ from openroast.models.profile import RoastProfile  # noqa: TC001
 
 if TYPE_CHECKING:
     from openroast.core.machine_storage import MachineStorage
+    from openroast.core.manager import MachineManager
     from openroast.core.storage import ProfileStorage
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 # Storage instances — set by init_*() at startup
 _storage: ProfileStorage | None = None
 _machine_storage: MachineStorage | None = None
+_manager: MachineManager | None = None
 
 
 def init_storage(storage: ProfileStorage) -> None:
@@ -33,6 +38,12 @@ def init_machine_storage(storage: MachineStorage) -> None:
     _machine_storage = storage
 
 
+def init_manager(manager: MachineManager) -> None:
+    """Configure the machine manager for REST endpoints."""
+    global _manager
+    _manager = manager
+
+
 def _get_storage() -> ProfileStorage:
     if _storage is None:
         raise RuntimeError("Storage not initialised")
@@ -43,6 +54,12 @@ def _get_machine_storage() -> MachineStorage:
     if _machine_storage is None:
         raise RuntimeError("Machine storage not initialised")
     return _machine_storage
+
+
+def _get_manager() -> MachineManager:
+    if _manager is None:
+        raise RuntimeError("MachineManager not initialised")
+    return _manager
 
 
 # --- Catalog (read-only) ---
@@ -161,6 +178,54 @@ async def delete_machine(machine_id: str) -> None:
     storage = _get_machine_storage()
     if not storage.delete(machine_id):
         raise HTTPException(status_code=404, detail="Machine not found")
+
+
+# --- Machine Connection ---
+
+
+@router.post("/machines/{machine_id}/connect")
+async def connect_machine(machine_id: str) -> dict:
+    """Connect to a machine (load driver, start sampling).
+
+    The machine must exist in storage. Once connected, WebSocket clients
+    can subscribe to /ws/live/{machine_id} for real-time data.
+    """
+    manager = _get_manager()
+    try:
+        await manager.connect_machine(machine_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except ConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+    return {"status": "connected", "machine_id": machine_id}
+
+
+@router.post("/machines/{machine_id}/disconnect")
+async def disconnect_machine(machine_id: str) -> dict:
+    """Disconnect a machine (stop sampling, release driver)."""
+    manager = _get_manager()
+    await manager.disconnect_machine(machine_id)
+    return {"status": "disconnected", "machine_id": machine_id}
+
+
+@router.get("/machines/{machine_id}/status")
+async def machine_status(machine_id: str) -> dict:
+    """Get the current connection and session status of a machine."""
+    manager = _get_manager()
+    instance = manager.get_instance(machine_id)
+    if instance is None:
+        return {
+            "machine_id": machine_id,
+            "connected": False,
+            "driver_state": "disconnected",
+            "session_state": "idle",
+        }
+    return {
+        "machine_id": machine_id,
+        "connected": True,
+        "driver_state": instance.driver.state.value,
+        "session_state": instance.session.state.value,
+    }
 
 
 # --- Profiles CRUD ---
