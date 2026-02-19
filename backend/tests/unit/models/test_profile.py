@@ -19,6 +19,16 @@ class TestTemperaturePoint:
         assert p.timestamp_ms == 3000
         assert p.et == 210.5
 
+    def test_ror_defaults_to_zero(self) -> None:
+        p = TemperaturePoint(timestamp_ms=0, et=200, bt=150)
+        assert p.et_ror == 0.0
+        assert p.bt_ror == 0.0
+
+    def test_ror_values(self) -> None:
+        p = TemperaturePoint(timestamp_ms=3000, et=210, bt=155, et_ror=5.5, bt_ror=8.2)
+        assert p.et_ror == 5.5
+        assert p.bt_ror == 8.2
+
     def test_negative_timestamp_rejected(self) -> None:
         with pytest.raises(ValidationError):
             TemperaturePoint(timestamp_ms=-1, et=200.0, bt=150.0)

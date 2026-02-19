@@ -7,6 +7,7 @@
 	import EventButtons from './EventButtons.svelte';
 	import SessionControls from './SessionControls.svelte';
 	import ConnectionStatus from './ConnectionStatus.svelte';
+	import SaveProfileForm from './SaveProfileForm.svelte';
 
 	interface Props {
 		machine: MachineState;
@@ -16,16 +17,30 @@
 		onstoprecord?: () => void;
 		onmark?: (eventType: RoastEventType) => void;
 		oncontrol?: (channel: string, value: number) => void;
+		onsave?: (data: { name: string; beanName: string; beanWeight: number }) => void;
 	}
 
-	let { machine, onstart, onstop, onrecord, onstoprecord, onmark, oncontrol }: Props = $props();
+	let { machine, onstart, onstop, onrecord, onstoprecord, onmark, oncontrol, onsave }: Props =
+		$props();
 
 	let burner = $state(0);
 	let airflow = $state(50);
 	let drum = $state(60);
+	let saving = $state(false);
+	let saved = $state(false);
 
 	let isRecording = $derived(machine.sessionState === 'recording');
 	let isActive = $derived(machine.sessionState !== 'idle' && machine.sessionState !== 'finished');
+	let showSaveForm = $derived(
+		machine.sessionState === 'finished' && machine.history.length > 0 && !saved
+	);
+
+	function handleSave(data: { name: string; beanName: string; beanWeight: number }) {
+		saving = true;
+		onsave?.(data);
+		saving = false;
+		saved = true;
+	}
 </script>
 
 <div class="machine-panel">
@@ -107,6 +122,10 @@
 				<div class="error-banner">
 					{machine.error}
 				</div>
+			{/if}
+
+			{#if showSaveForm}
+				<SaveProfileForm onsave={handleSave} {saving} {saved} />
 			{/if}
 		</div>
 	</div>
