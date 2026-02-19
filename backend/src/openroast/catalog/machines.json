@@ -196,10 +196,10 @@
           "id": "giesen-w6e",
           "name": "W6E (electric)",
           "protocol": "s7",
-          "sampling_interval_ms": 2000,
+          "sampling_interval_ms": 1000,
           "connection": {
             "type": "s7",
-            "host": "192.168.2.180",
+            "host": "172.30.30.50",
             "port": 102,
             "rack": 0,
             "slot": 0
@@ -248,7 +248,7 @@
             "bytesize": 8,
             "parity": "N",
             "stopbits": 1,
-            "timeout": 1.0,
+            "timeout": 0.4,
             "word_order_little": true
           },
           "et": {
@@ -260,8 +260,8 @@
             "modbus": {"address": 774, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}
           },
           "extra_channels": [
-            {"name": "Stack", "modbus": {"address": 770, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
-            {"name": "Inlet", "modbus": {"address": 772, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
+            {"name": "Inlet", "modbus": {"address": 770, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
+            {"name": "Stack", "modbus": {"address": 772, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
             {"name": "Status", "modbus": {"address": 778, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": []
@@ -277,58 +277,56 @@
           "id": "coffed-sr5",
           "name": "SR5 (manual)",
           "protocol": "modbus_rtu",
-          "sampling_interval_ms": 3000,
+          "sampling_interval_ms": 2000,
           "connection": {
             "type": "modbus_rtu",
             "host": "/dev/ttyUSB0",
             "port": 502,
-            "baudrate": 9600,
+            "baudrate": 115200,
             "bytesize": 8,
             "parity": "N",
-            "stopbits": 1,
+            "stopbits": 2,
             "timeout": 0.4,
             "word_order_little": true
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 4096, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 4096, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": [
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,1,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(2,53,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Slider 1", "channel": "slider1", "command": "writeSingle([1,1,{}])", "min": 0, "max": 100, "step": 1, "unit": ""},
+            {"name": "Slider 4", "channel": "slider4", "command": "writeSingle([2,53,{}])", "min": 0, "max": 100, "step": 1, "unit": ""}
           ]
         },
         {
           "id": "coffed-sr3",
           "name": "SR3 (manual)",
           "protocol": "modbus_rtu",
-          "sampling_interval_ms": 3000,
+          "sampling_interval_ms": 2000,
           "connection": {
             "type": "modbus_rtu",
             "host": "/dev/ttyUSB0",
             "port": 502,
-            "baudrate": 9600,
+            "baudrate": 115200,
             "bytesize": 8,
             "parity": "N",
-            "stopbits": 1,
+            "stopbits": 2,
             "timeout": 0.4,
             "word_order_little": true
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 4096, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 4096, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 52, "code": 3, "device_id": 3, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
-          "controls": [
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,1,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
-          ]
+          "controls": []
         },
         {
           "id": "coffed-sr5-auto",
@@ -355,9 +353,9 @@
             "modbus": {"address": 10, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": [
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,20,{})", "min": 60, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Airflow", "channel": "airflow", "command": "writeSingle(1,30,{})", "min": 38, "max": 70, "step": 1, "unit": "Hz"},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,40,{})", "min": 20, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Slider 1", "channel": "slider1", "command": "writeSingle([1,20,{}])", "min": 60, "max": 100, "step": 1, "unit": ""},
+            {"name": "Slider 2", "channel": "slider2", "command": "writeSingle([1,30,{}])", "min": 38, "max": 70, "step": 1, "unit": ""},
+            {"name": "Slider 4", "channel": "slider4", "command": "writeSingle([1,40,{}])", "min": 20, "max": 100, "step": 1, "unit": ""}
           ]
         }
       ]
@@ -393,12 +391,12 @@
           },
           "extra_channels": [
             {"name": "Inlet", "modbus": {"address": 2, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}},
-            {"name": "Gas %", "modbus": {"address": 6, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Airflow %", "modbus": {"address": 7, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Reg 6", "modbus": {"address": 6, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Reg 7", "modbus": {"address": 7, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,7,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Airflow", "channel": "airflow", "command": "writeSingle(1,6,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Slider 1", "channel": "slider1", "command": "writeSingle(1,7,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Slider 4", "channel": "slider4", "command": "writeSingle(1,6,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         },
         {
@@ -427,12 +425,12 @@
           },
           "extra_channels": [
             {"name": "Inlet", "modbus": {"address": 2, "code": 3, "device_id": 1, "divisor": 0, "mode": "F", "is_float": true, "is_bcd": false}},
-            {"name": "Gas %", "modbus": {"address": 6, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Airflow %", "modbus": {"address": 7, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Reg 6", "modbus": {"address": 6, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Reg 7", "modbus": {"address": 7, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Gas", "channel": "gas", "command": "writeSingle(1,7,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Airflow", "channel": "airflow", "command": "writeSingle(1,6,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Slider 1", "channel": "slider1", "command": "writeSingle(1,7,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Slider 4", "channel": "slider4", "command": "writeSingle(1,6,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         }
       ]
@@ -492,8 +490,8 @@
           "et": {"name": "ET"},
           "bt": {"name": "BT"},
           "extra_channels": [
-            {"name": "Heater %"},
-            {"name": "Fan %"}
+            {"name": "Heater"},
+            {"name": "Fan"}
           ],
           "controls": [
             {"name": "Heater", "channel": "heater", "min": 0, "max": 100, "step": 1, "unit": "%"},
@@ -532,7 +530,7 @@
             {"name": "Drum", "modbus": {"address": 12391, "code": 3, "device_id": 1, "divisor": 1, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,12290,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,12290,{});mwrite(1,12318,65531,4)", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         }
       ]
@@ -546,7 +544,7 @@
           "id": "aillio-bullet-r1-ibts",
           "name": "Bullet R1 (IBTS)",
           "protocol": "serial",
-          "sampling_interval_ms": 2000,
+          "sampling_interval_ms": 1000,
           "connection": {
             "type": "serial",
             "comport": "auto",
@@ -561,9 +559,11 @@
           "extra_channels": [
             {"name": "Heater"},
             {"name": "Fan"},
+            {"name": "BT RoR"},
             {"name": "Drum"},
             {"name": "Voltage"},
             {"name": "Exhaust"},
+            {"name": "State"},
             {"name": "Fan RPM"}
           ],
           "controls": [
@@ -576,7 +576,7 @@
           "id": "aillio-bullet-r2",
           "name": "Bullet R2",
           "protocol": "serial",
-          "sampling_interval_ms": 2000,
+          "sampling_interval_ms": 1000,
           "connection": {
             "type": "serial",
             "comport": "auto",
@@ -591,9 +591,11 @@
           "extra_channels": [
             {"name": "Heater"},
             {"name": "Fan"},
+            {"name": "BT RoR"},
             {"name": "Drum"},
             {"name": "Voltage"},
             {"name": "Exhaust"},
+            {"name": "State"},
             {"name": "Fan RPM"}
           ],
           "controls": [
@@ -612,18 +614,16 @@
         {
           "id": "santoker-qx-wifi",
           "name": "Q/X Series (WiFi)",
-          "protocol": "modbus_tcp",
+          "protocol": "serial",
           "sampling_interval_ms": 1000,
           "connection": {
-            "type": "modbus_tcp",
-            "host": "10.10.100.254",
-            "port": 20001,
-            "baudrate": 19200,
+            "type": "serial",
+            "comport": "10.10.100.254:20001",
+            "baudrate": 115200,
             "bytesize": 8,
             "parity": "N",
             "stopbits": 1,
-            "timeout": 1.0,
-            "word_order_little": true
+            "timeout": 1.0
           },
           "et": {"name": "ET"},
           "bt": {"name": "BT"},
@@ -633,15 +633,15 @@
             {"name": "Drum"}
           ],
           "controls": [
-            {"name": "Cooling Air", "channel": "cooling_air", "command": "santoker(ca,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Fan", "channel": "fan", "command": "santoker(fa,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Cooling Air", "channel": "cooling_air", "command": "santoker(ca,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
+            {"name": "Fan", "channel": "fan", "command": "santoker(fa,{})", "min": 0, "max": 100, "step": 1, "unit": ""}
           ]
         },
         {
           "id": "santoker-r-usb",
           "name": "R Series (USB)",
           "protocol": "serial",
-          "sampling_interval_ms": 1000,
+          "sampling_interval_ms": 2000,
           "connection": {
             "type": "serial",
             "comport": "/dev/ttyUSB0",
@@ -653,14 +653,7 @@
           },
           "et": {"name": "ET"},
           "bt": {"name": "BT"},
-          "extra_channels": [
-            {"name": "IR"},
-            {"name": "Board"}
-          ],
-          "controls": [
-            {"name": "Burner", "channel": "burner", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Fan", "channel": "fan", "min": 0, "max": 100, "step": 1, "unit": "%"}
-          ]
+          "controls": []
         }
       ]
     },
@@ -686,16 +679,13 @@
           "et": {"name": "Inlet"},
           "bt": {"name": "BT"},
           "extra_channels": [
-            {"name": "Set Temp"},
-            {"name": "Fan RPM"},
-            {"name": "Heater %"},
-            {"name": "Fan %"},
-            {"name": "Humidity"}
+            {"name": "SET"},
+            {"name": "RPM"},
+            {"name": "Heater"},
+            {"name": "Fan"},
+            {"name": "State"}
           ],
-          "controls": [
-            {"name": "Heater", "channel": "heater", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Fan", "channel": "fan", "min": 0, "max": 100, "step": 1, "unit": "%"}
-          ]
+          "controls": []
         }
       ]
     },
@@ -734,7 +724,7 @@
           "id": "besca-bsc-auto",
           "name": "BSC Automatic",
           "protocol": "modbus_tcp",
-          "sampling_interval_ms": 3000,
+          "sampling_interval_ms": 1000,
           "connection": {
             "type": "modbus_tcp",
             "host": "10.0.0.9",
@@ -790,15 +780,15 @@
           "extra_channels": [
             {"name": "IT", "modbus": {"address": 4099, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}},
             {"name": "DT", "modbus": {"address": 4097, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}},
-            {"name": "Gas1 %", "modbus": {"address": 4102, "code": 3, "device_id": 1, "divisor": 2, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Gas2 %", "modbus": {"address": 4101, "code": 3, "device_id": 1, "divisor": 2, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Gas1", "modbus": {"address": 4102, "code": 3, "device_id": 1, "divisor": 2, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Gas2", "modbus": {"address": 4101, "code": 3, "device_id": 1, "divisor": 2, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Pressure", "modbus": {"address": 4100, "code": 3, "device_id": 1, "divisor": 1, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Gas SV", "modbus": {"address": 4201, "code": 3, "device_id": 1, "divisor": 1, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "GasSV", "modbus": {"address": 4201, "code": 3, "device_id": 1, "divisor": 1, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Gas1", "channel": "gas1", "command": "writeSingle(1,4638,{})", "min": 0, "max": 60, "step": 1, "unit": "%"},
-            {"name": "Gas2", "channel": "gas2", "command": "writeSingle(1,4636,{})", "min": 0, "max": 60, "step": 1, "unit": "%"},
-            {"name": "SV", "channel": "sv", "command": "writeSingle(1,4608,{})", "min": 0, "max": 350, "step": 1, "unit": ""}
+            {"name": "Gas1", "channel": "gas1", "command": "writeSingle([1,4638,{}])", "min": 0, "max": 60, "step": 1, "unit": "Hz"},
+            {"name": "Gas2", "channel": "gas2", "command": "writeSingle([1,4636,{}])", "min": 0, "max": 60, "step": 1, "unit": "Hz"},
+            {"name": "Pressure", "channel": "pressure", "command": "writeSingle([1,4608,{}])", "min": 0, "max": 350, "step": 1, "unit": "daPa"}
           ]
         }
       ]
@@ -842,7 +832,7 @@
           "id": "kaleido-serial",
           "name": "Sniper (Serial)",
           "protocol": "serial",
-          "sampling_interval_ms": 2000,
+          "sampling_interval_ms": 1500,
           "connection": {
             "type": "serial",
             "comport": "/dev/ttyUSB0",
@@ -850,21 +840,22 @@
             "bytesize": 8,
             "parity": "N",
             "stopbits": 1,
-            "timeout": 1.0
+            "timeout": 0.6
           },
           "et": {"name": "ET"},
           "bt": {"name": "BT"},
           "extra_channels": [
+            {"name": "Heater"},
+            {"name": "Fan"},
             {"name": "SV"},
             {"name": "AT"},
             {"name": "Drum"},
-            {"name": "AH"},
-            {"name": "Heater %"},
-            {"name": "Fan %"}
+            {"name": "AH"}
           ],
           "controls": [
-            {"name": "Heater", "channel": "heater", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Fan", "channel": "fan", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Fan", "channel": "fan", "command": "kaleido(FC,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Drum", "channel": "drum", "command": "kaleido(RC,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Heater", "channel": "heater", "command": "kaleido(HP,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         }
       ]
@@ -878,7 +869,7 @@
           "id": "toper-plc",
           "name": "PLC",
           "protocol": "modbus_tcp",
-          "sampling_interval_ms": 2000,
+          "sampling_interval_ms": 1000,
           "connection": {
             "type": "modbus_tcp",
             "host": "192.168.137.90",
@@ -911,21 +902,21 @@
           "id": "arc-800",
           "name": "800",
           "protocol": "serial",
-          "sampling_interval_ms": 2000,
+          "sampling_interval_ms": 5000,
           "connection": {
             "type": "serial",
             "comport": "/dev/ttyUSB0",
-            "baudrate": 115200,
+            "baudrate": 9600,
             "bytesize": 8,
             "parity": "N",
             "stopbits": 1,
-            "timeout": 1.0
+            "timeout": 0.6
           },
-          "et": {"name": "ET"},
+          "et": {"name": "CT"},
           "bt": {"name": "BT"},
           "extra_channels": [
-            {"name": "MET"},
-            {"name": "IT"},
+            {"name": "Drum"},
+            {"name": "Inlet"},
             {"name": "AT"}
           ],
           "controls": []
@@ -945,13 +936,13 @@
           "connection": {
             "type": "serial",
             "comport": "/dev/ttyUSB0",
-            "baudrate": 115200,
+            "baudrate": 57600,
             "bytesize": 8,
             "parity": "N",
             "stopbits": 1,
-            "timeout": 1.0
+            "timeout": 0.5
           },
-          "et": {"name": "ET"},
+          "et": {"name": "CT"},
           "bt": {"name": "BT"},
           "controls": []
         }
