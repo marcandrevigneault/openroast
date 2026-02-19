@@ -118,4 +118,70 @@ describe("ChartOptionsMenu", () => {
     const updated = onchange.mock.calls[0][0] as ChartOptions;
     expect(updated.showControls.burner).toBe(true);
   });
+
+  it("hides control checkboxes when extra channel has same name", async () => {
+    const onchange = vi.fn();
+    // Extra channels that match control names — should suppress those controls
+    const overlappingExtras: ExtraChannelConfig[] = [
+      { name: "Burner" },
+      { name: "Drum" },
+    ];
+    render(ChartOptionsMenu, {
+      props: {
+        options: { ...DEFAULT_CHART_OPTIONS },
+        controls: TEST_CONTROLS,
+        extraChannels: overlappingExtras,
+        onchange,
+      },
+    });
+    await fireEvent.click(screen.getByLabelText("Chart options"));
+    // 4 base + 1 unique control (Airflow) + 2 extra channels = 7
+    expect(screen.getAllByRole("checkbox")).toHaveLength(7);
+    // Burner and Drum should appear once each (from extra channels), not twice
+    expect(screen.getAllByText("Burner")).toHaveLength(1);
+    expect(screen.getAllByText("Drum")).toHaveLength(1);
+    // Airflow has no matching extra channel — appears as control
+    expect(screen.getByText("Airflow")).toBeInTheDocument();
+  });
+
+  it("shows RoR Avg selector when RoR is enabled", async () => {
+    const onchange = vi.fn();
+    const opts: ChartOptions = {
+      ...DEFAULT_CHART_OPTIONS,
+      showETRor: true,
+    };
+    render(ChartOptionsMenu, {
+      props: { options: opts, onchange },
+    });
+    await fireEvent.click(screen.getByLabelText("Chart options"));
+    expect(screen.getByText("RoR Avg")).toBeInTheDocument();
+    const select = screen.getByRole("combobox");
+    expect(select).toBeInTheDocument();
+  });
+
+  it("hides RoR Avg selector when no RoR enabled", async () => {
+    const onchange = vi.fn();
+    render(ChartOptionsMenu, {
+      props: { options: { ...DEFAULT_CHART_OPTIONS }, onchange },
+    });
+    await fireEvent.click(screen.getByLabelText("Chart options"));
+    expect(screen.queryByText("RoR Avg")).not.toBeInTheDocument();
+  });
+
+  it("calls onchange with new rorSmoothing when selector changed", async () => {
+    const onchange = vi.fn();
+    const opts: ChartOptions = {
+      ...DEFAULT_CHART_OPTIONS,
+      showBTRor: true,
+    };
+    render(ChartOptionsMenu, {
+      props: { options: opts, onchange },
+    });
+    await fireEvent.click(screen.getByLabelText("Chart options"));
+    const select = screen.getByRole("combobox");
+    await fireEvent.change(select, { target: { value: "5" } });
+    expect(onchange).toHaveBeenCalledOnce();
+    const updated = onchange.mock.calls[0][0] as ChartOptions;
+    expect(updated.rorSmoothing).toBe(5);
+  });
 });

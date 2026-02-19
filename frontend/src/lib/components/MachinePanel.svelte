@@ -3,6 +3,7 @@
   import type { RoastEventType } from "$lib/types/ws-messages";
   import {
     createChartOptions,
+    smoothRor,
     type ChartOptions,
   } from "$lib/stores/chart-options";
   import TemperatureDisplay from "./TemperatureDisplay.svelte";
@@ -88,6 +89,24 @@
 
   let isRecording = $derived(machine.sessionState === "recording");
   let isConnected = $derived(machine.driverState === "connected");
+
+  // Smoothed RoR for the header temperature display
+  let smoothedHeaderEtRor = $derived(() => {
+    const w = effectiveOptions.rorSmoothing;
+    if (w <= 1 || machine.history.length === 0)
+      return machine.currentTemp?.et_ror ?? null;
+    const rors = machine.history.map((p) => p.et_ror);
+    const smoothed = smoothRor(rors, w);
+    return smoothed[smoothed.length - 1] ?? null;
+  });
+  let smoothedHeaderBtRor = $derived(() => {
+    const w = effectiveOptions.rorSmoothing;
+    if (w <= 1 || machine.history.length === 0)
+      return machine.currentTemp?.bt_ror ?? null;
+    const rors = machine.history.map((p) => p.bt_ror);
+    const smoothed = smoothRor(rors, w);
+    return smoothed[smoothed.length - 1] ?? null;
+  });
   let showSaveForm = $derived(
     machine.sessionState === "finished" && machine.history.length > 0 && !saved,
   );
@@ -113,14 +132,14 @@
         <TemperatureDisplay
           label="ET"
           value={machine.currentTemp?.et ?? null}
-          ror={machine.currentTemp?.et_ror ?? null}
+          ror={smoothedHeaderEtRor()}
           color="#ff7043"
           compact
         />
         <TemperatureDisplay
           label="BT"
           value={machine.currentTemp?.bt ?? null}
-          ror={machine.currentTemp?.bt_ror ?? null}
+          ror={smoothedHeaderBtRor()}
           color="#42a5f5"
           compact
         />

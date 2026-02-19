@@ -9,6 +9,7 @@
   import { formatTime } from "$lib/stores/machine";
   import {
     DEFAULT_CHART_OPTIONS,
+    smoothRor,
     type ChartOptions,
   } from "$lib/stores/chart-options";
 
@@ -102,17 +103,17 @@
       .join(" ");
   }
 
-  // Build SVG path for RoR (clamped to right Y-axis range)
+  // Build SVG path for RoR (clamped to right Y-axis range), using pre-smoothed values
   function buildRorPath(
     points: TemperaturePoint[],
-    accessor: (p: TemperaturePoint) => number,
+    smoothedValues: number[],
   ): string {
     if (points.length < 2) return "";
     return points
       .slice(1)
       .map((p, i) => {
         const x = xScale(p.timestamp_ms);
-        const val = Math.max(R_MIN, Math.min(R_MAX, accessor(p)));
+        const val = Math.max(R_MIN, Math.min(R_MAX, smoothedValues[i + 1]));
         const y = yScaleRight(val);
         return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
       })
@@ -186,21 +187,43 @@
     options.showBT ? buildTempPath(history, (p) => p.bt) : "",
   );
 
-  // RoR curves
-  let etRorPath = $derived(
-    options.showETRor ? buildRorPath(history, (p) => p.et_ror) : "",
+  // Smoothed RoR values
+  let smoothedEtRor = $derived(
+    smoothRor(
+      history.map((p) => p.et_ror),
+      options.rorSmoothing,
+    ),
   );
-  let btRorPath = $derived(
-    options.showBTRor ? buildRorPath(history, (p) => p.bt_ror) : "",
+  let smoothedBtRor = $derived(
+    smoothRor(
+      history.map((p) => p.bt_ror),
+      options.rorSmoothing,
+    ),
   );
 
-  // Dynamic control curves
+  // RoR curves
+  let etRorPath = $derived(
+    options.showETRor ? buildRorPath(history, smoothedEtRor) : "",
+  );
+  let btRorPath = $derived(
+    options.showBTRor ? buildRorPath(history, smoothedBtRor) : "",
+  );
+
+  // Filter out controls that have a matching extra channel (read-back already exists)
+  let uniqueControls = $derived(
+    controls.filter(
+      (ctrl) => !extraChannels.some((ch) => ch.name === ctrl.name),
+    ),
+  );
+
+  // Dynamic control curves (only for controls without a matching extra channel)
   let controlPaths = $derived(
-    controls
+    uniqueControls
       .filter((ctrl) => options.showControls[ctrl.channel])
       .map((ctrl) => ({
         path: buildDynamicControlPath(controlHistory, ctrl.channel, ctrl),
-        color: CONTROL_COLORS[controls.indexOf(ctrl) % CONTROL_COLORS.length],
+        color:
+          CONTROL_COLORS[uniqueControls.indexOf(ctrl) % CONTROL_COLORS.length],
         label: ctrl.name,
       })),
   );

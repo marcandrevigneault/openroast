@@ -17,6 +17,13 @@
   }: Props = $props();
   let open = $state(false);
 
+  // Filter out controls that already have a matching extra channel (same name = read-back exists)
+  let uniqueControls = $derived(
+    controls.filter(
+      (ctrl) => !extraChannels.some((ch) => ch.name === ctrl.name),
+    ),
+  );
+
   const CONTROL_COLORS = [
     "#ff7043",
     "#4fc3f7",
@@ -39,6 +46,12 @@
         [channel]: !options.showControls[channel],
       },
     });
+  }
+
+  const ROR_SMOOTHING_OPTIONS = [1, 3, 5, 7, 9];
+
+  function setRorSmoothing(value: number) {
+    onchange({ ...options, rorSmoothing: value });
   }
 
   function toggleExtraChannel(name: string) {
@@ -95,9 +108,26 @@
         </label>
       {/each}
 
-      {#if controls.length > 0}
+      {#if options.showETRor || options.showBTRor}
         <div class="section-divider"></div>
-        {#each controls as ctrl, i (ctrl.channel)}
+        <div class="smoothing-row">
+          <span class="option-label">RoR Avg</span>
+          <select
+            class="smoothing-select"
+            value={options.rorSmoothing}
+            onchange={(e) =>
+              setRorSmoothing(Number((e.target as HTMLSelectElement).value))}
+          >
+            {#each ROR_SMOOTHING_OPTIONS as n (n)}
+              <option value={n}>{n === 1 ? "Off" : String(n)}</option>
+            {/each}
+          </select>
+        </div>
+      {/if}
+
+      {#if uniqueControls.length > 0}
+        <div class="section-divider"></div>
+        {#each uniqueControls as ctrl, i (ctrl.channel)}
           <label class="option-row">
             <input
               type="checkbox"
@@ -203,5 +233,25 @@
 
   input[type="checkbox"] {
     accent-color: #4fc3f7;
+  }
+
+  .smoothing-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 4px;
+    font-size: 0.8rem;
+    color: #ccc;
+  }
+
+  .smoothing-select {
+    background: #12122a;
+    border: 1px solid #2a2a4a;
+    border-radius: 3px;
+    color: #ccc;
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    cursor: pointer;
   }
 </style>
