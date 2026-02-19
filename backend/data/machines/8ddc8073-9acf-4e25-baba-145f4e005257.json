@@ -1,0 +1,91 @@
+{
+  "id": "8ddc8073-9acf-4e25-baba-145f4e005257",
+  "name": "Stratto 2.0",
+  "catalog_manufacturer_id": "carmomaq",
+  "catalog_model_id": "carmomaq-stratto-2.0",
+  "protocol": "modbus_tcp",
+  "connection": {
+    "type": "modbus_tcp",
+    "host": "192.168.5.11",
+    "port": 502,
+    "baudrate": 19200,
+    "bytesize": 8,
+    "parity": "N",
+    "stopbits": 1,
+    "timeout": 1.0,
+    "word_order_little": true
+  },
+  "sampling_interval_ms": 3000,
+  "et": {
+    "name": "ET",
+    "modbus": {
+      "address": 43,
+      "code": 3,
+      "device_id": 1,
+      "divisor": 1,
+      "mode": "C",
+      "is_float": false,
+      "is_bcd": false
+    },
+    "s7": null
+  },
+  "bt": {
+    "name": "BT",
+    "modbus": {
+      "address": 44,
+      "code": 3,
+      "device_id": 1,
+      "divisor": 1,
+      "mode": "C",
+      "is_float": false,
+      "is_bcd": false
+    },
+    "s7": null
+  },
+  "extra_channels": [
+    {
+      "name": "Burner",
+      "modbus": null,
+      "s7": null
+    },
+    {
+      "name": "Drum",
+      "modbus": null,
+      "s7": null
+    },
+    {
+      "name": "Air",
+      "modbus": null,
+      "s7": null
+    }
+  ],
+  "controls": [
+    {
+      "name": "Air",
+      "channel": "air",
+      "command": "writeSingle(1,47,{})",
+      "min": 0.0,
+      "max": 120.0,
+      "step": 1.0,
+      "unit": ""
+    },
+    {
+      "name": "Drum",
+      "channel": "drum",
+      "command": "writeSingle(1,46,{})",
+      "min": 0.0,
+      "max": 120.0,
+      "step": 1.0,
+      "unit": ""
+    },
+    {
+      "name": "Burner",
+      "channel": "burner",
+      "command": "writeSingle(1,45,{})",
+      "min": 0.0,
+      "max": 100.0,
+      "step": 1.0,
+      "unit": "%"
+    }
+  ]
+}

@@ -21,14 +21,19 @@
   } from "$lib/services/machine-api";
   import type { ControlConfig, ExtraChannelConfig } from "$lib/stores/machine";
   import { WSClient } from "$lib/services/ws-client";
+  import { loadUIState, saveUIState } from "$lib/stores/persistence";
+  import type { ChartOptions } from "$lib/stores/chart-options";
   import MachinePanel from "$lib/components/MachinePanel.svelte";
   import DashboardToolbar from "$lib/components/DashboardToolbar.svelte";
   import CatalogSelector from "$lib/components/CatalogSelector.svelte";
+  import ToastContainer from "$lib/components/ToastContainer.svelte";
+  import { addToast } from "$lib/stores/toast";
 
   let dashboard = $state<DashboardState>(createDashboardState());
   let machineStates = new SvelteMap<string, MachineState>();
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive, side-effect only
   let wsClients = new Map<string, WSClient>();
+  let chartOptionsMap = $state<Record<string, ChartOptions>>({});
 
   let showAddDialog = $state(false);
 
@@ -102,13 +107,14 @@
       const client = createWSClient(id);
       client.connect();
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Connection failed";
       const current = machineStates.get(id);
       if (current) {
         machineStates.set(id, {
           ...current,
-          error: e instanceof Error ? e.message : "Connection failed",
           driverState: "error",
         });
+        addToast(msg, "error", current.machineName);
       }
     }
   }
@@ -137,13 +143,14 @@
       const client = createWSClient(id);
       client.connect();
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Connection failed";
       const state = machineStates.get(id);
       if (state) {
         machineStates.set(id, {
           ...state,
-          error: e instanceof Error ? e.message : "Connection failed",
           driverState: "error",
         });
+        addToast(msg, "error", state.machineName);
       }
     }
   }
@@ -167,8 +174,22 @@
     dashboard = removeMachine(dashboard, id);
   }
 
+  function persistState() {
+    saveUIState({
+      version: 2,
+      layout: dashboard.layout,
+      chartOptions: chartOptionsMap,
+    });
+  }
+
   function handleLayoutChange(layout: Partial<LayoutConfig>) {
     dashboard = updateLayout(dashboard, layout);
+    persistState();
+  }
+
+  function handleChartOptionsChange(id: string, options: ChartOptions) {
+    chartOptionsMap = { ...chartOptionsMap, [id]: options };
+    persistState();
   }
 
   function handleStart(id: string) {
@@ -285,6 +306,12 @@
   }
 
   onMount(() => {
+    // Restore persisted UI state
+    const saved = loadUIState();
+    if (saved) {
+      dashboard = updateLayout(dashboard, saved.layout);
+      chartOptionsMap = saved.chartOptions ?? {};
+    }
     loadSavedMachines();
   });
 
@@ -294,6 +321,8 @@
     }
   });
 </script>
+
+<ToastContainer />
 
 <div class="dashboard">
   <DashboardToolbar
@@ -309,12 +338,14 @@
       {#if state}
         <MachinePanel
           machine={state}
+          chartOptions={chartOptionsMap[m.id]}
           onstart={() => handleStart(m.id)}
           onstop={() => handleStop(m.id)}
           onrecord={() => handleRecord(m.id)}
           onstoprecord={() => handleStopRecord(m.id)}
           onmark={(eventType) => handleMark(m.id, eventType)}
           oncontrol={(channel, value) => handleControl(m.id, channel, value)}
+          onchartoptionschange={(opts) => handleChartOptionsChange(m.id, opts)}
           onretry={() => handleRetryConnection(m.id)}
           onsettingssaved={(machine) => handleSettingsSaved(m.id, machine)}
           onremove={() => handleRemoveMachine(m.id)}

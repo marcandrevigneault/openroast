@@ -44,6 +44,30 @@ const MOCK_MACHINE: SavedMachine = {
       },
     },
   ],
+  et: {
+    name: "ET",
+    modbus: {
+      address: 44,
+      code: 3,
+      device_id: 1,
+      divisor: 1,
+      mode: "C",
+      is_float: false,
+      is_bcd: false,
+    },
+  },
+  bt: {
+    name: "BT",
+    modbus: {
+      address: 43,
+      code: 3,
+      device_id: 1,
+      divisor: 1,
+      mode: "C",
+      is_float: false,
+      is_bcd: false,
+    },
+  },
 };
 
 describe("MachineSettingsPanel", () => {
@@ -95,7 +119,7 @@ describe("MachineSettingsPanel", () => {
     renderOpen();
     await screen.findByDisplayValue("Test Roaster");
     expect(screen.getByText("General")).toBeInTheDocument();
-    // "Name" appears in General section and Controls card
+    // "Name" appears in multiple sections
     expect(screen.getAllByText("Name").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Protocol")).toBeInTheDocument();
   });
@@ -108,6 +132,33 @@ describe("MachineSettingsPanel", () => {
     expect(screen.getByText("Port")).toBeInTheDocument();
   });
 
+  it("shows Sensors section with BT and ET", async () => {
+    renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    expect(screen.getByText("Sensors")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("BT")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("ET")).toBeInTheDocument();
+  });
+
+  it("shows BT modbus register config", async () => {
+    renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    // BT address=43, ET address=44
+    expect(screen.getByDisplayValue("43")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("44")).toBeInTheDocument();
+  });
+
+  it("shows sensor register fields for modbus protocol", async () => {
+    renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    // "Address" labels (BT, ET, Inlet = 3 total)
+    const addressLabels = screen.getAllByText("Address");
+    expect(addressLabels.length).toBe(3);
+    // "Fn Code" labels
+    const fnCodeLabels = screen.getAllByText("Fn Code");
+    expect(fnCodeLabels.length).toBe(3);
+  });
+
   it("shows Controls section with existing controls", async () => {
     renderOpen();
     await screen.findByDisplayValue("Test Roaster");
@@ -116,11 +167,22 @@ describe("MachineSettingsPanel", () => {
     expect(screen.getByDisplayValue("burner")).toBeInTheDocument();
   });
 
-  it("shows Extra Channels section", async () => {
+  it("shows Extra Channels section with register config", async () => {
     renderOpen();
     await screen.findByDisplayValue("Test Roaster");
     expect(screen.getByText("Extra Channels")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Inlet")).toBeInTheDocument();
+    // Inlet address=48
+    expect(screen.getByDisplayValue("48")).toBeInTheDocument();
+  });
+
+  it("shows section dividers", async () => {
+    renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    const { container } = renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    const dividers = container.querySelectorAll(".section-divider");
+    expect(dividers.length).toBeGreaterThanOrEqual(3);
   });
 
   it("calls updateMachine and onsaved on save", async () => {
@@ -154,6 +216,22 @@ describe("MachineSettingsPanel", () => {
     expect(savedChannel.modbus).toEqual(
       expect.objectContaining({ address: 48, code: 3 }),
     );
+  });
+
+  it("preserves BT/ET sensor config on save", async () => {
+    mockUpdateMachine.mockResolvedValue(MOCK_MACHINE);
+
+    renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    await fireEvent.click(screen.getByText("Save"));
+
+    const savedMachine = mockUpdateMachine.mock.calls[0][1] as SavedMachine;
+    const bt = savedMachine.bt as Record<string, unknown>;
+    const et = savedMachine.et as Record<string, unknown>;
+    expect(bt.name).toBe("BT");
+    expect((bt.modbus as Record<string, unknown>).address).toBe(43);
+    expect(et.name).toBe("ET");
+    expect((et.modbus as Record<string, unknown>).address).toBe(44);
   });
 
   it("disables Save button when name is empty", async () => {
@@ -209,7 +287,7 @@ describe("MachineSettingsPanel", () => {
     expect(channelLabels.length).toBe(2);
   });
 
-  it("adds a new extra channel when + Add clicked", async () => {
+  it("adds a new extra channel with register config for modbus", async () => {
     renderOpen();
     await screen.findByDisplayValue("Test Roaster");
 
@@ -217,9 +295,9 @@ describe("MachineSettingsPanel", () => {
     // Second "+ Add" is for Extra Channels
     await fireEvent.click(addButtons[1]);
 
-    // All extra channel inputs have placeholder attr; existing "Inlet" + new empty one
-    const placeholders = screen.getAllByPlaceholderText("Channel name");
-    expect(placeholders.length).toBe(2);
+    // New modbus channel gets register config fields — now 4 Address labels (BT, ET, Inlet, new)
+    const addressLabels = screen.getAllByText("Address");
+    expect(addressLabels.length).toBe(4);
   });
 
   it("shows Serial Port / Baudrate for serial protocol", async () => {
@@ -227,10 +305,45 @@ describe("MachineSettingsPanel", () => {
       ...MOCK_MACHINE,
       protocol: "serial",
       connection: { type: "serial", comport: "/dev/ttyUSB0", baudrate: 115200 },
+      et: { name: "ET" },
+      bt: { name: "BT" },
+      extra_channels: [{ name: "Heater" }],
     });
     renderOpen();
     await screen.findByDisplayValue("/dev/ttyUSB0");
     expect(screen.getByText("Serial Port")).toBeInTheDocument();
     expect(screen.getByText("Baudrate")).toBeInTheDocument();
+    // Should NOT show Address labels for serial protocol
+    expect(screen.queryAllByText("Address")).toHaveLength(0);
+  });
+
+  it("shows S7 register fields for s7 protocol", async () => {
+    mockGetMachine.mockResolvedValue({
+      ...MOCK_MACHINE,
+      protocol: "s7",
+      connection: { type: "s7", host: "192.168.1.10", port: 102 },
+      et: {
+        name: "ET",
+        s7: { area: 6, db_nr: 2, start: 36, type: 0, mode: 1, div: 0 },
+      },
+      bt: {
+        name: "BT",
+        s7: { area: 6, db_nr: 2, start: 38, type: 0, mode: 1, div: 0 },
+      },
+      extra_channels: [
+        {
+          name: "Exhaust",
+          s7: { area: 6, db_nr: 2, start: 48, type: 0, mode: 0, div: 0 },
+        },
+      ],
+    });
+    renderOpen();
+    await screen.findByDisplayValue("Test Roaster");
+    // Should show S7 fields: DB Nr, Start, Area, Div
+    expect(screen.getAllByText("DB Nr").length).toBe(3); // BT, ET, Exhaust
+    expect(screen.getAllByText("Start").length).toBe(3);
+    expect(screen.getAllByText("Area").length).toBe(3);
+    // Should NOT show Modbus Address labels
+    expect(screen.queryAllByText("Address")).toHaveLength(0);
   });
 });
