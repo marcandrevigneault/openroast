@@ -3,11 +3,10 @@
  * and how they are laid out.
  */
 
-export type LayoutMode = "grid" | "horizontal" | "vertical";
+export type LayoutMode = "vertical" | "side-by-side";
 
 export interface LayoutConfig {
   mode: LayoutMode;
-  columns: number; // 1–4, relevant in grid mode
 }
 
 export interface DashboardMachine {
@@ -21,8 +20,7 @@ export interface DashboardState {
 }
 
 export const DEFAULT_LAYOUT: LayoutConfig = {
-  mode: "grid",
-  columns: 2,
+  mode: "vertical",
 };
 
 export function createDashboardState(): DashboardState {

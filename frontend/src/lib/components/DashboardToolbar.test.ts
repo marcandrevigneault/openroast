@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/svelte";
 import DashboardToolbar from "./DashboardToolbar.svelte";
 import type { LayoutConfig } from "$lib/stores/dashboard";
 
-const defaultLayout: LayoutConfig = { mode: "grid", columns: 2 };
+const defaultLayout: LayoutConfig = { mode: "vertical" };
 
 describe("DashboardToolbar", () => {
   it("renders Add Machine button", () => {
@@ -41,15 +41,14 @@ describe("DashboardToolbar", () => {
         onlayoutchange: () => {},
       },
     });
-    expect(screen.getByTitle("Grid")).toBeInTheDocument();
-    expect(screen.getByTitle("Side by side")).toBeInTheDocument();
     expect(screen.getByTitle("Stacked")).toBeInTheDocument();
+    expect(screen.getByTitle("Side by side")).toBeInTheDocument();
   });
 
   it("highlights active layout mode", () => {
     const { container } = render(DashboardToolbar, {
       props: {
-        layout: { mode: "vertical", columns: 2 },
+        layout: { mode: "vertical" },
         machineCount: 1,
         onaddmachine: () => {},
         onlayoutchange: () => {},
@@ -70,32 +69,8 @@ describe("DashboardToolbar", () => {
         onlayoutchange,
       },
     });
-    await fireEvent.click(screen.getByTitle("Stacked"));
-    expect(onlayoutchange).toHaveBeenCalledWith({ mode: "vertical" });
-  });
-
-  it("shows column selector in grid mode", () => {
-    const { container } = render(DashboardToolbar, {
-      props: {
-        layout: { mode: "grid", columns: 2 },
-        machineCount: 1,
-        onaddmachine: () => {},
-        onlayoutchange: () => {},
-      },
-    });
-    expect(container.querySelector(".col-select")).toBeTruthy();
-  });
-
-  it("hides column selector in non-grid mode", () => {
-    const { container } = render(DashboardToolbar, {
-      props: {
-        layout: { mode: "horizontal", columns: 2 },
-        machineCount: 1,
-        onaddmachine: () => {},
-        onlayoutchange: () => {},
-      },
-    });
-    expect(container.querySelector(".col-select")).toBeFalsy();
+    await fireEvent.click(screen.getByTitle("Side by side"));
+    expect(onlayoutchange).toHaveBeenCalledWith({ mode: "side-by-side" });
   });
 
   it("displays machine count singular", () => {

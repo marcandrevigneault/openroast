@@ -32,14 +32,11 @@
 
   let showAddDialog = $state(false);
 
-  let gridStyle = $derived.by(() => {
-    const { mode, columns } = dashboard.layout;
-    if (mode === "grid")
-      return `grid-template-columns: repeat(${columns}, 1fr)`;
-    if (mode === "horizontal")
-      return "grid-template-columns: repeat(auto-fit, minmax(500px, 1fr))";
-    return "grid-template-columns: 1fr";
-  });
+  let gridStyle = $derived(
+    dashboard.layout.mode === "side-by-side"
+      ? "grid-template-columns: repeat(2, 1fr)"
+      : "grid-template-columns: 1fr",
+  );
 
   function createWSClient(machineId: string): WSClient {
     const client = new WSClient(machineId, {
