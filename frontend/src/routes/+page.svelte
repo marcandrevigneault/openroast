@@ -19,6 +19,7 @@
     getMachine,
     type SavedMachine,
   } from "$lib/services/machine-api";
+  import type { ControlConfig, ExtraChannelConfig } from "$lib/stores/machine";
   import { WSClient } from "$lib/services/ws-client";
   import MachinePanel from "$lib/components/MachinePanel.svelte";
   import DashboardToolbar from "$lib/components/DashboardToolbar.svelte";
@@ -177,6 +178,34 @@
     }
   }
 
+  function handleSettingsSaved(id: string, machine: SavedMachine) {
+    const current = machineStates.get(id);
+    if (!current) return;
+
+    const newControls: ControlConfig[] = toControlConfigs(machine);
+    const newExtraChannels: ExtraChannelConfig[] =
+      toExtraChannelConfigs(machine);
+
+    // Update machine state with new config
+    machineStates.set(id, {
+      ...current,
+      machineName: machine.name,
+      controls: newControls,
+      extraChannels: newExtraChannels,
+    });
+
+    // Update dashboard name
+    const dm = dashboard.machines.find((m) => m.id === id);
+    if (dm && dm.name !== machine.name) {
+      dashboard = {
+        ...dashboard,
+        machines: dashboard.machines.map((m) =>
+          m.id === id ? { ...m, name: machine.name } : m,
+        ),
+      };
+    }
+  }
+
   function handleControl(id: string, channel: string, value: number) {
     const client = wsClients.get(id);
     if (!client) return;
@@ -254,6 +283,7 @@
           onstoprecord={() => handleStopRecord(m.id)}
           onmark={(eventType) => handleMark(m.id, eventType)}
           oncontrol={(channel, value) => handleControl(m.id, channel, value)}
+          onsettingssaved={(machine) => handleSettingsSaved(m.id, machine)}
           onremove={() => handleRemoveMachine(m.id)}
         />
       {/if}
