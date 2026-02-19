@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/svelte";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/svelte";
 import MachinePanel from "./MachinePanel.svelte";
 import { createInitialState, type MachineState } from "$lib/stores/machine";
 
@@ -122,5 +122,28 @@ describe("MachinePanel", () => {
     sliders.forEach((slider) => {
       expect(slider).not.toBeDisabled();
     });
+  });
+
+  it("shows remove button when onremove provided", () => {
+    render(MachinePanel, {
+      props: { machine: makeMachine(), onremove: () => {} },
+    });
+    expect(screen.getByTitle("Remove machine")).toBeInTheDocument();
+  });
+
+  it("hides remove button when onremove not provided", () => {
+    render(MachinePanel, {
+      props: { machine: makeMachine() },
+    });
+    expect(screen.queryByTitle("Remove machine")).not.toBeInTheDocument();
+  });
+
+  it("calls onremove when remove button clicked", async () => {
+    const onremove = vi.fn();
+    render(MachinePanel, {
+      props: { machine: makeMachine(), onremove },
+    });
+    await fireEvent.click(screen.getByTitle("Remove machine"));
+    expect(onremove).toHaveBeenCalledOnce();
   });
 });
