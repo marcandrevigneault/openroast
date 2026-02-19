@@ -92,7 +92,7 @@ class SimulatorManager:
             machine_id=machine_id,
             catalog_id=model.id,
             manufacturer_id=manufacturer_id,
-            name=f"{model.name} (Simulator)",
+            name=model.name,
             port=port,
             host=host,
         )
@@ -170,7 +170,7 @@ class SimulatorManager:
             )
 
         machine = SavedMachine(
-            name=f"{model.name} (Simulator)",
+            name=model.name,
             catalog_manufacturer_id=manufacturer_id,
             catalog_model_id=model.id,
             protocol=model.protocol,
