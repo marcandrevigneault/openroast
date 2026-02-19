@@ -3,30 +3,31 @@
   import { SvelteMap } from "svelte/reactivity";
   import type { MachineState } from "$lib/stores/machine";
   import { createInitialState, processMessage } from "$lib/stores/machine";
-  import type { RoastEventType } from "$lib/types/ws-messages";
-  import { generateDemoPoints } from "$lib/stores/demo";
+  import type { RoastEventType, ServerMessage } from "$lib/types/ws-messages";
   import {
     createDashboardState,
     addMachine,
     removeMachine,
     updateLayout,
-    generateMachineId,
     type DashboardState,
     type LayoutConfig,
   } from "$lib/stores/dashboard";
+  import {
+    listMachines,
+    connectMachine,
+    disconnectMachine,
+    getMachine,
+    type SavedMachine,
+  } from "$lib/services/machine-api";
+  import { WSClient } from "$lib/services/ws-client";
   import MachinePanel from "$lib/components/MachinePanel.svelte";
   import DashboardToolbar from "$lib/components/DashboardToolbar.svelte";
-  import AddMachineDialog from "$lib/components/AddMachineDialog.svelte";
+  import CatalogSelector from "$lib/components/CatalogSelector.svelte";
 
   let dashboard = $state<DashboardState>(createDashboardState());
   let machineStates = new SvelteMap<string, MachineState>();
-  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive, used for side-effects only
-  let timers = new Map<string, ReturnType<typeof setInterval>>();
-  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive, used for side-effects only
-  let demoData = new Map<
-    string,
-    { points: ReturnType<typeof generateDemoPoints>; index: number }
-  >();
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive, side-effect only
+  let wsClients = new Map<string, WSClient>();
 
   let showAddDialog = $state(false);
 
@@ -39,82 +40,72 @@
     return "grid-template-columns: 1fr";
   });
 
-  function startDemoForMachine(id: string) {
-    const points = generateDemoPoints(600);
-    demoData.set(id, { points, index: 0 });
-
-    const state = machineStates.get(id);
-    if (!state) return;
-
-    machineStates.set(id, {
-      ...state,
-      sessionState: "monitoring",
-      driverState: "connected",
-      history: [],
-      events: [],
-      currentTemp: null,
-      error: null,
+  function createWSClient(machineId: string): WSClient {
+    const client = new WSClient(machineId, {
+      onMessage: (msg: ServerMessage) => {
+        const current = machineStates.get(machineId);
+        if (!current) return;
+        machineStates.set(machineId, processMessage(current, msg));
+      },
+      onStateChange: (wsState) => {
+        const current = machineStates.get(machineId);
+        if (!current) return;
+        // Map WSClient state to driver state
+        const driverState =
+          wsState === "connected"
+            ? "connected"
+            : wsState === "connecting"
+              ? "connecting"
+              : wsState === "error"
+                ? "error"
+                : "disconnected";
+        if (current.driverState !== driverState) {
+          machineStates.set(machineId, { ...current, driverState });
+        }
+      },
     });
+    wsClients.set(machineId, client);
+    return client;
+  }
 
-    const timer = setInterval(() => {
-      const demo = demoData.get(id);
+  async function handleAddMachine(machine: SavedMachine) {
+    const id = machine.id;
+    dashboard = addMachine(dashboard, { id, name: machine.name });
+    machineStates.set(id, createInitialState(id, machine.name));
+
+    // Connect to the machine and start WebSocket
+    try {
+      await connectMachine(id);
+      const client = createWSClient(id);
+      client.connect();
+    } catch (e) {
       const current = machineStates.get(id);
-      if (!demo || !current) return;
-
-      if (demo.index >= demo.points.length) {
-        stopDemoForMachine(id);
-        return;
+      if (current) {
+        machineStates.set(id, {
+          ...current,
+          error: e instanceof Error ? e.message : "Connection failed",
+          driverState: "error",
+        });
       }
-
-      const point = demo.points[demo.index];
-      const updated = processMessage(current, {
-        type: "temperature",
-        timestamp_ms: point.timestamp_ms,
-        et: point.et,
-        bt: point.bt,
-        et_ror: point.et_ror,
-        bt_ror: point.bt_ror,
-        extra_channels: {},
-      });
-      demo.index++;
-      machineStates.set(id, updated);
-    }, 100);
-
-    timers.set(id, timer);
-  }
-
-  function stopDemoForMachine(id: string) {
-    const timer = timers.get(id);
-    if (timer) {
-      clearInterval(timer);
-      timers.delete(id);
-    }
-    const current = machineStates.get(id);
-    if (current) {
-      machineStates.set(
-        id,
-        processMessage(current, {
-          type: "state",
-          state: "finished",
-          previous_state: current.sessionState,
-        }),
-      );
     }
   }
 
-  function handleAddMachine(name: string) {
-    const id = generateMachineId();
-    dashboard = addMachine(dashboard, { id, name });
-    machineStates.set(id, createInitialState(id, name));
+  async function handleRemoveMachine(id: string) {
+    // Disconnect WebSocket
+    const client = wsClients.get(id);
+    if (client) {
+      client.disconnect();
+      wsClients.delete(id);
+    }
 
-    startDemoForMachine(id);
-  }
+    // Disconnect machine from backend
+    try {
+      await disconnectMachine(id);
+    } catch {
+      // Best-effort disconnect
+    }
 
-  function handleRemoveMachine(id: string) {
-    stopDemoForMachine(id);
-    demoData.delete(id);
     machineStates.delete(id);
-
     dashboard = removeMachine(dashboard, id);
   }
 
@@ -123,59 +114,86 @@
   }
 
   function handleStart(id: string) {
-    startDemoForMachine(id);
+    const client = wsClients.get(id);
+    if (client) {
+      client.send({ type: "command", action: "start_monitoring" });
+    }
   }
 
   function handleStop(id: string) {
-    stopDemoForMachine(id);
+    const client = wsClients.get(id);
+    if (client) {
+      client.send({ type: "command", action: "stop_recording" });
+    }
   }
 
   function handleRecord(id: string) {
-    const current = machineStates.get(id);
-    if (!current) return;
-    machineStates.set(
-      id,
-      processMessage(current, {
-        type: "state",
-        state: "recording",
-        previous_state: "monitoring",
-      }),
-    );
+    const client = wsClients.get(id);
+    if (client) {
+      client.send({ type: "command", action: "start_recording" });
+    }
   }
 
   function handleStopRecord(id: string) {
-    stopDemoForMachine(id);
+    const client = wsClients.get(id);
+    if (client) {
+      client.send({ type: "command", action: "stop_recording" });
+    }
   }
 
   function handleMark(id: string, eventType: RoastEventType) {
-    const current = machineStates.get(id);
-    if (!current?.currentTemp) return;
-    const lastPoint = current.currentTemp;
-    machineStates.set(
-      id,
-      processMessage(current, {
-        type: "event",
+    const client = wsClients.get(id);
+    if (client) {
+      client.send({
+        type: "command",
+        action: "mark_event",
         event_type: eventType,
-        timestamp_ms: lastPoint.timestamp_ms,
-        auto_detected: false,
-        bt_at_event: lastPoint.bt,
-        et_at_event: lastPoint.et,
-      }),
-    );
+      });
+    }
   }
 
   function handleControl(id: string, channel: string, value: number) {
-    console.log(`Machine ${id} — Control: ${channel} = ${value}`);
+    const client = wsClients.get(id);
+    if (client) {
+      // Normalize 0-100 slider value to 0.0-1.0
+      client.send({
+        type: "control",
+        channel,
+        value: value / 100,
+      });
+    }
+  }
+
+  async function loadSavedMachines() {
+    try {
+      const machines = await listMachines();
+      for (const summary of machines) {
+        try {
+          const machine = await getMachine(summary.id);
+          dashboard = addMachine(dashboard, {
+            id: machine.id,
+            name: machine.name,
+          });
+          machineStates.set(
+            machine.id,
+            createInitialState(machine.id, machine.name),
+          );
+        } catch {
+          // Skip machines we can't load
+        }
+      }
+    } catch {
+      // Backend not available — that's OK, user can add machines later
+    }
   }
 
   onMount(() => {
-    // Start with one demo machine
-    handleAddMachine("Stratto Pro 300");
+    loadSavedMachines();
   });
 
   onDestroy(() => {
-    for (const timer of timers.values()) {
-      clearInterval(timer);
+    for (const client of wsClients.values()) {
+      client.disconnect();
     }
   });
 </script>
@@ -215,7 +233,7 @@
     </div>
   {/if}
 
-  <AddMachineDialog
+  <CatalogSelector
     open={showAddDialog}
     onadd={handleAddMachine}
     onclose={() => (showAddDialog = false)}
