@@ -7,15 +7,18 @@ from typing import TYPE_CHECKING
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from openroast.models.profile import RoastProfile  # noqa: TC001 — needed at runtime for Pydantic
+from openroast.models.machine import SavedMachine
+from openroast.models.profile import RoastProfile  # noqa: TC001
 
 if TYPE_CHECKING:
+    from openroast.core.machine_storage import MachineStorage
     from openroast.core.storage import ProfileStorage
 
 router = APIRouter()
 
-# Storage instance — set by init_storage() at startup
+# Storage instances — set by init_*() at startup
 _storage: ProfileStorage | None = None
+_machine_storage: MachineStorage | None = None
 
 
 def init_storage(storage: ProfileStorage) -> None:
@@ -24,24 +27,148 @@ def init_storage(storage: ProfileStorage) -> None:
     _storage = storage
 
 
+def init_machine_storage(storage: MachineStorage) -> None:
+    """Configure the machine storage backend."""
+    global _machine_storage
+    _machine_storage = storage
+
+
 def _get_storage() -> ProfileStorage:
     if _storage is None:
         raise RuntimeError("Storage not initialised")
     return _storage
 
 
-# --- Machines (stub) ---
+def _get_machine_storage() -> MachineStorage:
+    if _machine_storage is None:
+        raise RuntimeError("Machine storage not initialised")
+    return _machine_storage
+
+
+# --- Catalog (read-only) ---
+
+
+@router.get("/catalog/manufacturers")
+async def list_manufacturers() -> list[dict]:
+    """List all manufacturers from the static catalog."""
+    from openroast.catalog.loader import get_manufacturers
+
+    return [
+        {"id": m.id, "name": m.name, "country": m.country, "model_count": len(m.models)}
+        for m in get_manufacturers()
+    ]
+
+
+@router.get("/catalog/manufacturers/{manufacturer_id}/models")
+async def list_manufacturer_models(manufacturer_id: str) -> list[dict]:
+    """List models for a specific manufacturer."""
+    from openroast.catalog.loader import get_manufacturer
+
+    mfr = get_manufacturer(manufacturer_id)
+    if mfr is None:
+        raise HTTPException(status_code=404, detail="Manufacturer not found")
+    return [m.model_dump() for m in mfr.models]
+
+
+@router.get("/catalog/manufacturers/{manufacturer_id}/models/{model_id}")
+async def get_catalog_model(manufacturer_id: str, model_id: str) -> dict:
+    """Get a specific catalog model."""
+    from openroast.catalog.loader import get_model
+
+    model = get_model(manufacturer_id, model_id)
+    if model is None:
+        raise HTTPException(status_code=404, detail="Model not found")
+    return model.model_dump()
+
+
+# --- Machines CRUD ---
+
+
+class CreateMachineFromCatalogRequest(BaseModel):
+    """Request body for creating a machine from a catalog entry."""
+
+    manufacturer_id: str
+    model_id: str
+    name: str | None = None
+
 
 @router.get("/machines")
 async def list_machines() -> list[dict]:
-    """List configured roasting machines."""
-    return []
+    """List saved machine configurations."""
+    storage = _get_machine_storage()
+    return storage.list_all()
+
+
+@router.post("/machines", status_code=201)
+async def create_machine(machine: SavedMachine) -> dict:
+    """Save a new machine configuration."""
+    storage = _get_machine_storage()
+    machine_id = storage.save(machine)
+    return {"id": machine_id}
+
+
+@router.post("/machines/from-catalog", status_code=201)
+async def create_machine_from_catalog(req: CreateMachineFromCatalogRequest) -> dict:
+    """Create a machine from a catalog entry with default settings."""
+    from openroast.catalog.loader import get_model
+
+    model = get_model(req.manufacturer_id, req.model_id)
+    if model is None:
+        raise HTTPException(status_code=404, detail="Catalog model not found")
+
+    machine = SavedMachine(
+        name=req.name or model.name,
+        catalog_manufacturer_id=req.manufacturer_id,
+        catalog_model_id=req.model_id,
+        protocol=model.protocol,
+        connection=model.connection,
+        sampling_interval_ms=model.sampling_interval_ms,
+        et=model.et,
+        bt=model.bt,
+        extra_channels=model.extra_channels,
+        controls=model.controls,
+    )
+    storage = _get_machine_storage()
+    machine_id = storage.save(machine)
+    return {"id": machine_id, "machine": machine.model_dump()}
+
+
+@router.get("/machines/{machine_id}")
+async def get_machine(machine_id: str) -> SavedMachine:
+    """Get a saved machine by ID."""
+    storage = _get_machine_storage()
+    machine = storage.get(machine_id)
+    if machine is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+    return machine
+
+
+@router.put("/machines/{machine_id}")
+async def update_machine(machine_id: str, machine: SavedMachine) -> SavedMachine:
+    """Update a saved machine configuration."""
+    storage = _get_machine_storage()
+    existing = storage.get(machine_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Machine not found")
+    machine.id = machine_id
+    storage.save(machine)
+    return machine
+
+
+@router.delete("/machines/{machine_id}", status_code=204)
+async def delete_machine(machine_id: str) -> None:
+    """Delete a saved machine."""
+    storage = _get_machine_storage()
+    if not storage.delete(machine_id):
+        raise HTTPException(status_code=404, detail="Machine not found")
 
 
 # --- Profiles CRUD ---
 
+
 class SaveProfileRequest(BaseModel):
     """Request body for saving a profile."""
+
     profile: RoastProfile
     name: str | None = None
     bean_name: str | None = None
