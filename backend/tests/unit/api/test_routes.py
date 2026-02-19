@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -10,8 +11,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 from httpx import ASGITransport, AsyncClient
 
-from openroast.api.routes import init_machine_storage, init_storage
+from openroast.api.routes import init_machine_storage, init_manager, init_storage
 from openroast.core.machine_storage import MachineStorage
+from openroast.core.manager import MachineManager
 from openroast.core.storage import ProfileStorage
 from openroast.main import app
 
@@ -19,8 +21,10 @@ from openroast.main import app
 @pytest.fixture(autouse=True)
 def _setup_storage(tmp_path: Path) -> None:
     """Use a temp directory for storage in all tests."""
+    storage = MachineStorage(tmp_path / "machines")
     init_storage(ProfileStorage(tmp_path / "profiles"))
-    init_machine_storage(MachineStorage(tmp_path / "machines"))
+    init_machine_storage(storage)
+    init_manager(MachineManager(storage))
 
 
 @pytest.fixture
@@ -331,3 +335,85 @@ class TestProfilesEndpoint:
 
         resp = await client.get(f"/api/profiles/{profile_id}")
         assert resp.json()["name"] == "Override Name"
+
+
+# --- Machine Connection Endpoints ---
+
+
+class TestMachineConnect:
+    """Tests for machine connect/disconnect/status endpoints."""
+
+    async def test_connect_nonexistent_machine(self, client: AsyncClient) -> None:
+        resp = await client.post("/api/machines/nonexistent/connect")
+        assert resp.status_code == 404
+
+    async def test_disconnect_nonexistent_is_ok(self, client: AsyncClient) -> None:
+        """Disconnecting a machine that isn't connected is idempotent."""
+        resp = await client.post("/api/machines/nonexistent/disconnect")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "disconnected"
+
+    async def test_status_not_connected(self, client: AsyncClient) -> None:
+        """Status of a machine that isn't connected returns disconnected."""
+        resp = await client.get("/api/machines/some-id/status")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["connected"] is False
+        assert body["driver_state"] == "disconnected"
+        assert body["session_state"] == "idle"
+
+    async def test_connect_with_mock_manager(self, client: AsyncClient) -> None:
+        """Connect succeeds when manager.connect_machine doesn't raise."""
+        # Create a machine first
+        payload = {
+            "manufacturer_id": "carmomaq",
+            "model_id": "carmomaq-stratto-2.0",
+            "name": "Test Stratto",
+        }
+        create_resp = await client.post("/api/machines/from-catalog", json=payload)
+        machine_id = create_resp.json()["id"]
+
+        # Inject a mock manager that doesn't need real hardware
+        mock_manager = MagicMock(spec=MachineManager)
+        mock_manager.connect_machine = AsyncMock()
+        mock_manager.disconnect_machine = AsyncMock()
+        init_manager(mock_manager)
+
+        resp = await client.post(f"/api/machines/{machine_id}/connect")
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "connected"
+        mock_manager.connect_machine.assert_called_once_with(machine_id)
+
+    async def test_connect_driver_failure(self, client: AsyncClient) -> None:
+        """Connect returns 502 when driver can't connect."""
+        mock_manager = MagicMock(spec=MachineManager)
+        mock_manager.connect_machine = AsyncMock(
+            side_effect=ConnectionError("Cannot reach device"),
+        )
+        init_manager(mock_manager)
+
+        resp = await client.post("/api/machines/some-id/connect")
+        assert resp.status_code == 502
+        assert "Cannot reach device" in resp.json()["detail"]
+
+    async def test_status_connected_machine(self, client: AsyncClient) -> None:
+        """Status returns connected info when machine is active."""
+        from openroast.core.session import RoastSession
+        from openroast.drivers.base import ConnectionState
+
+        mock_instance = MagicMock()
+        mock_driver = MagicMock()
+        mock_driver.state = ConnectionState.CONNECTED
+        mock_instance.driver = mock_driver
+        mock_instance.session = RoastSession(machine_name="Test")
+
+        mock_manager = MagicMock(spec=MachineManager)
+        mock_manager.get_instance.return_value = mock_instance
+        init_manager(mock_manager)
+
+        resp = await client.get("/api/machines/test-id/status")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["connected"] is True
+        assert body["driver_state"] == "connected"
+        assert body["session_state"] == "idle"

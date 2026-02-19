@@ -93,7 +93,9 @@ class BaseDriver(ABC):
 
         Args:
             channel: Control channel name (e.g., "burner", "airflow", "fan").
-            value: Normalized value 0.0-1.0.
+            value: Value in the control's native units (e.g., 0-100 for percentage,
+                35-60 for Hz). The caller (MachineManager) is responsible for
+                scaling from normalized 0.0-1.0 to native range.
 
         Raises:
             NotImplementedError: If the driver does not support control output.
