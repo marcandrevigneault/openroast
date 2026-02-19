@@ -127,7 +127,7 @@
 
       {#if uniqueControls.length > 0}
         <div class="section-divider"></div>
-        {#each uniqueControls as ctrl, i (ctrl.channel)}
+        {#each uniqueControls as ctrl (ctrl.channel)}
           <label class="option-row">
             <input
               type="checkbox"
@@ -136,7 +136,9 @@
             />
             <span
               class="color-dot"
-              style="background: {CONTROL_COLORS[i % CONTROL_COLORS.length]}"
+              style="background: {CONTROL_COLORS[
+                controls.indexOf(ctrl) % CONTROL_COLORS.length
+              ]}"
             ></span>
             <span class="option-label">{ctrl.name}</span>
           </label>
