@@ -2,9 +2,8 @@
   import type { MachineState } from "$lib/stores/machine";
   import type { RoastEventType } from "$lib/types/ws-messages";
   import {
-    DEFAULT_CHART_OPTIONS,
+    createChartOptions,
     type ChartOptions,
-    type ControlPoint,
   } from "$lib/stores/chart-options";
   import TemperatureDisplay from "./TemperatureDisplay.svelte";
   import RoastChart from "./RoastChart.svelte";
@@ -17,7 +16,6 @@
 
   interface Props {
     machine: MachineState;
-    controlHistory?: ControlPoint[];
     chartOptions?: ChartOptions;
     onstart?: () => void;
     onstop?: () => void;
@@ -36,7 +34,6 @@
 
   let {
     machine,
-    controlHistory = [],
     chartOptions,
     onstart,
     onstop,
@@ -49,13 +46,26 @@
     onsave,
   }: Props = $props();
 
-  let burner = $state(0);
-  let airflow = $state(50);
-  let drum = $state(60);
+  const CONTROL_COLORS = [
+    "#ff7043",
+    "#4fc3f7",
+    "#81c784",
+    "#ffab91",
+    "#ce93d8",
+    "#fff176",
+  ];
+
+  // Dynamic slider values keyed by channel name
+  let sliderValues = $state<Record<string, number>>({});
   let saving = $state(false);
   let saved = $state(false);
 
-  let localChartOptions = $state({ ...DEFAULT_CHART_OPTIONS });
+  let localChartOptions = $state(
+    createChartOptions(
+      machine.controls.map((c: { channel: string }) => c.channel),
+      machine.extraChannels.map((c: { name: string }) => c.name),
+    ),
+  );
   let effectiveOptions = $derived(chartOptions ?? localChartOptions);
 
   function handleChartOptionsChange(opts: ChartOptions) {
@@ -117,11 +127,16 @@
       <div class="chart-row">
         <RoastChart
           history={machine.history}
-          {controlHistory}
+          controlHistory={machine.controlHistory}
+          controls={machine.controls}
+          extraChannelHistory={machine.extraChannelHistory}
+          extraChannels={machine.extraChannels}
           options={effectiveOptions}
         />
         <ChartOptionsMenu
           options={effectiveOptions}
+          controls={machine.controls}
+          extraChannels={machine.extraChannels}
           onchange={handleChartOptionsChange}
         />
       </div>
@@ -144,36 +159,27 @@
 
     <div class="right-column">
       <div class="sliders">
-        <ControlSlider
-          label="Burner"
-          bind:value={burner}
-          min={0}
-          max={100}
-          step={5}
-          color="#ff7043"
-          disabled={!isConnected}
-          onchange={(v) => oncontrol?.("burner", v)}
-        />
-        <ControlSlider
-          label="Airflow"
-          bind:value={airflow}
-          min={0}
-          max={100}
-          step={5}
-          color="#4fc3f7"
-          disabled={!isConnected}
-          onchange={(v) => oncontrol?.("airflow", v)}
-        />
-        <ControlSlider
-          label="Drum"
-          bind:value={drum}
-          min={0}
-          max={100}
-          step={5}
-          color="#81c784"
-          disabled={!isConnected}
-          onchange={(v) => oncontrol?.("drum", v)}
-        />
+        {#each machine.controls as ctrl (ctrl.channel)}
+          <ControlSlider
+            label={ctrl.name}
+            value={sliderValues[ctrl.channel] ?? ctrl.min}
+            min={ctrl.min}
+            max={ctrl.max}
+            step={ctrl.step}
+            unit={ctrl.unit}
+            color={CONTROL_COLORS[
+              machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
+            ]}
+            disabled={!isConnected}
+            onchange={(v) => {
+              sliderValues[ctrl.channel] = v;
+              oncontrol?.(ctrl.channel, v);
+            }}
+          />
+        {/each}
+        {#if machine.controls.length === 0}
+          <p class="no-controls">No controls configured</p>
+        {/if}
       </div>
 
       {#if machine.error}
@@ -284,6 +290,13 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .no-controls {
+    color: #666;
+    font-size: 0.75rem;
+    text-align: center;
+    margin: 8px 0;
   }
 
   .error-banner {

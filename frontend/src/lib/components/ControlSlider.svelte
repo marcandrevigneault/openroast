@@ -6,6 +6,7 @@
     max?: number;
     step?: number;
     color?: string;
+    unit?: string;
     disabled?: boolean;
     onchange?: (value: number) => void;
   }
@@ -17,6 +18,7 @@
     max = 100,
     step = 1,
     color = "#4fc3f7",
+    unit = "",
     disabled = false,
     onchange,
   }: Props = $props();
@@ -33,7 +35,9 @@
 <div class="slider-control" class:disabled>
   <div class="slider-header">
     <span class="slider-label">{label}</span>
-    <span class="slider-value" style="color: {color}">{value}</span>
+    <span class="slider-value" style="color: {color}"
+      >{value}{#if unit}<span class="slider-unit">{unit}</span>{/if}</span
+    >
   </div>
   <input
     type="range"
@@ -77,6 +81,12 @@
     font-family: "JetBrains Mono", "Fira Code", monospace;
     font-size: 0.85rem;
     font-weight: 600;
+  }
+
+  .slider-unit {
+    font-size: 0.65rem;
+    opacity: 0.6;
+    margin-left: 2px;
   }
 
   .slider {

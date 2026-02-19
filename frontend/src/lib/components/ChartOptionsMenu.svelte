@@ -1,16 +1,54 @@
 <script lang="ts">
   import type { ChartOptions } from "$lib/stores/chart-options";
+  import type { ControlConfig, ExtraChannelConfig } from "$lib/stores/machine";
 
   interface Props {
     options: ChartOptions;
+    controls?: ControlConfig[];
+    extraChannels?: ExtraChannelConfig[];
     onchange: (options: ChartOptions) => void;
   }
 
-  let { options, onchange }: Props = $props();
+  let {
+    options,
+    controls = [],
+    extraChannels = [],
+    onchange,
+  }: Props = $props();
   let open = $state(false);
 
-  function toggle(key: keyof ChartOptions) {
+  const CONTROL_COLORS = [
+    "#ff7043",
+    "#4fc3f7",
+    "#81c784",
+    "#ffab91",
+    "#ce93d8",
+    "#fff176",
+  ];
+  const EXTRA_CHANNEL_COLOR = "#a5d6a7";
+
+  function toggleBase(key: "showET" | "showBT" | "showETRor" | "showBTRor") {
     onchange({ ...options, [key]: !options[key] });
+  }
+
+  function toggleControl(channel: string) {
+    onchange({
+      ...options,
+      showControls: {
+        ...options.showControls,
+        [channel]: !options.showControls[channel],
+      },
+    });
+  }
+
+  function toggleExtraChannel(name: string) {
+    onchange({
+      ...options,
+      showExtraChannels: {
+        ...options.showExtraChannels,
+        [name]: !options.showExtraChannels[name],
+      },
+    });
   }
 
   function handleClickOutside(e: MouseEvent) {
@@ -20,14 +58,15 @@
     }
   }
 
-  const ITEMS: { key: keyof ChartOptions; label: string; color: string }[] = [
+  const BASE_ITEMS: {
+    key: "showET" | "showBT" | "showETRor" | "showBTRor";
+    label: string;
+    color: string;
+  }[] = [
     { key: "showET", label: "ET", color: "#ff7043" },
     { key: "showBT", label: "BT", color: "#42a5f5" },
     { key: "showETRor", label: "ET RoR", color: "#ffab91" },
     { key: "showBTRor", label: "BT RoR", color: "#90caf9" },
-    { key: "showBurner", label: "Burner", color: "#ff7043" },
-    { key: "showAirflow", label: "Airflow", color: "#4fc3f7" },
-    { key: "showDrum", label: "Drum", color: "#81c784" },
   ];
 </script>
 
@@ -44,17 +83,51 @@
 
   {#if open}
     <div class="popover">
-      {#each ITEMS as item (item.key)}
+      {#each BASE_ITEMS as item (item.key)}
         <label class="option-row">
           <input
             type="checkbox"
             checked={options[item.key]}
-            onchange={() => toggle(item.key)}
+            onchange={() => toggleBase(item.key)}
           />
           <span class="color-dot" style="background: {item.color}"></span>
           <span class="option-label">{item.label}</span>
         </label>
       {/each}
+
+      {#if controls.length > 0}
+        <div class="section-divider"></div>
+        {#each controls as ctrl, i (ctrl.channel)}
+          <label class="option-row">
+            <input
+              type="checkbox"
+              checked={options.showControls[ctrl.channel] ?? false}
+              onchange={() => toggleControl(ctrl.channel)}
+            />
+            <span
+              class="color-dot"
+              style="background: {CONTROL_COLORS[i % CONTROL_COLORS.length]}"
+            ></span>
+            <span class="option-label">{ctrl.name}</span>
+          </label>
+        {/each}
+      {/if}
+
+      {#if extraChannels.length > 0}
+        <div class="section-divider"></div>
+        {#each extraChannels as ch (ch.name)}
+          <label class="option-row">
+            <input
+              type="checkbox"
+              checked={options.showExtraChannels[ch.name] ?? false}
+              onchange={() => toggleExtraChannel(ch.name)}
+            />
+            <span class="color-dot" style="background: {EXTRA_CHANNEL_COLOR}"
+            ></span>
+            <span class="option-label">{ch.name}</span>
+          </label>
+        {/each}
+      {/if}
     </div>
   {/if}
 </div>
@@ -94,6 +167,12 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+  }
+
+  .section-divider {
+    height: 1px;
+    background: #2a2a4a;
+    margin: 4px 0;
   }
 
   .option-row {
