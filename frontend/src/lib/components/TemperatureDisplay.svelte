@@ -5,9 +5,17 @@
     ror: number | null;
     unit?: string;
     color?: string;
+    compact?: boolean;
   }
 
-  let { label, value, ror, unit = "°C", color = "#e0e0e0" }: Props = $props();
+  let {
+    label,
+    value,
+    ror,
+    unit = "°C",
+    color = "#e0e0e0",
+    compact = false,
+  }: Props = $props();
 
   let displayValue = $derived(value !== null ? value.toFixed(1) : "---");
   let displayRor = $derived(
@@ -15,14 +23,52 @@
   );
 </script>
 
-<div class="temp-display" style="--accent-color: {color}">
-  <span class="label">{label}</span>
-  <span class="value">{displayValue}</span>
-  <span class="unit">{unit}</span>
-  <span class="ror">{displayRor} /min</span>
-</div>
+{#if compact}
+  <div class="temp-compact" style="--accent-color: {color}">
+    <span class="compact-label">{label}</span>
+    <span class="compact-value">{displayValue}</span>
+    <span class="compact-ror">{displayRor}/min</span>
+  </div>
+{:else}
+  <div class="temp-display" style="--accent-color: {color}">
+    <span class="label">{label}</span>
+    <span class="value">{displayValue}</span>
+    <span class="unit">{unit}</span>
+    <span class="ror">{displayRor} /min</span>
+  </div>
+{/if}
 
 <style>
+  /* --- Compact (inline) mode --- */
+  .temp-compact {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .compact-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-color);
+    opacity: 0.7;
+  }
+
+  .compact-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    color: var(--accent-color);
+    line-height: 1;
+  }
+
+  .compact-ror {
+    font-size: 0.7rem;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    color: #888;
+  }
+
+  /* --- Full (card) mode --- */
   .temp-display {
     display: flex;
     flex-direction: column;
