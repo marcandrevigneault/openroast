@@ -17,6 +17,13 @@
   }: Props = $props();
   let open = $state(false);
 
+  // Filter out controls that already have a matching extra channel (same name = read-back exists)
+  let uniqueControls = $derived(
+    controls.filter(
+      (ctrl) => !extraChannels.some((ch) => ch.name === ctrl.name),
+    ),
+  );
+
   const CONTROL_COLORS = [
     "#ff7043",
     "#4fc3f7",
@@ -118,9 +125,9 @@
         </div>
       {/if}
 
-      {#if controls.length > 0}
+      {#if uniqueControls.length > 0}
         <div class="section-divider"></div>
-        {#each controls as ctrl, i (ctrl.channel)}
+        {#each uniqueControls as ctrl, i (ctrl.channel)}
           <label class="option-row">
             <input
               type="checkbox"

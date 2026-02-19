@@ -209,13 +209,21 @@
     options.showBTRor ? buildRorPath(history, smoothedBtRor) : "",
   );
 
-  // Dynamic control curves
+  // Filter out controls that have a matching extra channel (read-back already exists)
+  let uniqueControls = $derived(
+    controls.filter(
+      (ctrl) => !extraChannels.some((ch) => ch.name === ctrl.name),
+    ),
+  );
+
+  // Dynamic control curves (only for controls without a matching extra channel)
   let controlPaths = $derived(
-    controls
+    uniqueControls
       .filter((ctrl) => options.showControls[ctrl.channel])
       .map((ctrl) => ({
         path: buildDynamicControlPath(controlHistory, ctrl.channel, ctrl),
-        color: CONTROL_COLORS[controls.indexOf(ctrl) % CONTROL_COLORS.length],
+        color:
+          CONTROL_COLORS[uniqueControls.indexOf(ctrl) % CONTROL_COLORS.length],
         label: ctrl.name,
       })),
   );
