@@ -7,9 +7,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from openroast.api.routes import init_machine_storage, init_manager, init_storage
 from openroast.api.routes import router as api_router
+from openroast.api.simulator_routes import init_simulator_manager
+from openroast.api.simulator_routes import router as sim_router
 from openroast.core.machine_storage import MachineStorage
 from openroast.core.manager import MachineManager
 from openroast.core.storage import ProfileStorage
+from openroast.simulator.manager import SimulatorManager
 from openroast.ws.live import init_manager as init_ws_manager
 from openroast.ws.live import router as ws_router
 
@@ -38,7 +41,12 @@ _manager = MachineManager(_machine_storage)
 init_manager(_manager)
 init_ws_manager(_manager)
 
+# Initialise simulator manager
+_sim_manager = SimulatorManager(_machine_storage)
+init_simulator_manager(_sim_manager)
+
 app.include_router(api_router, prefix="/api")
+app.include_router(sim_router, prefix="/api")
 app.include_router(ws_router, prefix="/ws")
 
 
