@@ -5,16 +5,13 @@ import {
   removeMachine,
   updateLayout,
   generateMachineId,
-  type DashboardState,
-  type DashboardMachine,
 } from "./dashboard";
 
 describe("createDashboardState", () => {
   it("creates empty state with default layout", () => {
     const state = createDashboardState();
     expect(state.machines).toEqual([]);
-    expect(state.layout.mode).toBe("grid");
-    expect(state.layout.columns).toBe(2);
+    expect(state.layout.mode).toBe("vertical");
   });
 });
 
@@ -71,23 +68,14 @@ describe("removeMachine", () => {
 describe("updateLayout", () => {
   it("updates mode", () => {
     const state = createDashboardState();
-    const result = updateLayout(state, { mode: "vertical" });
+    const result = updateLayout(state, { mode: "side-by-side" });
+    expect(result.layout.mode).toBe("side-by-side");
+  });
+
+  it("preserves mode when not specified", () => {
+    const state = createDashboardState();
+    const result = updateLayout(state, {});
     expect(result.layout.mode).toBe("vertical");
-    expect(result.layout.columns).toBe(2); // preserved
-  });
-
-  it("updates columns", () => {
-    const state = createDashboardState();
-    const result = updateLayout(state, { columns: 3 });
-    expect(result.layout.columns).toBe(3);
-    expect(result.layout.mode).toBe("grid"); // preserved
-  });
-
-  it("updates both", () => {
-    const state = createDashboardState();
-    const result = updateLayout(state, { mode: "horizontal", columns: 4 });
-    expect(result.layout.mode).toBe("horizontal");
-    expect(result.layout.columns).toBe(4);
   });
 });
 

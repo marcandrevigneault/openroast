@@ -11,9 +11,8 @@
   let { layout, machineCount, onaddmachine, onlayoutchange }: Props = $props();
 
   const MODES: { mode: LayoutMode; icon: string; label: string }[] = [
-    { mode: "grid", icon: "⊞", label: "Grid" },
-    { mode: "horizontal", icon: "⊟", label: "Side by side" },
     { mode: "vertical", icon: "☰", label: "Stacked" },
+    { mode: "side-by-side", icon: "⊟", label: "Side by side" },
   ];
 </script>
 
@@ -31,21 +30,6 @@
         {m.icon}
       </button>
     {/each}
-
-    {#if layout.mode === "grid"}
-      <select
-        class="col-select"
-        value={layout.columns}
-        onchange={(e) =>
-          onlayoutchange({
-            columns: parseInt((e.target as HTMLSelectElement).value),
-          })}
-      >
-        {#each [1, 2, 3, 4] as n (n)}
-          <option value={n}>{n} col{n > 1 ? "s" : ""}</option>
-        {/each}
-      </select>
-    {/if}
   </div>
 
   <span class="machine-count"
@@ -102,16 +86,6 @@
   .layout-btn.active {
     background: #2a2a4a;
     color: #4fc3f7;
-  }
-
-  .col-select {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
-    border-radius: 4px;
-    color: #ccc;
-    font-size: 0.75rem;
-    padding: 4px 6px;
-    margin-left: 4px;
   }
 
   .machine-count {
