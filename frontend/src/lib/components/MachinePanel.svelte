@@ -6,6 +6,7 @@
     smoothRor,
     type ChartOptions,
   } from "$lib/stores/chart-options";
+  import { addToast } from "$lib/stores/toast";
   import TemperatureDisplay from "./TemperatureDisplay.svelte";
   import RoastChart from "./RoastChart.svelte";
   import ChartOptionsMenu from "./ChartOptionsMenu.svelte";
@@ -66,8 +67,8 @@
   let sliderValues = $state<Record<string, number>>({});
   let saving = $state(false);
   let saved = $state(false);
-  let controlsOpen = $state(false);
   let settingsOpen = $state(false);
+  let lastToastedError = $state<string | null>(null);
 
   // svelte-ignore state_referenced_locally
   const initControlChannels = machine.controls.map(
@@ -113,6 +114,16 @@
   let showSaveForm = $derived(
     machine.sessionState === "finished" && machine.history.length > 0 && !saved,
   );
+
+  // Dispatch machine errors as toast notifications
+  $effect(() => {
+    if (machine.error && machine.error !== lastToastedError) {
+      addToast(machine.error, "error", machine.machineName);
+      lastToastedError = machine.error;
+    } else if (!machine.error) {
+      lastToastedError = null;
+    }
+  });
 
   function handleSave(data: {
     name: string;
@@ -213,49 +224,29 @@
     <EventButtons disabled={!isRecording} events={machine.events} {onmark} />
   </div>
 
-  <!-- Collapsible controls drawer -->
+  <!-- Controls -->
   {#if machine.controls.length > 0}
     <div class="controls-section">
-      <button
-        class="controls-toggle"
-        onclick={() => (controlsOpen = !controlsOpen)}
-        aria-label="Toggle controls"
-      >
-        Controls
-        <span class="toggle-arrow" class:open={controlsOpen}>&#9662;</span>
-      </button>
-
-      {#if controlsOpen}
-        <div class="controls-drawer">
-          {#each machine.controls as ctrl (ctrl.channel)}
-            <ControlSlider
-              label={ctrl.name}
-              value={sliderValues[ctrl.channel] ?? ctrl.min}
-              min={ctrl.min}
-              max={ctrl.max}
-              step={ctrl.step}
-              unit={ctrl.unit}
-              color={CONTROL_COLORS[
-                machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
-              ]}
-              disabled={!isConnected}
-              onchange={(v) => {
-                sliderValues[ctrl.channel] = v;
-                oncontrol?.(ctrl.channel, v);
-              }}
-            />
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
-
-  {#if machine.error}
-    <div class="error-banner">
-      <span>{machine.error}</span>
-      {#if onretry}
-        <button class="btn-retry" onclick={onretry}>Retry</button>
-      {/if}
+      <div class="controls-grid">
+        {#each machine.controls as ctrl (ctrl.channel)}
+          <ControlSlider
+            label={ctrl.name}
+            value={sliderValues[ctrl.channel] ?? ctrl.min}
+            min={ctrl.min}
+            max={ctrl.max}
+            step={ctrl.step}
+            unit={ctrl.unit}
+            color={CONTROL_COLORS[
+              machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
+            ]}
+            disabled={!isConnected}
+            onchange={(v) => {
+              sliderValues[ctrl.channel] = v;
+              oncontrol?.(ctrl.channel, v);
+            }}
+          />
+        {/each}
+      </div>
     </div>
   {/if}
 
@@ -394,74 +385,15 @@
     flex-wrap: wrap;
   }
 
-  /* --- Controls drawer --- */
+  /* --- Controls --- */
   .controls-section {
     border-top: 1px solid #2a2a4a;
     padding-top: 4px;
   }
 
-  .controls-toggle {
-    background: transparent;
-    border: none;
-    color: #888;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    padding: 4px 0;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .controls-toggle:hover {
-    color: #ccc;
-  }
-
-  .toggle-arrow {
-    display: inline-block;
-    transition: transform 0.2s;
-    font-size: 0.65rem;
-  }
-
-  .toggle-arrow.open {
-    transform: rotate(180deg);
-  }
-
-  .controls-drawer {
+  .controls-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 0 16px;
-    padding-top: 4px;
-  }
-
-  /* --- Error & misc --- */
-  .error-banner {
-    background: #3e1111;
-    border: 1px solid #f44336;
-    border-radius: 6px;
-    padding: 8px 12px;
-    color: #ff8a80;
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .btn-retry {
-    background: #f44336;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .btn-retry:hover {
-    background: #e53935;
   }
 </style>

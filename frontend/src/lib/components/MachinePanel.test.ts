@@ -1,11 +1,12 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/svelte";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen } from "@testing-library/svelte";
 import MachinePanel from "./MachinePanel.svelte";
 import {
   createInitialState,
   type MachineState,
   type ControlConfig,
 } from "$lib/stores/machine";
+import { getToasts, clearToasts } from "$lib/stores/toast";
 
 const TEST_CONTROLS: ControlConfig[] = [
   { name: "Burner", channel: "burner", min: 0, max: 100, step: 5, unit: "%" },
@@ -30,6 +31,15 @@ function makeMachine(overrides: Partial<MachineState> = {}): MachineState {
 }
 
 describe("MachinePanel", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    clearToasts();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("renders machine name", () => {
     render(MachinePanel, { props: { machine: makeMachine() } });
     expect(screen.getByText("Test Roaster")).toBeInTheDocument();
@@ -67,31 +77,16 @@ describe("MachinePanel", () => {
     expect(screen.getByText("190.7")).toBeInTheDocument();
   });
 
-  it("shows controls toggle button", () => {
-    render(MachinePanel, { props: { machine: makeMachine() } });
-    expect(screen.getByText("Controls")).toBeInTheDocument();
-  });
-
-  it("hides sliders by default (collapsed)", () => {
+  it("shows control sliders always visible", () => {
     const { container } = render(MachinePanel, {
       props: { machine: makeMachine() },
     });
-    const sliders = container.querySelectorAll('input[type="range"]');
-    expect(sliders).toHaveLength(0);
-  });
-
-  it("shows sliders when controls toggle is clicked", async () => {
-    const { container } = render(MachinePanel, {
-      props: { machine: makeMachine() },
-    });
-    await fireEvent.click(screen.getByText("Controls"));
     const sliders = container.querySelectorAll('input[type="range"]');
     expect(sliders).toHaveLength(3);
   });
 
-  it("shows slider labels when expanded", async () => {
+  it("shows slider labels", () => {
     render(MachinePanel, { props: { machine: makeMachine() } });
-    await fireEvent.click(screen.getByText("Controls"));
     expect(screen.getByText("Burner")).toBeInTheDocument();
     expect(screen.getByText("Airflow")).toBeInTheDocument();
     expect(screen.getByText("Drum")).toBeInTheDocument();
@@ -99,8 +94,9 @@ describe("MachinePanel", () => {
 
   it("hides controls section when no controls configured", () => {
     const machine = makeMachine({ controls: [] });
-    render(MachinePanel, { props: { machine } });
-    expect(screen.queryByText("Controls")).not.toBeInTheDocument();
+    const { container } = render(MachinePanel, { props: { machine } });
+    const sliders = container.querySelectorAll('input[type="range"]');
+    expect(sliders).toHaveLength(0);
   });
 
   it("renders event buttons", () => {
@@ -111,18 +107,23 @@ describe("MachinePanel", () => {
     expect(screen.getByText("DROP")).toBeInTheDocument();
   });
 
-  it("shows error banner when error exists", () => {
+  it("dispatches error as toast notification", async () => {
     render(MachinePanel, {
       props: { machine: makeMachine({ error: "Connection lost" }) },
     });
-    expect(screen.getByText("Connection lost")).toBeInTheDocument();
+    await vi.advanceTimersByTimeAsync(0);
+    const toasts = getToasts();
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].message).toBe("Connection lost");
+    expect(toasts[0].machineLabel).toBe("Test Roaster");
+    expect(toasts[0].type).toBe("error");
   });
 
-  it("hides error banner when no error", () => {
-    render(MachinePanel, {
-      props: { machine: makeMachine({ error: null }) },
+  it("does not show inline error banner", () => {
+    const { container } = render(MachinePanel, {
+      props: { machine: makeMachine({ error: "Connection lost" }) },
     });
-    expect(screen.queryByText("Connection lost")).not.toBeInTheDocument();
+    expect(container.querySelector(".error-banner")).toBeNull();
   });
 
   it("renders chart", () => {
@@ -132,7 +133,7 @@ describe("MachinePanel", () => {
     expect(container.querySelector("svg")).toBeTruthy();
   });
 
-  it("enables sliders when connected", async () => {
+  it("enables sliders when connected", () => {
     const { container } = render(MachinePanel, {
       props: {
         machine: makeMachine({
@@ -141,18 +142,16 @@ describe("MachinePanel", () => {
         }),
       },
     });
-    await fireEvent.click(screen.getByText("Controls"));
     const sliders = container.querySelectorAll('input[type="range"]');
     sliders.forEach((slider) => {
       expect(slider).not.toBeDisabled();
     });
   });
 
-  it("disables sliders when disconnected", async () => {
+  it("disables sliders when disconnected", () => {
     const { container } = render(MachinePanel, {
       props: { machine: makeMachine({ driverState: "disconnected" }) },
     });
-    await fireEvent.click(screen.getByText("Controls"));
     const sliders = container.querySelectorAll('input[type="range"]');
     sliders.forEach((slider) => {
       expect(slider).toBeDisabled();
@@ -173,47 +172,28 @@ describe("MachinePanel", () => {
     expect(screen.queryByTitle("Remove machine")).not.toBeInTheDocument();
   });
 
-  it("calls onremove when remove button clicked", async () => {
-    const onremove = vi.fn();
-    render(MachinePanel, {
-      props: { machine: makeMachine(), onremove },
-    });
-    await fireEvent.click(screen.getByTitle("Remove machine"));
-    expect(onremove).toHaveBeenCalledOnce();
-  });
-
   it("shows settings gear button", () => {
     render(MachinePanel, { props: { machine: makeMachine() } });
     expect(screen.getByTitle("Machine settings")).toBeInTheDocument();
   });
 
-  it("shows Retry button in error banner when onretry provided", () => {
+  it("shows retry button in header when disconnected", () => {
     render(MachinePanel, {
       props: {
-        machine: makeMachine({ error: "Connection failed" }),
+        machine: makeMachine({ driverState: "disconnected" }),
         onretry: () => {},
       },
     });
-    expect(screen.getByText("Retry")).toBeInTheDocument();
+    expect(screen.getByTitle("Retry connection")).toBeInTheDocument();
   });
 
-  it("calls onretry when Retry button clicked", async () => {
-    const onretry = vi.fn();
+  it("hides retry button when connected", () => {
     render(MachinePanel, {
       props: {
-        machine: makeMachine({ error: "Connection failed" }),
-        onretry,
+        machine: makeMachine({ driverState: "connected" }),
+        onretry: () => {},
       },
     });
-    await fireEvent.click(screen.getByText("Retry"));
-    expect(onretry).toHaveBeenCalledOnce();
-  });
-
-  it("hides Retry button when onretry not provided", () => {
-    render(MachinePanel, {
-      props: { machine: makeMachine({ error: "Connection failed" }) },
-    });
-    expect(screen.getByText("Connection failed")).toBeInTheDocument();
-    expect(screen.queryByText("Retry")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Retry connection")).not.toBeInTheDocument();
   });
 });

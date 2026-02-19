@@ -287,7 +287,7 @@ describe("MachineSettingsPanel", () => {
     expect(channelLabels.length).toBe(2);
   });
 
-  it("adds a new extra channel when + Add clicked", async () => {
+  it("adds a new extra channel with register config for modbus", async () => {
     renderOpen();
     await screen.findByDisplayValue("Test Roaster");
 
@@ -295,10 +295,9 @@ describe("MachineSettingsPanel", () => {
     // Second "+ Add" is for Extra Channels
     await fireEvent.click(addButtons[1]);
 
-    // New channel has "name only" hint since no register config
-    expect(
-      screen.getByText("No register config — name only."),
-    ).toBeInTheDocument();
+    // New modbus channel gets register config fields — now 4 Address labels (BT, ET, Inlet, new)
+    const addressLabels = screen.getAllByText("Address");
+    expect(addressLabels.length).toBe(4);
   });
 
   it("shows Serial Port / Baudrate for serial protocol", async () => {

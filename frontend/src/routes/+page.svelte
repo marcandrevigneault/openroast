@@ -26,6 +26,8 @@
   import MachinePanel from "$lib/components/MachinePanel.svelte";
   import DashboardToolbar from "$lib/components/DashboardToolbar.svelte";
   import CatalogSelector from "$lib/components/CatalogSelector.svelte";
+  import ToastContainer from "$lib/components/ToastContainer.svelte";
+  import { addToast } from "$lib/stores/toast";
 
   let dashboard = $state<DashboardState>(createDashboardState());
   let machineStates = new SvelteMap<string, MachineState>();
@@ -105,13 +107,14 @@
       const client = createWSClient(id);
       client.connect();
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Connection failed";
       const current = machineStates.get(id);
       if (current) {
         machineStates.set(id, {
           ...current,
-          error: e instanceof Error ? e.message : "Connection failed",
           driverState: "error",
         });
+        addToast(msg, "error", current.machineName);
       }
     }
   }
@@ -140,13 +143,14 @@
       const client = createWSClient(id);
       client.connect();
     } catch (e) {
+      const msg = e instanceof Error ? e.message : "Connection failed";
       const state = machineStates.get(id);
       if (state) {
         machineStates.set(id, {
           ...state,
-          error: e instanceof Error ? e.message : "Connection failed",
           driverState: "error",
         });
+        addToast(msg, "error", state.machineName);
       }
     }
   }
@@ -317,6 +321,8 @@
     }
   });
 </script>
+
+<ToastContainer />
 
 <div class="dashboard">
   <DashboardToolbar

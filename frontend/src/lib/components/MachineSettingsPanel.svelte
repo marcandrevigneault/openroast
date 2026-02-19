@@ -43,7 +43,6 @@
     protocol === "modbus_tcp" || protocol === "modbus_rtu",
   );
   let isS7 = $derived(protocol === "s7");
-  let hasRegisterConfig = $derived(isModbus || isS7);
 
   $effect(() => {
     if (open && machineId) {
@@ -157,7 +156,28 @@
   }
 
   function addExtraChannel() {
-    extraChannels = [...extraChannels, { name: "" }];
+    let newChannel: Record<string, unknown> = { name: "" };
+    if (isModbus) {
+      newChannel.modbus = {
+        address: 0,
+        code: 3,
+        device_id: 1,
+        divisor: 0,
+        mode: "",
+        is_float: false,
+        is_bcd: false,
+      };
+    } else if (isS7) {
+      newChannel.s7 = {
+        area: 0,
+        db_nr: 0,
+        start: 0,
+        type: 0,
+        mode: 0,
+        div: 0,
+      };
+    }
+    extraChannels = [...extraChannels, newChannel];
   }
 
   function removeExtraChannel(index: number) {
@@ -467,9 +487,6 @@
                     </label>
                   </div>
                 {/if}
-                {#if hasRegisterConfig && !getModbus(extraChannels[i]) && !getS7(extraChannels[i])}
-                  <p class="register-hint">No register config — name only.</p>
-                {/if}
               </div>
             {/each}
             {#if extraChannels.length === 0}
@@ -669,17 +686,11 @@
     border-color: #f44336;
   }
 
-  .empty-hint,
-  .register-hint {
+  .empty-hint {
     color: #666;
     font-size: 0.8rem;
     font-style: italic;
     margin: 0;
-  }
-
-  .register-hint {
-    font-size: 0.7rem;
-    padding-left: 4px;
   }
 
   .loading {
