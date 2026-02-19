@@ -83,4 +83,44 @@ describe("MachinePanel", () => {
     });
     expect(container.querySelector("svg")).toBeTruthy();
   });
+
+  it("enables sliders when connected and idle", () => {
+    const { container } = render(MachinePanel, {
+      props: {
+        machine: makeMachine({
+          sessionState: "idle",
+          driverState: "connected",
+        }),
+      },
+    });
+    const sliders = container.querySelectorAll('input[type="range"]');
+    sliders.forEach((slider) => {
+      expect(slider).not.toBeDisabled();
+    });
+  });
+
+  it("disables sliders when disconnected", () => {
+    const { container } = render(MachinePanel, {
+      props: { machine: makeMachine({ driverState: "disconnected" }) },
+    });
+    const sliders = container.querySelectorAll('input[type="range"]');
+    sliders.forEach((slider) => {
+      expect(slider).toBeDisabled();
+    });
+  });
+
+  it("enables sliders when connected and finished", () => {
+    const { container } = render(MachinePanel, {
+      props: {
+        machine: makeMachine({
+          sessionState: "finished",
+          driverState: "connected",
+        }),
+      },
+    });
+    const sliders = container.querySelectorAll('input[type="range"]');
+    sliders.forEach((slider) => {
+      expect(slider).not.toBeDisabled();
+    });
+  });
 });

@@ -27,12 +27,13 @@ class RoastSession:
     State machine: IDLE → MONITORING → RECORDING → FINISHED
     """
 
-    __slots__ = ["_data", "_events", "_machine_name", "_state"]
+    __slots__ = ["_controls", "_data", "_events", "_machine_name", "_state"]
 
     def __init__(self, machine_name: str = "") -> None:
         self._state = SessionState.IDLE
         self._data: list[TemperaturePoint] = []
         self._events: list[RoastEvent] = []
+        self._controls: dict[str, list[tuple[float, float]]] = {}
         self._machine_name = machine_name
 
     @property
@@ -60,6 +61,7 @@ class RoastSession:
         self._state = SessionState.RECORDING
         self._data.clear()
         self._events.clear()
+        self._controls.clear()
 
     def stop_recording(self) -> None:
         """Stop recording and finalize the roast."""
@@ -81,6 +83,23 @@ class RoastSession:
         """
         if self._state == SessionState.RECORDING:
             self._data.append(TemperaturePoint(timestamp_ms=timestamp_ms, et=et, bt=bt))
+
+    def add_control_change(self, timestamp_ms: float, channel: str,
+                           value: float) -> None:
+        """Record a control value change during the session.
+
+        Control changes are recorded in any active state (MONITORING or
+        RECORDING) so pre-heat adjustments are captured.
+
+        Args:
+            timestamp_ms: When the control was changed.
+            channel: Control channel name (e.g. 'burner', 'airflow').
+            value: New control value.
+        """
+        if self._state in (SessionState.MONITORING, SessionState.RECORDING):
+            if channel not in self._controls:
+                self._controls[channel] = []
+            self._controls[channel].append((timestamp_ms, value))
 
     def add_event(self, event_type: str, timestamp_ms: float,
                   auto_detected: bool = False) -> None:
@@ -117,4 +136,5 @@ class RoastSession:
             machine=self._machine_name,
             temperatures=list(self._data),
             events=list(self._events),
+            controls={ch: list(pts) for ch, pts in self._controls.items()},
         )

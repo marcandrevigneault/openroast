@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   createInitialState,
   processMessage,
+  recordControlChange,
   formatTime,
   type MachineState,
   type TemperaturePoint,
+  type ControlPoint,
 } from "./machine";
 import type { ServerMessage } from "$lib/types/ws-messages";
 
@@ -19,6 +21,8 @@ describe("createInitialState", () => {
     expect(state.history).toEqual([]);
     expect(state.events).toEqual([]);
     expect(state.error).toBeNull();
+    expect(state.controlHistory).toEqual([]);
+    expect(state.currentControls).toBeNull();
   });
 });
 
@@ -130,7 +134,7 @@ describe("processMessage", () => {
       expect(result.sessionState).toBe("monitoring");
     });
 
-    it("clears history and events when recording starts", () => {
+    it("clears history, events, and controlHistory when recording starts", () => {
       let state = baseState();
       // Add some history
       state = processMessage(state, {
@@ -150,10 +154,12 @@ describe("processMessage", () => {
         bt_at_event: 180,
         et_at_event: 200,
       });
+      state = recordControlChange(state, "burner", 80, 1000);
       expect(state.history).toHaveLength(1);
       expect(state.events).toHaveLength(1);
+      expect(state.controlHistory).toHaveLength(1);
 
-      // Start recording → clears
+      // Start recording -> clears
       state = processMessage(state, {
         type: "state",
         state: "recording",
@@ -161,6 +167,7 @@ describe("processMessage", () => {
       });
       expect(state.history).toEqual([]);
       expect(state.events).toEqual([]);
+      expect(state.controlHistory).toEqual([]);
     });
 
     it("preserves history for non-recording state changes", () => {
@@ -222,7 +229,7 @@ describe("processMessage", () => {
       expect(result).toBe(state);
     });
 
-    it("returns state unchanged for control_ack", () => {
+    it("updates currentControls on control_ack", () => {
       const state = baseState();
       const result = processMessage(state, {
         type: "control_ack",
@@ -231,7 +238,28 @@ describe("processMessage", () => {
         applied: true,
         message: "ok",
       });
-      expect(result).toBe(state);
+      expect(result.currentControls).toBeTruthy();
+      expect(result.currentControls!.burner).toBe(50);
+    });
+
+    it("preserves other channels on control_ack", () => {
+      let state = baseState();
+      state = processMessage(state, {
+        type: "control_ack",
+        channel: "burner",
+        value: 80,
+        applied: true,
+        message: "ok",
+      });
+      state = processMessage(state, {
+        type: "control_ack",
+        channel: "airflow",
+        value: 60,
+        applied: true,
+        message: "ok",
+      });
+      expect(state.currentControls!.burner).toBe(80);
+      expect(state.currentControls!.airflow).toBe(60);
     });
 
     it("returns state unchanged for replay", () => {
@@ -249,6 +277,40 @@ describe("processMessage", () => {
       });
       expect(result).toBe(state);
     });
+  });
+});
+
+describe("recordControlChange", () => {
+  function baseState(): MachineState {
+    return createInitialState("m1", "Test");
+  }
+
+  it("appends control point to history", () => {
+    const state = recordControlChange(baseState(), "burner", 75, 5000);
+    expect(state.controlHistory).toHaveLength(1);
+    expect(state.controlHistory[0].burner).toBe(75);
+    expect(state.controlHistory[0].timestamp_ms).toBe(5000);
+  });
+
+  it("updates currentControls", () => {
+    const state = recordControlChange(baseState(), "airflow", 60, 3000);
+    expect(state.currentControls).toBeTruthy();
+    expect(state.currentControls!.airflow).toBe(60);
+  });
+
+  it("preserves other channels from previous controls", () => {
+    let state = recordControlChange(baseState(), "burner", 80, 1000);
+    state = recordControlChange(state, "airflow", 50, 2000);
+    expect(state.currentControls!.burner).toBe(80);
+    expect(state.currentControls!.airflow).toBe(50);
+    expect(state.controlHistory).toHaveLength(2);
+  });
+
+  it("defaults missing channels to 0", () => {
+    const state = recordControlChange(baseState(), "drum", 90, 1000);
+    expect(state.currentControls!.burner).toBe(0);
+    expect(state.currentControls!.airflow).toBe(0);
+    expect(state.currentControls!.drum).toBe(90);
   });
 });
 

@@ -26,6 +26,13 @@ export interface RoastEvent {
   et_at_event: number;
 }
 
+export interface ControlPoint {
+  timestamp_ms: number;
+  burner: number;
+  airflow: number;
+  drum: number;
+}
+
 export interface MachineState {
   machineId: string;
   machineName: string;
@@ -34,6 +41,8 @@ export interface MachineState {
   currentTemp: TemperaturePoint | null;
   history: TemperaturePoint[];
   events: RoastEvent[];
+  controlHistory: ControlPoint[];
+  currentControls: ControlPoint | null;
   error: string | null;
 }
 
@@ -49,6 +58,8 @@ export function createInitialState(
     currentTemp: null,
     history: [],
     events: [],
+    controlHistory: [],
+    currentControls: null,
     error: null,
   };
 }
@@ -90,14 +101,17 @@ export function processMessage(
         events: [...state.events, evt],
       };
     }
-    case "state":
+    case "state": {
+      const isNewRecording = msg.state === "recording";
       return {
         ...state,
         sessionState: msg.state,
         // Clear history when starting a new recording
-        history: msg.state === "recording" ? [] : state.history,
-        events: msg.state === "recording" ? [] : state.events,
+        history: isNewRecording ? [] : state.history,
+        events: isNewRecording ? [] : state.events,
+        controlHistory: isNewRecording ? [] : state.controlHistory,
       };
+    }
     case "connection":
       return {
         ...state,
@@ -108,11 +122,54 @@ export function processMessage(
         ...state,
         error: msg.message,
       };
+    case "control_ack": {
+      const controls = state.currentControls ?? {
+        timestamp_ms: 0,
+        burner: 0,
+        airflow: 0,
+        drum: 0,
+      };
+      return {
+        ...state,
+        currentControls: {
+          ...controls,
+          timestamp_ms: state.currentTemp?.timestamp_ms ?? 0,
+          [msg.channel]: msg.value,
+        },
+      };
+    }
     case "alarm":
     case "replay":
-    case "control_ack":
       return state;
   }
+}
+
+/**
+ * Record a control change into the machine state.
+ * Appends to controlHistory and updates currentControls.
+ */
+export function recordControlChange(
+  state: MachineState,
+  channel: string,
+  value: number,
+  timestamp_ms: number,
+): MachineState {
+  const base = state.currentControls ?? {
+    timestamp_ms: 0,
+    burner: 0,
+    airflow: 0,
+    drum: 0,
+  };
+  const point: ControlPoint = {
+    ...base,
+    timestamp_ms,
+    [channel]: value,
+  };
+  return {
+    ...state,
+    currentControls: point,
+    controlHistory: [...state.controlHistory, point],
+  };
 }
 
 /**
