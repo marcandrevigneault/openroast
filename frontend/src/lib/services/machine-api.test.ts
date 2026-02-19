@@ -5,6 +5,7 @@ import {
   listMachines,
   getMachine,
   createFromCatalog,
+  createCustomMachine,
   deleteMachine,
   connectMachine,
   disconnectMachine,
@@ -111,6 +112,60 @@ describe("machine-api", () => {
         (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body,
       );
       expect(callBody.name).toBeUndefined();
+    });
+  });
+
+  describe("createCustomMachine", () => {
+    it("creates custom machine via POST /machines", async () => {
+      // First call: POST /machines returns { id }
+      // Second call: GET /machines/{id} returns full machine
+      const machine = {
+        id: "m2",
+        name: "My Roaster",
+        protocol: "modbus_tcp",
+        connection: { type: "modbus_tcp", host: "10.0.0.1", port: 502 },
+        sampling_interval_ms: 3000,
+        controls: [],
+        extra_channels: [],
+      };
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 201,
+            json: () => Promise.resolve({ id: "m2" }),
+          })
+          .mockResolvedValueOnce({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve(machine),
+          }),
+      );
+
+      const result = await createCustomMachine({
+        name: "My Roaster",
+        protocol: "modbus_tcp",
+        connection: { type: "modbus_tcp", host: "10.0.0.1", port: 502 },
+      });
+      expect(result).toEqual({ id: "m2", machine });
+
+      const calls = (fetch as ReturnType<typeof vi.fn>).mock.calls;
+      expect(calls[0][0]).toBe("/api/machines");
+      expect(calls[0][1].method).toBe("POST");
+      expect(calls[1][0]).toBe("/api/machines/m2");
+    });
+
+    it("throws on error", async () => {
+      mockFetch(null, 422);
+      await expect(
+        createCustomMachine({
+          name: "",
+          protocol: "modbus_tcp",
+          connection: {},
+        }),
+      ).rejects.toThrow();
     });
   });
 

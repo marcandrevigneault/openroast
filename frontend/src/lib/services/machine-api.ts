@@ -111,6 +111,28 @@ export async function createFromCatalog(
   return resp.json();
 }
 
+export interface CreateCustomMachineRequest {
+  name: string;
+  protocol: string;
+  connection: Record<string, unknown>;
+  sampling_interval_ms?: number;
+}
+
+export async function createCustomMachine(
+  req: CreateCustomMachineRequest,
+): Promise<{ id: string; machine: SavedMachine }> {
+  const resp = await fetch(`${BASE}/machines`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!resp.ok) throw new Error(`Failed to create machine: ${resp.status}`);
+  const data = await resp.json();
+  // Backend returns { id }, so we need to fetch the full machine
+  const machine = await getMachine(data.id);
+  return { id: data.id, machine };
+}
+
 export async function deleteMachine(machineId: string): Promise<void> {
   const resp = await fetch(`${BASE}/machines/${machineId}`, {
     method: "DELETE",

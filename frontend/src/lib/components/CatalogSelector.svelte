@@ -3,6 +3,7 @@
     listManufacturers,
     listModels,
     createFromCatalog,
+    createCustomMachine,
     type ManufacturerSummary,
     type CatalogModel,
     type SavedMachine,
@@ -16,7 +17,14 @@
 
   let { open, onadd, onclose }: Props = $props();
 
-  type Step = "choose" | "manufacturer" | "model" | "confirm";
+  type Step = "choose" | "manufacturer" | "model" | "confirm" | "custom";
+
+  const PROTOCOLS = [
+    { value: "modbus_tcp", label: "Modbus TCP" },
+    { value: "modbus_rtu", label: "Modbus RTU" },
+    { value: "serial", label: "Serial" },
+    { value: "s7", label: "Siemens S7" },
+  ];
 
   let step = $state<Step>("choose");
   let manufacturers = $state<ManufacturerSummary[]>([]);
@@ -27,6 +35,11 @@
   let loading = $state(false);
   let error = $state<string | null>(null);
 
+  // Custom machine form state
+  let customProtocol = $state("modbus_tcp");
+  let customHost = $state("192.168.1.1");
+  let customPort = $state(502);
+
   function reset() {
     step = "choose";
     manufacturers = [];
@@ -34,6 +47,9 @@
     selectedManufacturer = null;
     selectedModel = null;
     customName = "";
+    customProtocol = "modbus_tcp";
+    customHost = "192.168.1.1";
+    customPort = 502;
     loading = false;
     error = null;
   }
@@ -54,6 +70,15 @@
     } finally {
       loading = false;
     }
+  }
+
+  function handleChooseCustom() {
+    customName = "";
+    customProtocol = "modbus_tcp";
+    customHost = "192.168.1.1";
+    customPort = 502;
+    error = null;
+    step = "custom";
   }
 
   async function handleSelectManufacturer(mfr: ManufacturerSummary) {
@@ -94,16 +119,55 @@
     }
   }
 
+  function buildConnectionConfig(): Record<string, unknown> {
+    if (customProtocol === "modbus_tcp") {
+      return { type: "modbus_tcp", host: customHost, port: customPort };
+    } else if (customProtocol === "modbus_rtu") {
+      return { type: "modbus_rtu", host: customHost, port: customPort };
+    } else if (customProtocol === "serial") {
+      return {
+        type: "serial",
+        comport: customHost,
+        baudrate: customPort,
+      };
+    } else {
+      return { type: "s7", host: customHost, port: customPort };
+    }
+  }
+
+  async function handleCustomConfirm() {
+    if (!customName.trim()) return;
+    loading = true;
+    error = null;
+    try {
+      const result = await createCustomMachine({
+        name: customName.trim(),
+        protocol: customProtocol,
+        connection: buildConnectionConfig(),
+      });
+      onadd(result.machine);
+      handleClose();
+    } catch (e) {
+      error = e instanceof Error ? e.message : "Failed to create machine";
+      loading = false;
+    }
+  }
+
   function handleBack() {
     error = null;
     if (step === "confirm") step = "model";
     else if (step === "model") step = "manufacturer";
-    else if (step === "manufacturer") step = "choose";
+    else if (step === "manufacturer" || step === "custom") step = "choose";
   }
 
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === "Escape") handleClose();
   }
+
+  let hostLabel = $derived(
+    customProtocol === "serial" ? "Serial Port" : "Host",
+  );
+  let portLabel = $derived(customProtocol === "serial" ? "Baudrate" : "Port");
 </script>
 
 {#if open}
@@ -129,7 +193,7 @@
               <small>Select from known machines</small>
             </span>
           </button>
-          <button class="choice-btn" disabled title="Coming soon">
+          <button class="choice-btn" onclick={handleChooseCustom}>
             <span class="choice-icon">&#9998;</span>
             <span class="choice-text">
               <strong>Custom Machine</strong>
@@ -219,13 +283,56 @@
             {loading ? "Creating..." : "Add Machine"}
           </button>
         </div>
+      {:else if step === "custom"}
+        <div class="step-header">
+          <button class="btn-back" onclick={handleBack}>&larr;</button>
+          <h3>Custom Machine</h3>
+        </div>
+        <div class="confirm-details">
+          <label class="field">
+            <span class="label">Machine Name</span>
+            <!-- svelte-ignore a11y_autofocus -->
+            <input
+              type="text"
+              bind:value={customName}
+              placeholder="My Roaster"
+              autofocus
+            />
+          </label>
+          <label class="field">
+            <span class="label">Protocol</span>
+            <select bind:value={customProtocol}>
+              {#each PROTOCOLS as proto (proto.value)}
+                <option value={proto.value}>{proto.label}</option>
+              {/each}
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">{hostLabel}</span>
+            <input type="text" bind:value={customHost} />
+          </label>
+          <label class="field">
+            <span class="label">{portLabel}</span>
+            <input type="number" bind:value={customPort} min="1" />
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn-cancel" onclick={handleClose}>Cancel</button>
+          <button
+            class="btn-submit"
+            onclick={handleCustomConfirm}
+            disabled={loading || !customName.trim()}
+          >
+            {loading ? "Creating..." : "Create Machine"}
+          </button>
+        </div>
       {/if}
 
       {#if error}
         <div class="error-msg">{error}</div>
       {/if}
 
-      {#if step !== "confirm"}
+      {#if step !== "confirm" && step !== "custom"}
         <div class="actions">
           <button class="btn-cancel" onclick={handleClose}>Cancel</button>
         </div>
@@ -386,7 +493,8 @@
     letter-spacing: 0.05em;
   }
 
-  input {
+  input,
+  select {
     background: #12122a;
     border: 1px solid #2a2a4a;
     border-radius: 6px;
@@ -395,7 +503,8 @@
     font-size: 0.9rem;
   }
 
-  input:focus {
+  input:focus,
+  select:focus {
     outline: none;
     border-color: #4fc3f7;
   }
