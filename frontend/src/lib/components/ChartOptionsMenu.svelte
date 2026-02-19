@@ -41,6 +41,12 @@
     });
   }
 
+  const ROR_SMOOTHING_OPTIONS = [1, 3, 5, 7, 9];
+
+  function setRorSmoothing(value: number) {
+    onchange({ ...options, rorSmoothing: value });
+  }
+
   function toggleExtraChannel(name: string) {
     onchange({
       ...options,
@@ -94,6 +100,23 @@
           <span class="option-label">{item.label}</span>
         </label>
       {/each}
+
+      {#if options.showETRor || options.showBTRor}
+        <div class="section-divider"></div>
+        <div class="smoothing-row">
+          <span class="option-label">RoR Avg</span>
+          <select
+            class="smoothing-select"
+            value={options.rorSmoothing}
+            onchange={(e) =>
+              setRorSmoothing(Number((e.target as HTMLSelectElement).value))}
+          >
+            {#each ROR_SMOOTHING_OPTIONS as n (n)}
+              <option value={n}>{n === 1 ? "Off" : String(n)}</option>
+            {/each}
+          </select>
+        </div>
+      {/if}
 
       {#if controls.length > 0}
         <div class="section-divider"></div>
@@ -203,5 +226,25 @@
 
   input[type="checkbox"] {
     accent-color: #4fc3f7;
+  }
+
+  .smoothing-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 4px;
+    font-size: 0.8rem;
+    color: #ccc;
+  }
+
+  .smoothing-select {
+    background: #12122a;
+    border: 1px solid #2a2a4a;
+    border-radius: 3px;
+    color: #ccc;
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    cursor: pointer;
   }
 </style>

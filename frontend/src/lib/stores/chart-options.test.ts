@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_CHART_OPTIONS,
   createChartOptions,
+  smoothRor,
   type ChartOptions,
 } from "./chart-options";
 
@@ -21,6 +22,10 @@ describe("DEFAULT_CHART_OPTIONS", () => {
     expect(DEFAULT_CHART_OPTIONS.showExtraChannels).toEqual({});
   });
 
+  it("defaults rorSmoothing to 1", () => {
+    expect(DEFAULT_CHART_OPTIONS.rorSmoothing).toBe(1);
+  });
+
   it("has all expected fields", () => {
     const keys = Object.keys(DEFAULT_CHART_OPTIONS);
     expect(keys).toContain("showET");
@@ -29,6 +34,7 @@ describe("DEFAULT_CHART_OPTIONS", () => {
     expect(keys).toContain("showBTRor");
     expect(keys).toContain("showControls");
     expect(keys).toContain("showExtraChannels");
+    expect(keys).toContain("rorSmoothing");
   });
 
   it("can be spread to create a copy", () => {
@@ -63,5 +69,45 @@ describe("createChartOptions", () => {
     const opts = createChartOptions();
     expect(opts.showControls).toEqual({});
     expect(opts.showExtraChannels).toEqual({});
+  });
+
+  it("sets rorSmoothing to 1 by default", () => {
+    const opts = createChartOptions(["burner"], ["Inlet"]);
+    expect(opts.rorSmoothing).toBe(1);
+  });
+});
+
+describe("smoothRor", () => {
+  it("returns original values when windowSize is 1", () => {
+    const values = [5, 10, 15, 20];
+    expect(smoothRor(values, 1)).toEqual([5, 10, 15, 20]);
+  });
+
+  it("returns original values when windowSize is 0", () => {
+    const values = [5, 10, 15];
+    expect(smoothRor(values, 0)).toEqual([5, 10, 15]);
+  });
+
+  it("computes trailing moving average with window 3", () => {
+    const values = [3, 6, 9, 12, 15];
+    const result = smoothRor(values, 3);
+    // i=0: avg(3) = 3
+    // i=1: avg(3,6) = 4.5
+    // i=2: avg(3,6,9) = 6
+    // i=3: avg(6,9,12) = 9
+    // i=4: avg(9,12,15) = 12
+    expect(result[0]).toBe(3);
+    expect(result[1]).toBe(4.5);
+    expect(result[2]).toBe(6);
+    expect(result[3]).toBe(9);
+    expect(result[4]).toBe(12);
+  });
+
+  it("handles empty array", () => {
+    expect(smoothRor([], 5)).toEqual([]);
+  });
+
+  it("handles single element", () => {
+    expect(smoothRor([10], 3)).toEqual([10]);
   });
 });
