@@ -35,6 +35,78 @@ def _list_models() -> None:
         print()
 
 
+def _provision_machine(
+    manufacturer_id: str,
+    model_id: str,
+    host: str,
+    port: int,
+) -> str:
+    """Create a SavedMachine JSON file pointing to the simulator.
+
+    Writes directly to the backend data directory so the machine
+    appears in the UI when the backend loads saved machines.
+
+    Returns:
+        The machine ID.
+    """
+    from pathlib import Path
+
+    from openroast.catalog.loader import get_model
+    from openroast.core.machine_storage import MachineStorage
+    from openroast.models.catalog import ModbusConnectionConfig
+    from openroast.models.machine import SavedMachine
+
+    model = get_model(manufacturer_id, model_id)
+    if model is None:
+        print(f"Error: Model '{model_id}' not found")
+        sys.exit(1)
+
+    # Override connection to point to simulator
+    conn = model.connection
+    if isinstance(conn, ModbusConnectionConfig):
+        conn = ModbusConnectionConfig(
+            type="modbus_tcp",
+            host=host,
+            port=port,
+            baudrate=conn.baudrate,
+            bytesize=conn.bytesize,
+            parity=conn.parity,
+            stopbits=conn.stopbits,
+            timeout=conn.timeout,
+            word_order_little=conn.word_order_little,
+        )
+
+    machine = SavedMachine(
+        name=f"{model.name} (Simulator)",
+        catalog_manufacturer_id=manufacturer_id,
+        catalog_model_id=model_id,
+        protocol=model.protocol,
+        connection=conn,
+        sampling_interval_ms=model.sampling_interval_ms,
+        et=model.et,
+        bt=model.bt,
+        extra_channels=model.extra_channels,
+        controls=model.controls,
+    )
+
+    # Write to the standard data directory
+    data_dir = Path(__file__).resolve().parent.parent.parent.parent / "data" / "machines"
+    storage = MachineStorage(data_dir)
+    storage.save(machine)
+
+    return machine.id
+
+
+def _cleanup_machine(machine_id: str) -> None:
+    """Remove the provisioned SavedMachine JSON file."""
+    from pathlib import Path
+
+    data_dir = Path(__file__).resolve().parent.parent.parent.parent / "data" / "machines"
+    machine_file = data_dir / f"{machine_id}.json"
+    if machine_file.exists():
+        machine_file.unlink()
+
+
 async def _run_simulator(
     manufacturer_id: str,
     model_id: str,
@@ -51,17 +123,22 @@ async def _run_simulator(
         print("Use --list to see available models.")
         sys.exit(1)
 
+    # Provision a SavedMachine so the UI can see it
+    machine_id = _provision_machine(manufacturer_id, model_id, host, port)
+
     server = SimulatorServer(model, port=port, host=host)
     await server.start()
 
     print(f"Simulator running: {model.name}")
     print(f"  Modbus TCP: {host}:{port}")
+    print(f"  Machine ID: {machine_id}")
     print(f"  Sampling interval: {model.sampling_interval_ms}ms")
     print(f"  Channels: BT={model.bt and model.bt.name}, ET={model.et and model.et.name}")
     if model.controls:
         ctrl_names = ", ".join(c.name for c in model.controls)
         print(f"  Controls: {ctrl_names}")
-    print("\nPress Ctrl+C to stop.\n")
+    print("\nThe machine is now available in the UI. Reload the page to see it.")
+    print("Press Ctrl+C to stop.\n")
 
     stop_event = asyncio.Event()
 
@@ -75,6 +152,7 @@ async def _run_simulator(
     await stop_event.wait()
     print("\nStopping simulator...")
     await server.stop()
+    _cleanup_machine(machine_id)
     print("Done.")
 
 
