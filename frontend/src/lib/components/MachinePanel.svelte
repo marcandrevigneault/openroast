@@ -25,7 +25,7 @@
 	let drum = $state(60);
 
 	let isRecording = $derived(machine.sessionState === 'recording');
-	let isActive = $derived(machine.sessionState !== 'idle' && machine.sessionState !== 'finished');
+	let isConnected = $derived(machine.driverState === 'connected');
 </script>
 
 <div class="machine-panel">
@@ -78,7 +78,7 @@
 					max={100}
 					step={5}
 					color="#ff7043"
-					disabled={!isActive}
+					disabled={!isConnected}
 					onchange={(v) => oncontrol?.('burner', v)}
 				/>
 				<ControlSlider
@@ -88,7 +88,7 @@
 					max={100}
 					step={5}
 					color="#4fc3f7"
-					disabled={!isActive}
+					disabled={!isConnected}
 					onchange={(v) => oncontrol?.('airflow', v)}
 				/>
 				<ControlSlider
@@ -98,7 +98,7 @@
 					max={100}
 					step={5}
 					color="#81c784"
-					disabled={!isActive}
+					disabled={!isConnected}
 					onchange={(v) => oncontrol?.('drum', v)}
 				/>
 			</div>

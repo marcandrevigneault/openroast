@@ -114,6 +114,59 @@ class TestEvents:
         assert profile.events[0].auto_detected is True
 
 
+class TestControlTracking:
+    """Tests for control value tracking."""
+
+    def test_add_control_during_monitoring(
+        self, monitoring_session: RoastSession,
+    ) -> None:
+        monitoring_session.add_control_change(0, "burner", 0.8)
+        monitoring_session.add_control_change(5000, "airflow", 0.5)
+        # Controls are stored even during monitoring
+        monitoring_session.start_recording()
+        # But start_recording clears them
+        monitoring_session.add_reading(0, 210.0, 155.0)
+        profile = monitoring_session.to_profile("test")
+        assert profile.controls == {}
+
+    def test_add_control_during_recording(
+        self, recording_session: RoastSession,
+    ) -> None:
+        recording_session.add_control_change(0, "burner", 0.8)
+        recording_session.add_control_change(5000, "burner", 0.6)
+        recording_session.add_control_change(5000, "airflow", 0.5)
+        recording_session.add_reading(0, 210.0, 155.0)
+        profile = recording_session.to_profile("test")
+        assert "burner" in profile.controls
+        assert len(profile.controls["burner"]) == 2
+        assert profile.controls["burner"][0] == (0, 0.8)
+        assert profile.controls["burner"][1] == (5000, 0.6)
+        assert profile.controls["airflow"][0] == (5000, 0.5)
+
+    def test_controls_cleared_on_new_recording(
+        self, monitoring_session: RoastSession,
+    ) -> None:
+        monitoring_session.start_recording()
+        monitoring_session.add_control_change(0, "burner", 0.8)
+        monitoring_session.add_reading(0, 210.0, 155.0)
+        monitoring_session.stop_recording()
+        # Start new recording
+        monitoring_session.start_monitoring()
+        monitoring_session.start_recording()
+        monitoring_session.add_reading(0, 210.0, 155.0)
+        profile = monitoring_session.to_profile("test")
+        assert profile.controls == {}
+
+    def test_control_ignored_in_idle(self, session: RoastSession) -> None:
+        session.add_control_change(0, "burner", 0.5)
+        # Should not raise, just silently ignored
+        session.start_monitoring()
+        session.start_recording()
+        session.add_reading(0, 210.0, 155.0)
+        profile = session.to_profile("test")
+        assert profile.controls == {}
+
+
 class TestProfileExport:
     """Tests for exporting session data as a RoastProfile."""
 
