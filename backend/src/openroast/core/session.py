@@ -63,6 +63,13 @@ class RoastSession:
         self._events.clear()
         self._controls.clear()
 
+    def stop_monitoring(self) -> None:
+        """Stop monitoring and return to idle."""
+        if self._state != SessionState.MONITORING:
+            msg = f"Cannot stop monitoring from {self._state.value}"
+            raise ValueError(msg)
+        self._state = SessionState.IDLE
+
     def stop_recording(self) -> None:
         """Stop recording and finalize the roast."""
         if self._state != SessionState.RECORDING:

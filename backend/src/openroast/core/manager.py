@@ -242,6 +242,8 @@ class MachineManager:
         try:
             if action == CommandAction.START_MONITORING:
                 session.start_monitoring()
+            elif action == CommandAction.STOP_MONITORING:
+                session.stop_monitoring()
             elif action == CommandAction.START_RECORDING:
                 session.start_recording()
             elif action == CommandAction.STOP_RECORDING:

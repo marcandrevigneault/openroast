@@ -31,7 +31,25 @@ class TestSessionLifecycle:
         with pytest.raises(ValueError, match="Cannot start recording"):
             session.start_recording()
 
-    def test_cannot_stop_from_monitoring(
+    def test_stop_monitoring(
+        self, monitoring_session: RoastSession,
+    ) -> None:
+        monitoring_session.stop_monitoring()
+        assert monitoring_session.state == SessionState.IDLE
+
+    def test_cannot_stop_monitoring_from_idle(
+        self, session: RoastSession,
+    ) -> None:
+        with pytest.raises(ValueError, match="Cannot stop monitoring"):
+            session.stop_monitoring()
+
+    def test_cannot_stop_monitoring_from_recording(
+        self, recording_session: RoastSession,
+    ) -> None:
+        with pytest.raises(ValueError, match="Cannot stop monitoring"):
+            recording_session.stop_monitoring()
+
+    def test_cannot_stop_recording_from_monitoring(
         self, monitoring_session: RoastSession,
     ) -> None:
         with pytest.raises(ValueError, match="Cannot stop recording"):

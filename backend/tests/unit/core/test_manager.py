@@ -305,6 +305,31 @@ class TestHandleSessionCommand:
         await manager.disconnect_machine(machine.id)
 
     @patch("openroast.core.manager.create_driver")
+    async def test_stop_monitoring(self, mock_factory: MagicMock) -> None:
+        machine = _make_machine()
+        storage = _mock_storage({machine.id: machine})
+        mock_factory.return_value = _mock_driver()
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        # IDLE → MONITORING
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_MONITORING
+        )
+
+        # MONITORING → IDLE
+        result = await manager.handle_session_command(
+            machine.id, CommandAction.STOP_MONITORING
+        )
+
+        assert isinstance(result, StateMessage)
+        assert result.state == SessionStateValue.IDLE
+        assert result.previous_state == SessionStateValue.MONITORING
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
     async def test_full_lifecycle(self, mock_factory: MagicMock) -> None:
         machine = _make_machine()
         storage = _mock_storage({machine.id: machine})

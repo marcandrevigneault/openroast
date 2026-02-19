@@ -56,6 +56,7 @@ class DriverStateValue(StrEnum):
 
 class CommandAction(StrEnum):
     START_MONITORING = "start_monitoring"
+    STOP_MONITORING = "stop_monitoring"
     START_RECORDING = "start_recording"
     STOP_RECORDING = "stop_recording"
     MARK_EVENT = "mark_event"

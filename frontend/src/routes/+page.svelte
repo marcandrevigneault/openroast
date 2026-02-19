@@ -209,9 +209,13 @@
 
   function handleStop(id: string) {
     const client = wsClients.get(id);
-    if (client) {
-      client.send({ type: "command", action: "stop_recording" });
-    }
+    if (!client) return;
+    const state = machineStates.get(id);
+    const action =
+      state?.sessionState === "monitoring"
+        ? "stop_monitoring"
+        : "stop_recording";
+    client.send({ type: "command", action });
   }
 
   function handleRecord(id: string) {
