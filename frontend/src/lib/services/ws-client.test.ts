@@ -64,7 +64,11 @@ describe("WSClient", () => {
 
     onMessage = vi.fn();
     onStateChange = vi.fn();
-    callbacks = { onMessage, onStateChange };
+    callbacks = {
+      onMessage: onMessage as unknown as WSClientCallbacks["onMessage"],
+      onStateChange:
+        onStateChange as unknown as WSClientCallbacks["onStateChange"],
+    };
     vi.useFakeTimers();
   });
 
