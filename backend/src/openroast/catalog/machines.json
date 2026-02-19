@@ -73,7 +73,6 @@
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
             {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "V.Press", "channel": "vpress", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         },
@@ -109,7 +108,6 @@
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
             {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "V.Press", "channel": "vpress", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         },
@@ -145,7 +143,6 @@
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
             {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
-            {"name": "V.Press", "channel": "vpress", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
           ]
         }

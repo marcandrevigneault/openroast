@@ -89,6 +89,9 @@
 
   let isRecording = $derived(machine.sessionState === "recording");
   let isConnected = $derived(machine.driverState === "connected");
+  let showRetryButton = $derived(
+    machine.driverState === "error" || machine.driverState === "disconnected",
+  );
 
   // Smoothed RoR for the header temperature display
   let smoothedHeaderEtRor = $derived(() => {
@@ -150,6 +153,13 @@
         driverState={machine.driverState}
         sessionState={machine.sessionState}
       />
+      {#if showRetryButton && onretry}
+        <button
+          class="btn-retry-header"
+          onclick={onretry}
+          title="Retry connection">&#8635;</button
+        >
+      {/if}
       <button
         class="btn-settings"
         onclick={() => (settingsOpen = true)}
@@ -308,6 +318,23 @@
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
+  }
+
+  .btn-retry-header {
+    background: transparent;
+    border: 1px solid #ff9800;
+    color: #ff9800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .btn-retry-header:hover {
+    background: rgba(255, 152, 0, 0.15);
+    color: #ffb74d;
+    border-color: #ffb74d;
   }
 
   .btn-settings {

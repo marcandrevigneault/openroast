@@ -35,8 +35,15 @@
   let samplingInterval = $state(3000);
   let controls = $state<CatalogControl[]>([]);
   let extraChannels = $state<Record<string, unknown>[]>([]);
+  let etSensor = $state<Record<string, unknown>>({});
+  let btSensor = $state<Record<string, unknown>>({});
 
   let isSerial = $derived(protocol === "serial");
+  let isModbus = $derived(
+    protocol === "modbus_tcp" || protocol === "modbus_rtu",
+  );
+  let isS7 = $derived(protocol === "s7");
+  let hasRegisterConfig = $derived(isModbus || isS7);
 
   $effect(() => {
     if (open && machineId) {
@@ -55,6 +62,14 @@
       samplingInterval = m.sampling_interval_ms;
       controls = [...(m.controls ?? [])];
       extraChannels = (m.extra_channels ?? []).map((ch) => ({ ...ch }));
+
+      // Load sensor configs
+      etSensor = (m as Record<string, unknown>).et
+        ? { ...((m as Record<string, unknown>).et as Record<string, unknown>) }
+        : { name: "ET" };
+      btSensor = (m as Record<string, unknown>).bt
+        ? { ...((m as Record<string, unknown>).bt as Record<string, unknown>) }
+        : { name: "BT" };
 
       // Extract connection params
       const conn = m.connection ?? {};
@@ -84,6 +99,16 @@
     }
   }
 
+  function getModbus(
+    obj: Record<string, unknown>,
+  ): Record<string, unknown> | null {
+    return (obj.modbus as Record<string, unknown>) ?? null;
+  }
+
+  function getS7(obj: Record<string, unknown>): Record<string, unknown> | null {
+    return (obj.s7 as Record<string, unknown>) ?? null;
+  }
+
   async function handleSave() {
     if (!machine || !name.trim()) return;
     saving = true;
@@ -99,6 +124,8 @@
         extra_channels: extraChannels.filter(
           (ch) => ((ch as { name?: string }).name ?? "").trim() !== "",
         ),
+        et: etSensor,
+        bt: btSensor,
       };
       const result = await updateMachine(machineId, updated);
       onsaved(result);
@@ -189,6 +216,8 @@
             </label>
           </section>
 
+          <div class="section-divider"></div>
+
           <!-- Connection -->
           <section class="form-section">
             <h4>Connection</h4>
@@ -201,6 +230,119 @@
               <input type="number" bind:value={port} min="1" />
             </label>
           </section>
+
+          <div class="section-divider"></div>
+
+          <!-- Sensors (BT / ET) -->
+          <section class="form-section">
+            <h4>Sensors</h4>
+
+            <!-- BT -->
+            <div class="list-item-card">
+              <div class="item-row">
+                <label class="field field-sm">
+                  <span class="label">BT Name</span>
+                  <input type="text" bind:value={btSensor.name} />
+                </label>
+              </div>
+              {#if isModbus && getModbus(btSensor)}
+                {@const mb = getModbus(btSensor)!}
+                <div class="item-row">
+                  <label class="field field-sm">
+                    <span class="label">Address</span>
+                    <input type="number" bind:value={mb.address} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Fn Code</span>
+                    <input type="number" bind:value={mb.code} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Device ID</span>
+                    <input type="number" bind:value={mb.device_id} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Divisor</span>
+                    <input type="number" bind:value={mb.divisor} />
+                  </label>
+                </div>
+              {/if}
+              {#if isS7 && getS7(btSensor)}
+                {@const s7 = getS7(btSensor)!}
+                <div class="item-row">
+                  <label class="field field-sm">
+                    <span class="label">DB Nr</span>
+                    <input type="number" bind:value={s7.db_nr} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Start</span>
+                    <input type="number" bind:value={s7.start} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Area</span>
+                    <input type="number" bind:value={s7.area} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Div</span>
+                    <input type="number" bind:value={s7.div} />
+                  </label>
+                </div>
+              {/if}
+            </div>
+
+            <!-- ET -->
+            <div class="list-item-card">
+              <div class="item-row">
+                <label class="field field-sm">
+                  <span class="label">ET Name</span>
+                  <input type="text" bind:value={etSensor.name} />
+                </label>
+              </div>
+              {#if isModbus && getModbus(etSensor)}
+                {@const mb = getModbus(etSensor)!}
+                <div class="item-row">
+                  <label class="field field-sm">
+                    <span class="label">Address</span>
+                    <input type="number" bind:value={mb.address} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Fn Code</span>
+                    <input type="number" bind:value={mb.code} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Device ID</span>
+                    <input type="number" bind:value={mb.device_id} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Divisor</span>
+                    <input type="number" bind:value={mb.divisor} />
+                  </label>
+                </div>
+              {/if}
+              {#if isS7 && getS7(etSensor)}
+                {@const s7 = getS7(etSensor)!}
+                <div class="item-row">
+                  <label class="field field-sm">
+                    <span class="label">DB Nr</span>
+                    <input type="number" bind:value={s7.db_nr} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Start</span>
+                    <input type="number" bind:value={s7.start} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Area</span>
+                    <input type="number" bind:value={s7.area} />
+                  </label>
+                  <label class="field field-sm">
+                    <span class="label">Div</span>
+                    <input type="number" bind:value={s7.div} />
+                  </label>
+                </div>
+              {/if}
+            </div>
+          </section>
+
+          <div class="section-divider"></div>
 
           <!-- Controls -->
           <section class="form-section">
@@ -258,6 +400,8 @@
             {/if}
           </section>
 
+          <div class="section-divider"></div>
+
           <!-- Extra Channels -->
           <section class="form-section">
             <div class="section-header">
@@ -265,17 +409,67 @@
               <button class="btn-add" onclick={addExtraChannel}>+ Add</button>
             </div>
             {#each extraChannels as _ch, i (i)}
-              <div class="inline-item">
-                <input
-                  type="text"
-                  bind:value={extraChannels[i].name}
-                  placeholder="Channel name"
-                />
-                <button
-                  class="btn-remove-item"
-                  onclick={() => removeExtraChannel(i)}
-                  title="Remove channel">&times;</button
-                >
+              <div class="list-item-card">
+                <div class="item-row">
+                  <label class="field field-sm">
+                    <span class="label">Name</span>
+                    <input
+                      type="text"
+                      bind:value={extraChannels[i].name}
+                      placeholder="Channel name"
+                    />
+                  </label>
+                  <button
+                    class="btn-remove-item"
+                    onclick={() => removeExtraChannel(i)}
+                    title="Remove channel">&times;</button
+                  >
+                </div>
+                {#if isModbus && getModbus(extraChannels[i])}
+                  {@const mb = getModbus(extraChannels[i])!}
+                  <div class="item-row">
+                    <label class="field field-sm">
+                      <span class="label">Address</span>
+                      <input type="number" bind:value={mb.address} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Fn Code</span>
+                      <input type="number" bind:value={mb.code} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Device ID</span>
+                      <input type="number" bind:value={mb.device_id} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Divisor</span>
+                      <input type="number" bind:value={mb.divisor} />
+                    </label>
+                  </div>
+                {/if}
+                {#if isS7 && getS7(extraChannels[i])}
+                  {@const s7 = getS7(extraChannels[i])!}
+                  <div class="item-row">
+                    <label class="field field-sm">
+                      <span class="label">DB Nr</span>
+                      <input type="number" bind:value={s7.db_nr} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Start</span>
+                      <input type="number" bind:value={s7.start} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Area</span>
+                      <input type="number" bind:value={s7.area} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Div</span>
+                      <input type="number" bind:value={s7.div} />
+                    </label>
+                  </div>
+                {/if}
+                {#if hasRegisterConfig && !getModbus(extraChannels[i]) && !getS7(extraChannels[i])}
+                  <p class="register-hint">No register config — name only.</p>
+                {/if}
               </div>
             {/each}
             {#if extraChannels.length === 0}
@@ -367,6 +561,10 @@
     gap: 8px;
   }
 
+  .section-divider {
+    border-top: 1px solid #2a2a4a;
+  }
+
   h4 {
     margin: 0;
     color: #ccc;
@@ -454,16 +652,6 @@
     align-items: flex-end;
   }
 
-  .inline-item {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .inline-item input {
-    flex: 1;
-  }
-
   .btn-remove-item {
     background: transparent;
     border: 1px solid transparent;
@@ -481,11 +669,17 @@
     border-color: #f44336;
   }
 
-  .empty-hint {
+  .empty-hint,
+  .register-hint {
     color: #666;
     font-size: 0.8rem;
     font-style: italic;
     margin: 0;
+  }
+
+  .register-hint {
+    font-size: 0.7rem;
+    padding-left: 4px;
   }
 
   .loading {

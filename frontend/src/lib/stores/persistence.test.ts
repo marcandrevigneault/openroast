@@ -4,7 +4,6 @@ import {
   loadUIState,
   clearUIState,
   createDefaultState,
-  DEFAULT_CHART_OPTIONS,
   type PersistedUIState,
 } from "./persistence";
 
@@ -34,38 +33,18 @@ describe("persistence", () => {
   });
 
   describe("createDefaultState", () => {
-    it("returns version 1 with empty machines", () => {
+    it("returns version 2 with vertical layout", () => {
       const state = createDefaultState();
-      expect(state.version).toBe(1);
-      expect(state.dashboard.machines).toEqual([]);
-      expect(state.dashboard.layout.mode).toBe("grid");
-      expect(state.dashboard.layout.columns).toBe(2);
+      expect(state.version).toBe(2);
+      expect(state.layout.mode).toBe("vertical");
       expect(state.chartOptions).toEqual({});
-    });
-  });
-
-  describe("DEFAULT_CHART_OPTIONS", () => {
-    it("has ET and BT enabled by default", () => {
-      expect(DEFAULT_CHART_OPTIONS.showET).toBe(true);
-      expect(DEFAULT_CHART_OPTIONS.showBT).toBe(true);
-    });
-
-    it("has optional curves disabled by default", () => {
-      expect(DEFAULT_CHART_OPTIONS.showETRor).toBe(false);
-      expect(DEFAULT_CHART_OPTIONS.showBTRor).toBe(false);
-      expect(DEFAULT_CHART_OPTIONS.showBurner).toBe(false);
-      expect(DEFAULT_CHART_OPTIONS.showAirflow).toBe(false);
-      expect(DEFAULT_CHART_OPTIONS.showDrum).toBe(false);
     });
   });
 
   describe("saveUIState", () => {
     it("saves state to localStorage", () => {
       const state = makeState({
-        dashboard: {
-          machines: [{ id: "m1", name: "Roaster 1" }],
-          layout: { mode: "vertical", columns: 1 },
-        },
+        layout: { mode: "side-by-side" },
       });
       const result = saveUIState(state);
       expect(result).toBe(true);
@@ -76,7 +55,7 @@ describe("persistence", () => {
       const raw = store.get("openroast-ui-state");
       expect(raw).not.toBeUndefined();
       const parsed = JSON.parse(raw!);
-      expect(parsed.dashboard.machines).toHaveLength(1);
+      expect(parsed.layout.mode).toBe("side-by-side");
     });
   });
 
@@ -87,20 +66,25 @@ describe("persistence", () => {
 
     it("returns saved state", () => {
       const state = makeState({
-        dashboard: {
-          machines: [{ id: "m1", name: "Roaster 1" }],
-          layout: { mode: "horizontal", columns: 3 },
-        },
+        layout: { mode: "side-by-side" },
         chartOptions: {
-          m1: { ...DEFAULT_CHART_OPTIONS, showETRor: true },
+          m1: {
+            showET: true,
+            showBT: true,
+            showETRor: true,
+            showBTRor: false,
+            showControls: {},
+            showExtraChannels: {},
+            rorSmoothing: 5,
+          },
         },
       });
       saveUIState(state);
       const loaded = loadUIState();
       expect(loaded).not.toBeNull();
-      expect(loaded!.dashboard.machines[0].name).toBe("Roaster 1");
-      expect(loaded!.dashboard.layout.mode).toBe("horizontal");
+      expect(loaded!.layout.mode).toBe("side-by-side");
       expect(loaded!.chartOptions.m1.showETRor).toBe(true);
+      expect(loaded!.chartOptions.m1.rorSmoothing).toBe(5);
     });
 
     it("returns null for invalid JSON", () => {
@@ -112,21 +96,29 @@ describe("persistence", () => {
       store.set(
         "openroast-ui-state",
         JSON.stringify({
-          version: 999,
-          dashboard: { machines: [], layout: {} },
+          version: 1,
+          layout: { mode: "vertical" },
           chartOptions: {},
         }),
       );
       expect(loadUIState()).toBeNull();
     });
 
-    it("returns null for missing dashboard", () => {
-      store.set("openroast-ui-state", JSON.stringify({ version: 1 }));
+    it("returns null for missing layout", () => {
+      store.set("openroast-ui-state", JSON.stringify({ version: 2 }));
       expect(loadUIState()).toBeNull();
     });
 
     it("returns null for non-object", () => {
       store.set("openroast-ui-state", '"string"');
+      expect(loadUIState()).toBeNull();
+    });
+
+    it("returns null for layout missing mode", () => {
+      store.set(
+        "openroast-ui-state",
+        JSON.stringify({ version: 2, layout: {} }),
+      );
       expect(loadUIState()).toBeNull();
     });
   });
@@ -142,16 +134,17 @@ describe("persistence", () => {
   describe("roundtrip", () => {
     it("preserves full state through save/load", () => {
       const state = makeState({
-        dashboard: {
-          machines: [
-            { id: "m1", name: "Stratto Pro 300" },
-            { id: "m2", name: "Probat 12" },
-          ],
-          layout: { mode: "grid", columns: 3 },
-        },
+        layout: { mode: "side-by-side" },
         chartOptions: {
-          m1: { ...DEFAULT_CHART_OPTIONS, showBurner: true, showAirflow: true },
-          m2: { ...DEFAULT_CHART_OPTIONS },
+          m1: {
+            showET: true,
+            showBT: true,
+            showETRor: false,
+            showBTRor: true,
+            showControls: { burner: true },
+            showExtraChannels: { Inlet: false },
+            rorSmoothing: 3,
+          },
         },
       });
       saveUIState(state);
