@@ -113,6 +113,41 @@
     }
   }
 
+  async function handleRetryConnection(id: string) {
+    const current = machineStates.get(id);
+    if (!current) return;
+
+    // Clear error state
+    machineStates.set(id, {
+      ...current,
+      error: null,
+      driverState: "connecting",
+    });
+
+    // If WSClient exists, force immediate reconnect
+    const existingClient = wsClients.get(id);
+    if (existingClient) {
+      existingClient.retryNow();
+      return;
+    }
+
+    // Otherwise retry the REST connection + create WSClient
+    try {
+      await connectMachine(id);
+      const client = createWSClient(id);
+      client.connect();
+    } catch (e) {
+      const state = machineStates.get(id);
+      if (state) {
+        machineStates.set(id, {
+          ...state,
+          error: e instanceof Error ? e.message : "Connection failed",
+          driverState: "error",
+        });
+      }
+    }
+  }
+
   async function handleRemoveMachine(id: string) {
     // Disconnect WebSocket
     const client = wsClients.get(id);
@@ -280,6 +315,7 @@
           onstoprecord={() => handleStopRecord(m.id)}
           onmark={(eventType) => handleMark(m.id, eventType)}
           oncontrol={(channel, value) => handleControl(m.id, channel, value)}
+          onretry={() => handleRetryConnection(m.id)}
           onsettingssaved={(machine) => handleSettingsSaved(m.id, machine)}
           onremove={() => handleRemoveMachine(m.id)}
         />

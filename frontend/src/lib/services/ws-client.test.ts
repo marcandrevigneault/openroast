@@ -232,4 +232,19 @@ describe("WSClient", () => {
     // Should not crash, no message callback
     expect(onMessage).not.toHaveBeenCalled();
   });
+
+  it("retryNow forces immediate reconnect and resets backoff", () => {
+    const client = new WSClient("machine-1", callbacks);
+    client.connect();
+    MockWebSocket.instances[0].simulateOpen();
+
+    // Simulate error state
+    MockWebSocket.instances[0].simulateClose();
+    const countBefore = MockWebSocket.instances.length;
+
+    // Retry now — should create a new WebSocket immediately
+    client.retryNow();
+    expect(MockWebSocket.instances.length).toBe(countBefore + 1);
+    expect(client.state).toBe("connecting");
+  });
 });
