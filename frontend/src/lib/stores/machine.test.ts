@@ -246,7 +246,7 @@ describe("processMessage", () => {
     });
 
     it("clears history when monitoring starts", () => {
-      let state = { ...baseState(), sessionState: "monitoring" as const };
+      let state: MachineState = { ...baseState(), sessionState: "monitoring" };
       state = processMessage(state, {
         type: "temperature",
         timestamp_ms: 1000,
@@ -275,7 +275,7 @@ describe("processMessage", () => {
     });
 
     it("keeps last 5s of history rebased to t=0 when recording starts", () => {
-      let state = { ...baseState(), sessionState: "monitoring" as const };
+      let state: MachineState = { ...baseState(), sessionState: "monitoring" };
       // Add data at 1s, 3s, 8s (only 3s and 8s are within last 5s of t=8)
       for (const ts of [1000, 3000, 8000]) {
         state = processMessage(state, {
@@ -331,7 +331,7 @@ describe("processMessage", () => {
     });
 
     it("preserves history for non-recording state changes", () => {
-      let state = { ...baseState(), sessionState: "monitoring" as const };
+      let state: MachineState = { ...baseState(), sessionState: "monitoring" };
       state = processMessage(state, {
         type: "temperature",
         timestamp_ms: 1000,
