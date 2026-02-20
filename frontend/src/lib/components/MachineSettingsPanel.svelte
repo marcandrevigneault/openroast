@@ -45,7 +45,7 @@
   let isS7 = $derived(protocol === "s7");
 
   $effect(() => {
-    if (open && machineId) {
+    if (open && machineId && !machine) {
       loadMachine();
     }
   });
