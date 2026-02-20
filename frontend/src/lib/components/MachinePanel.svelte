@@ -210,11 +210,6 @@
       options={effectiveOptions}
     />
     <div class="chart-toolbar">
-      {#if onreset}
-        <button class="btn-chart-reset" onclick={onreset} title="Reset chart"
-          >&#8634;</button
-        >
-      {/if}
       <ChartOptionsMenu
         options={effectiveOptions}
         controls={machine.controls}
@@ -240,6 +235,11 @@
       {onstoprecord}
     />
     <EventButtons disabled={true} events={machine.events} {onmark} />
+    {#if onreset}
+      <button class="btn-reset" onclick={onreset} title="Reset chart"
+        >&#8634; Reset</button
+      >
+    {/if}
   </div>
 
   <!-- Controls -->
@@ -398,18 +398,18 @@
     align-items: center;
   }
 
-  .btn-chart-reset {
+  .btn-reset {
     background: transparent;
     border: 1px solid #2a2a4a;
-    border-radius: 4px;
+    border-radius: 6px;
     color: #888;
-    font-size: 1rem;
-    padding: 2px 6px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
     cursor: pointer;
-    line-height: 1;
+    margin-left: auto;
   }
 
-  .btn-chart-reset:hover {
+  .btn-reset:hover {
     color: #ccc;
     border-color: #444;
   }

@@ -282,6 +282,11 @@
       events: [],
       currentTemp: null,
     });
+    // Tell backend to reset session + clock so chart restarts at t=0
+    const client = wsClients.get(id);
+    if (client) {
+      client.send({ type: "command", action: "reset" });
+    }
   }
 
   function handleControl(id: string, channel: string, value: number) {
