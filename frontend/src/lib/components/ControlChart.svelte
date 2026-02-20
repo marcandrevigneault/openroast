@@ -34,7 +34,7 @@
     height = 150,
   }: Props = $props();
 
-  const PADDING = { top: 16, right: 40, bottom: 30, left: 50 };
+  const PADDING = { top: 28, right: 40, bottom: 30, left: 50 };
   const CONTROL_COLORS = [
     "#e6c229",
     "#66bb6a",
@@ -247,15 +247,8 @@
       <!-- Legend -->
       {#each allPaths as entry, i (entry.label)}
         {@const lx = PADDING.left + 10 + i * 65}
-        <rect
-          x={lx}
-          y={PADDING.top + 2}
-          width="10"
-          height="3"
-          fill={entry.color}
-          rx="1"
-        />
-        <text x={lx + 14} y={PADDING.top + 7} fill={entry.color} font-size="9"
+        <rect x={lx} y="8" width="10" height="3" fill={entry.color} rx="1" />
+        <text x={lx + 14} y="13" fill={entry.color} font-size="9"
           >{entry.label}</text
         >
       {/each}

@@ -22,7 +22,7 @@
   }: Props = $props();
 
   // Chart configuration
-  const PADDING = { top: 20, right: 60, bottom: 40, left: 50 };
+  const PADDING = { top: 34, right: 60, bottom: 40, left: 50 };
   const ET_COLOR = "#ff7043";
   const BT_COLOR = "#42a5f5";
   const ET_DELTA_COLOR = "#ffab91";
@@ -334,15 +334,8 @@
     <!-- Dynamic legend -->
     {#each legendEntries() as entry, i (entry.label)}
       {@const lx = PADDING.left + 10 + i * 55}
-      <rect
-        x={lx}
-        y={PADDING.top + 5}
-        width="10"
-        height="3"
-        fill={entry.color}
-        rx="1"
-      />
-      <text x={lx + 14} y={PADDING.top + 10} fill={entry.color} font-size="10"
+      <rect x={lx} y="10" width="10" height="3" fill={entry.color} rx="1" />
+      <text x={lx + 14} y="15" fill={entry.color} font-size="10"
         >{entry.label}</text
       >
     {/each}
