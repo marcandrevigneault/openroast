@@ -250,15 +250,23 @@
       })),
   );
 
-  // Dynamic extra channel curves
+  // Dynamic extra channel curves — use matching control color if one exists
   let extraChannelPaths = $derived(
     extraChannels
       .filter((ch) => options.showExtraChannels[ch.name])
-      .map((ch) => ({
-        path: buildExtraChannelPath(extraChannelHistory, ch.name),
-        color: EXTRA_CHANNEL_COLOR,
-        label: ch.name,
-      })),
+      .map((ch) => {
+        const matchingCtrl = controls.find((c) => c.name === ch.name);
+        const color = matchingCtrl
+          ? CONTROL_COLORS[
+              controls.indexOf(matchingCtrl) % CONTROL_COLORS.length
+            ]
+          : EXTRA_CHANNEL_COLOR;
+        return {
+          path: buildExtraChannelPath(extraChannelHistory, ch.name),
+          color,
+          label: ch.name,
+        };
+      }),
   );
 
   // Whether the right Y-axis is needed

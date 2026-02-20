@@ -148,14 +148,19 @@
       {#if extraChannels.length > 0}
         <div class="section-divider"></div>
         {#each extraChannels as ch (ch.name)}
+          {@const matchingCtrl = controls.find((c) => c.name === ch.name)}
+          {@const dotColor = matchingCtrl
+            ? CONTROL_COLORS[
+                controls.indexOf(matchingCtrl) % CONTROL_COLORS.length
+              ]
+            : EXTRA_CHANNEL_COLOR}
           <label class="option-row">
             <input
               type="checkbox"
               checked={options.showExtraChannels[ch.name] ?? false}
               onchange={() => toggleExtraChannel(ch.name)}
             />
-            <span class="color-dot" style="background: {EXTRA_CHANNEL_COLOR}"
-            ></span>
+            <span class="color-dot" style="background: {dotColor}"></span>
             <span class="option-label">{ch.name}</span>
           </label>
         {/each}
