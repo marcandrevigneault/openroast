@@ -67,6 +67,18 @@
   ];
 
   let sliderValues = $state<Record<string, number>>({});
+
+  // Sync slider values from extra channel read-backs (e.g., Burner extra channel → burner slider)
+  $effect(() => {
+    for (const ctrl of machine.controls) {
+      if (sliderValues[ctrl.channel] !== undefined) continue;
+      const readback = machine.currentExtraChannels[ctrl.name];
+      if (readback !== undefined) {
+        sliderValues[ctrl.channel] = readback;
+      }
+    }
+  });
+
   let saving = $state(false);
   let saved = $state(false);
   let settingsOpen = $state(false);
