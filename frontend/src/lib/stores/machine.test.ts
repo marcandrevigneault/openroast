@@ -245,6 +245,35 @@ describe("processMessage", () => {
       expect(result.sessionState).toBe("monitoring");
     });
 
+    it("clears history when monitoring starts", () => {
+      let state = { ...baseState(), sessionState: "monitoring" as const };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+      });
+      expect(state.history).toHaveLength(1);
+      // Stop monitoring → idle, then start again
+      state = processMessage(state, {
+        type: "state",
+        state: "idle",
+        previous_state: "monitoring",
+      });
+      state = processMessage(state, {
+        type: "state",
+        state: "monitoring",
+        previous_state: "idle",
+      });
+      expect(state.history).toEqual([]);
+      expect(state.controlHistory).toEqual([]);
+      expect(state.extraChannelHistory).toEqual([]);
+      expect(state.events).toEqual([]);
+    });
+
     it("keeps last 5s of history rebased to t=0 when recording starts", () => {
       let state = { ...baseState(), sessionState: "monitoring" as const };
       // Add data at 1s, 3s, 8s (only 3s and 8s are within last 5s of t=8)

@@ -167,6 +167,16 @@ export function processMessage(
             .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
         };
       }
+      if (msg.state === "monitoring") {
+        return {
+          ...state,
+          sessionState: msg.state,
+          history: [],
+          controlHistory: [],
+          extraChannelHistory: [],
+          events: [],
+        };
+      }
       return { ...state, sessionState: msg.state };
     }
     case "connection":
