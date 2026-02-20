@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { saveProfile, listProfiles, deleteProfile } from "./api";
+import { saveProfile, listProfiles, getProfile, deleteProfile } from "./api";
 
 const mockFetch = vi.fn();
 
@@ -69,6 +69,34 @@ describe("listProfiles", () => {
     const result = await listProfiles();
     expect(result).toEqual(summaries);
     expect(mockFetch).toHaveBeenCalledWith("/api/profiles");
+  });
+});
+
+describe("getProfile", () => {
+  it("fetches full profile by id", async () => {
+    const profile = {
+      id: "abc-123",
+      name: "Test",
+      machine: "Stratto",
+      created_at: "2026-01-01",
+      bean_name: "Ethiopian",
+      temperatures: [],
+      events: [],
+      controls: { Burner: [[0, 50]] },
+    };
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(profile),
+    });
+
+    const result = await getProfile("abc-123");
+    expect(result).toEqual(profile);
+    expect(mockFetch).toHaveBeenCalledWith("/api/profiles/abc-123");
+  });
+
+  it("throws on error response", async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 404 });
+    await expect(getProfile("nope")).rejects.toThrow("Get profile failed: 404");
   });
 });
 

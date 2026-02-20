@@ -29,12 +29,14 @@
   import CatalogSelector from "$lib/components/CatalogSelector.svelte";
   import ToastContainer from "$lib/components/ToastContainer.svelte";
   import { addToast } from "$lib/stores/toast";
+  import { evaluateSchedule, type RoastSchedule } from "$lib/stores/scheduler";
 
   let dashboard = $state<DashboardState>(createDashboardState());
   let machineStates = new SvelteMap<string, MachineState>();
   // eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive, side-effect only
   let wsClients = new Map<string, WSClient>();
   let chartOptionsMap = $state<Record<string, ChartOptions>>({});
+  let scheduleMap = new SvelteMap<string, RoastSchedule>();
 
   let showAddDialog = $state(false);
 
@@ -307,6 +309,50 @@
     });
   }
 
+  function handleScheduleChange(id: string, s: RoastSchedule) {
+    scheduleMap.set(id, s);
+  }
+
+  // Evaluate running schedules on every machine state change
+  $effect(() => {
+    for (const [machineId, sched] of scheduleMap) {
+      if (sched.status !== "running") continue;
+
+      const state = machineStates.get(machineId);
+      if (!state?.currentTemp) continue;
+      if (state.driverState !== "connected") continue;
+      if (
+        state.sessionState !== "monitoring" &&
+        state.sessionState !== "recording"
+      )
+        continue;
+
+      const histLen = state.history.length;
+      const prevTemp =
+        histLen >= 2
+          ? state.history[histLen - 2]
+          : (state.history[histLen - 1] ?? state.currentTemp);
+
+      const { schedule: updated, firedActions } = evaluateSchedule(
+        sched,
+        state.currentTemp.timestamp_ms,
+        state.currentTemp.bt,
+        state.currentTemp.et,
+        prevTemp.bt,
+        prevTemp.et,
+      );
+
+      if (firedActions.length > 0) {
+        for (const action of firedActions) {
+          handleControl(machineId, action.channel, action.value);
+        }
+        scheduleMap.set(machineId, updated);
+      } else if (updated.status !== sched.status) {
+        scheduleMap.set(machineId, updated);
+      }
+    }
+  });
+
   async function loadSavedMachines() {
     try {
       const machines = await listMachines();
@@ -380,6 +426,8 @@
           onretry={() => handleRetryConnection(m.id)}
           onsettingssaved={(machine) => handleSettingsSaved(m.id, machine)}
           onremove={() => handleRemoveMachine(m.id)}
+          schedule={scheduleMap.get(m.id)}
+          onschedulechange={(s) => handleScheduleChange(m.id, s)}
         />
       {/if}
     {/each}

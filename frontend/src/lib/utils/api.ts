@@ -50,6 +50,27 @@ export async function listProfiles(): Promise<ProfileSummary[]> {
   return resp.json();
 }
 
+export interface FullProfile {
+  id: string;
+  name: string;
+  machine: string;
+  created_at: string;
+  bean_name: string;
+  temperatures: TemperaturePoint[];
+  events: {
+    event_type: string;
+    timestamp_ms: number;
+    auto_detected: boolean;
+  }[];
+  controls: Record<string, [number, number][]>;
+}
+
+export async function getProfile(id: string): Promise<FullProfile> {
+  const resp = await fetch(`${BASE}/profiles/${id}`);
+  if (!resp.ok) throw new Error(`Get profile failed: ${resp.status}`);
+  return resp.json();
+}
+
 export async function deleteProfile(id: string): Promise<void> {
   const resp = await fetch(`${BASE}/profiles/${id}`, { method: "DELETE" });
   if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
