@@ -78,8 +78,8 @@
   }[] = [
     { key: "showET", label: "ET", color: "#ff7043" },
     { key: "showBT", label: "BT", color: "#42a5f5" },
-    { key: "showETRor", label: "ET RoR", color: "#ffab91" },
-    { key: "showBTRor", label: "BT RoR", color: "#90caf9" },
+    { key: "showETRor", label: "\u0394 ET", color: "#ffab91" },
+    { key: "showBTRor", label: "\u0394 BT", color: "#90caf9" },
   ];
 </script>
 
@@ -111,7 +111,7 @@
       {#if options.showETRor || options.showBTRor}
         <div class="section-divider"></div>
         <div class="smoothing-row">
-          <span class="option-label">RoR Avg</span>
+          <span class="option-label">Delta Avg</span>
           <select
             class="smoothing-select"
             value={options.rorSmoothing}
@@ -148,14 +148,19 @@
       {#if extraChannels.length > 0}
         <div class="section-divider"></div>
         {#each extraChannels as ch (ch.name)}
+          {@const matchingCtrl = controls.find((c) => c.name === ch.name)}
+          {@const dotColor = matchingCtrl
+            ? CONTROL_COLORS[
+                controls.indexOf(matchingCtrl) % CONTROL_COLORS.length
+              ]
+            : EXTRA_CHANNEL_COLOR}
           <label class="option-row">
             <input
               type="checkbox"
               checked={options.showExtraChannels[ch.name] ?? false}
               onchange={() => toggleExtraChannel(ch.name)}
             />
-            <span class="color-dot" style="background: {EXTRA_CHANNEL_COLOR}"
-            ></span>
+            <span class="color-dot" style="background: {dotColor}"></span>
             <span class="option-label">{ch.name}</span>
           </label>
         {/each}

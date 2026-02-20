@@ -1,11 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/svelte";
 import RoastChart from "./RoastChart.svelte";
-import type {
-  TemperaturePoint,
-  ControlPoint,
-  ControlConfig,
-} from "$lib/stores/machine";
+import type { TemperaturePoint } from "$lib/stores/machine";
 import { DEFAULT_CHART_OPTIONS } from "$lib/stores/chart-options";
 
 function makePoints(count: number): TemperaturePoint[] {
@@ -17,18 +13,6 @@ function makePoints(count: number): TemperaturePoint[] {
     bt_ror: 8 + i * 0.1,
   }));
 }
-
-function makeControlPoints(count: number): ControlPoint[] {
-  return Array.from({ length: count }, (_, i) => ({
-    timestamp_ms: i * 1000,
-    values: { burner: 70 + i, airflow: 50 },
-  }));
-}
-
-const TEST_CONTROLS: ControlConfig[] = [
-  { name: "Burner", channel: "burner", min: 0, max: 100, step: 5, unit: "%" },
-  { name: "Airflow", channel: "airflow", min: 0, max: 100, step: 5, unit: "%" },
-];
 
 describe("RoastChart", () => {
   it("renders SVG element", () => {
@@ -107,7 +91,7 @@ describe("RoastChart", () => {
     expect(paths.length).toBe(1);
   });
 
-  it("shows RoR paths when enabled", () => {
+  it("shows delta paths when enabled", () => {
     const opts = {
       ...DEFAULT_CHART_OPTIONS,
       showETRor: true,
@@ -117,29 +101,11 @@ describe("RoastChart", () => {
       props: { history: makePoints(20), options: opts },
     });
     const paths = container.querySelectorAll("path");
-    // ET + BT + ET RoR + BT RoR = 4 paths
+    // ET + BT + delta ET + delta BT = 4 paths
     expect(paths.length).toBe(4);
   });
 
-  it("shows control paths when enabled", () => {
-    const opts = {
-      ...DEFAULT_CHART_OPTIONS,
-      showControls: { burner: true, airflow: true },
-    };
-    const { container } = render(RoastChart, {
-      props: {
-        history: makePoints(20),
-        controlHistory: makeControlPoints(20),
-        controls: TEST_CONTROLS,
-        options: opts,
-      },
-    });
-    const paths = container.querySelectorAll("path");
-    // ET + BT + Burner + Airflow = 4 paths
-    expect(paths.length).toBe(4);
-  });
-
-  it("shows right Y-axis when RoR or controls enabled", () => {
+  it("shows right Y-axis when delta enabled", () => {
     const opts = { ...DEFAULT_CHART_OPTIONS, showETRor: true };
     const { container } = render(RoastChart, {
       props: { history: makePoints(20), options: opts },
@@ -150,14 +116,13 @@ describe("RoastChart", () => {
     expect(textContent).toContain("100");
   });
 
-  it("hides right Y-axis when no secondary curves enabled", () => {
+  it("hides right Y-axis when no delta curves enabled", () => {
     const { container } = render(RoastChart, {
       props: { history: makePoints(5) },
     });
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent?.trim());
     // Right axis labels (0, 25, 50, 75, 100) should not be present
-    // when no RoR or controls enabled. Check for "75" which only appears on right axis.
     expect(textContent).not.toContain("75");
   });
 
@@ -166,21 +131,17 @@ describe("RoastChart", () => {
       ...DEFAULT_CHART_OPTIONS,
       showET: true,
       showBT: false,
-      showControls: { burner: true },
+      showETRor: true,
     };
     const { container } = render(RoastChart, {
-      props: {
-        history: [],
-        controls: TEST_CONTROLS,
-        options: opts,
-      },
+      props: { history: [], options: opts },
     });
     const texts = container.querySelectorAll("text");
     const legendTexts = Array.from(texts)
       .map((t) => t.textContent?.trim())
-      .filter((t) => t === "ET" || t === "BT" || t === "Burner");
+      .filter((t) => t === "ET" || t === "BT" || t === "\u0394 ET");
     expect(legendTexts).toContain("ET");
-    expect(legendTexts).toContain("Burner");
+    expect(legendTexts).toContain("\u0394 ET");
     expect(legendTexts).not.toContain("BT");
   });
 });

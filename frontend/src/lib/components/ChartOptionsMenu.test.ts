@@ -38,7 +38,7 @@ describe("ChartOptionsMenu", () => {
       props: { options: { ...DEFAULT_CHART_OPTIONS }, onchange },
     });
     await fireEvent.click(screen.getByLabelText("Chart options"));
-    // 4 base checkboxes: ET, BT, ET RoR, BT RoR
+    // 4 base checkboxes: ET, BT, \u0394 ET, \u0394 BT
     expect(screen.getAllByRole("checkbox")).toHaveLength(4);
   });
 
@@ -83,8 +83,8 @@ describe("ChartOptionsMenu", () => {
     await fireEvent.click(screen.getByLabelText("Chart options"));
     expect(screen.getByText("ET")).toBeInTheDocument();
     expect(screen.getByText("BT")).toBeInTheDocument();
-    expect(screen.getByText("ET RoR")).toBeInTheDocument();
-    expect(screen.getByText("BT RoR")).toBeInTheDocument();
+    expect(screen.getByText("\u0394 ET")).toBeInTheDocument();
+    expect(screen.getByText("\u0394 BT")).toBeInTheDocument();
   });
 
   it("calls onchange when base checkbox toggled", async () => {
@@ -94,7 +94,7 @@ describe("ChartOptionsMenu", () => {
     });
     await fireEvent.click(screen.getByLabelText("Chart options"));
     const checkboxes = screen.getAllByRole("checkbox");
-    // Toggle ET RoR (index 2)
+    // Toggle \u0394 ET (index 2)
     await fireEvent.change(checkboxes[2]);
     expect(onchange).toHaveBeenCalledOnce();
     const updated = onchange.mock.calls[0][0] as ChartOptions;
@@ -144,7 +144,7 @@ describe("ChartOptionsMenu", () => {
     expect(screen.getByText("Airflow")).toBeInTheDocument();
   });
 
-  it("shows RoR Avg selector when RoR is enabled", async () => {
+  it("shows Delta Avg selector when RoR is enabled", async () => {
     const onchange = vi.fn();
     const opts: ChartOptions = {
       ...DEFAULT_CHART_OPTIONS,
@@ -154,18 +154,18 @@ describe("ChartOptionsMenu", () => {
       props: { options: opts, onchange },
     });
     await fireEvent.click(screen.getByLabelText("Chart options"));
-    expect(screen.getByText("RoR Avg")).toBeInTheDocument();
+    expect(screen.getByText("Delta Avg")).toBeInTheDocument();
     const select = screen.getByRole("combobox");
     expect(select).toBeInTheDocument();
   });
 
-  it("hides RoR Avg selector when no RoR enabled", async () => {
+  it("hides Delta Avg selector when no RoR enabled", async () => {
     const onchange = vi.fn();
     render(ChartOptionsMenu, {
       props: { options: { ...DEFAULT_CHART_OPTIONS }, onchange },
     });
     await fireEvent.click(screen.getByLabelText("Chart options"));
-    expect(screen.queryByText("RoR Avg")).not.toBeInTheDocument();
+    expect(screen.queryByText("Delta Avg")).not.toBeInTheDocument();
   });
 
   it("calls onchange with new rorSmoothing when selector changed", async () => {

@@ -109,17 +109,22 @@ export function processMessage(
       };
       const extras = msg.extra_channels;
       const hasExtras = Object.keys(extras).length > 0;
+      // Only accumulate chart data when monitoring or recording
+      const isActive =
+        state.sessionState === "monitoring" ||
+        state.sessionState === "recording";
       return {
         ...state,
         currentTemp: point,
-        history: [...state.history, point],
+        history: isActive ? [...state.history, point] : state.history,
         currentExtraChannels: hasExtras ? extras : state.currentExtraChannels,
-        extraChannelHistory: hasExtras
-          ? [
-              ...state.extraChannelHistory,
-              { timestamp_ms: msg.timestamp_ms, values: extras },
-            ]
-          : state.extraChannelHistory,
+        extraChannelHistory:
+          isActive && hasExtras
+            ? [
+                ...state.extraChannelHistory,
+                { timestamp_ms: msg.timestamp_ms, values: extras },
+              ]
+            : state.extraChannelHistory,
         error: null,
       };
     }
@@ -160,6 +165,16 @@ export function processMessage(
           extraChannelHistory: state.extraChannelHistory
             .filter((p) => p.timestamp_ms >= cutoff)
             .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
+        };
+      }
+      if (msg.state === "monitoring") {
+        return {
+          ...state,
+          sessionState: msg.state,
+          history: [],
+          controlHistory: [],
+          extraChannelHistory: [],
+          events: [],
         };
       }
       return { ...state, sessionState: msg.state };

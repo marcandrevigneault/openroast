@@ -122,6 +122,7 @@ export interface ControlCommand {
 
 export type CommandAction =
   | "start_monitoring"
+  | "stop_monitoring"
   | "start_recording"
   | "stop_recording"
   | "mark_event"

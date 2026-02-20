@@ -9,6 +9,7 @@
   import { addToast } from "$lib/stores/toast";
   import TemperatureDisplay from "./TemperatureDisplay.svelte";
   import RoastChart from "./RoastChart.svelte";
+  import ControlChart from "./ControlChart.svelte";
   import ChartOptionsMenu from "./ChartOptionsMenu.svelte";
   import ControlSlider from "./ControlSlider.svelte";
   import EventButtons from "./EventButtons.svelte";
@@ -67,6 +68,18 @@
   ];
 
   let sliderValues = $state<Record<string, number>>({});
+
+  // Sync slider values from extra channel read-backs (e.g., Burner extra channel → burner slider)
+  $effect(() => {
+    for (const ctrl of machine.controls) {
+      if (sliderValues[ctrl.channel] !== undefined) continue;
+      const readback = machine.currentExtraChannels[ctrl.name];
+      if (readback !== undefined) {
+        sliderValues[ctrl.channel] = readback;
+      }
+    }
+  });
+
   let saving = $state(false);
   let saved = $state(false);
   let settingsOpen = $state(false);
@@ -187,22 +200,10 @@
     </div>
   </div>
 
-  <!-- Full-width chart -->
+  <!-- Temperature chart -->
   <div class="chart-section">
-    <RoastChart
-      history={machine.history}
-      controlHistory={machine.controlHistory}
-      controls={machine.controls}
-      extraChannelHistory={machine.extraChannelHistory}
-      extraChannels={machine.extraChannels}
-      options={effectiveOptions}
-    />
+    <RoastChart history={machine.history} options={effectiveOptions} />
     <div class="chart-toolbar">
-      {#if onreset}
-        <button class="btn-chart-reset" onclick={onreset} title="Reset chart"
-          >&#8634;</button
-        >
-      {/if}
       <ChartOptionsMenu
         options={effectiveOptions}
         controls={machine.controls}
@@ -211,6 +212,16 @@
       />
     </div>
   </div>
+
+  <!-- Controls chart -->
+  <ControlChart
+    history={machine.history}
+    controlHistory={machine.controlHistory}
+    controls={machine.controls}
+    extraChannelHistory={machine.extraChannelHistory}
+    extraChannels={machine.extraChannels}
+    options={effectiveOptions}
+  />
 
   <!-- Extra channels bar -->
   <ExtraChannelsBar
@@ -228,6 +239,11 @@
       {onstoprecord}
     />
     <EventButtons disabled={true} events={machine.events} {onmark} />
+    {#if onreset}
+      <button class="btn-reset" onclick={onreset} title="Reset chart"
+        >&#8634; Reset</button
+      >
+    {/if}
   </div>
 
   <!-- Controls -->
@@ -386,18 +402,18 @@
     align-items: center;
   }
 
-  .btn-chart-reset {
+  .btn-reset {
     background: transparent;
     border: 1px solid #2a2a4a;
-    border-radius: 4px;
+    border-radius: 6px;
     color: #888;
-    font-size: 1rem;
-    padding: 2px 6px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
     cursor: pointer;
-    line-height: 1;
+    margin-left: auto;
   }
 
-  .btn-chart-reset:hover {
+  .btn-reset:hover {
     color: #ccc;
     border-color: #444;
   }

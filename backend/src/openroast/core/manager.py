@@ -242,6 +242,12 @@ class MachineManager:
         try:
             if action == CommandAction.START_MONITORING:
                 session.start_monitoring()
+                # Reset clock so chart starts at t=0
+                instance.start_time_ms = time.monotonic() * 1000
+                instance.prev_et = None
+                instance.prev_bt = None
+            elif action == CommandAction.STOP_MONITORING:
+                session.stop_monitoring()
             elif action == CommandAction.START_RECORDING:
                 session.start_recording()
             elif action == CommandAction.STOP_RECORDING:

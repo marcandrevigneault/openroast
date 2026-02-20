@@ -51,7 +51,11 @@ describe("processMessage", () => {
   }
 
   describe("temperature messages", () => {
-    it("adds temperature to history and sets currentTemp", () => {
+    function monitoringState(): MachineState {
+      return { ...baseState(), sessionState: "monitoring" };
+    }
+
+    it("adds temperature to history when monitoring", () => {
       const msg: ServerMessage = {
         type: "temperature",
         timestamp_ms: 1000,
@@ -62,7 +66,7 @@ describe("processMessage", () => {
         extra_channels: {},
       };
 
-      const result = processMessage(baseState(), msg);
+      const result = processMessage(monitoringState(), msg);
       expect(result.currentTemp).toEqual({
         timestamp_ms: 1000,
         et: 210.5,
@@ -73,8 +77,51 @@ describe("processMessage", () => {
       expect(result.history).toHaveLength(1);
     });
 
-    it("appends multiple temperature readings", () => {
-      let state = baseState();
+    it("does not add to history when idle", () => {
+      const result = processMessage(baseState(), {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+      });
+      expect(result.currentTemp).toBeTruthy();
+      expect(result.history).toHaveLength(0);
+    });
+
+    it("does not add to history when finished", () => {
+      const state = { ...baseState(), sessionState: "finished" as const };
+      const result = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+      });
+      expect(result.currentTemp).toBeTruthy();
+      expect(result.history).toHaveLength(0);
+    });
+
+    it("adds to history when recording", () => {
+      const state = { ...baseState(), sessionState: "recording" as const };
+      const result = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+      });
+      expect(result.history).toHaveLength(1);
+    });
+
+    it("appends multiple temperature readings when monitoring", () => {
+      let state = monitoringState();
       for (let i = 0; i < 5; i++) {
         state = processMessage(state, {
           type: "temperature",
@@ -104,8 +151,8 @@ describe("processMessage", () => {
       expect(result.error).toBeNull();
     });
 
-    it("captures extra channels from temperature message", () => {
-      const result = processMessage(baseState(), {
+    it("captures extra channels when monitoring", () => {
+      const result = processMessage(monitoringState(), {
         type: "temperature",
         timestamp_ms: 1000,
         et: 210,
@@ -122,8 +169,22 @@ describe("processMessage", () => {
       });
     });
 
-    it("does not add to extraChannelHistory when no extra channels", () => {
+    it("does not add extra channels to history when idle", () => {
       const result = processMessage(baseState(), {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Inlet: 250 },
+      });
+      expect(result.currentExtraChannels).toEqual({ Inlet: 250 });
+      expect(result.extraChannelHistory).toHaveLength(0);
+    });
+
+    it("does not add to extraChannelHistory when no extra channels", () => {
+      const result = processMessage(monitoringState(), {
         type: "temperature",
         timestamp_ms: 1000,
         et: 210,
@@ -184,8 +245,37 @@ describe("processMessage", () => {
       expect(result.sessionState).toBe("monitoring");
     });
 
+    it("clears history when monitoring starts", () => {
+      let state: MachineState = { ...baseState(), sessionState: "monitoring" };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+      });
+      expect(state.history).toHaveLength(1);
+      // Stop monitoring → idle, then start again
+      state = processMessage(state, {
+        type: "state",
+        state: "idle",
+        previous_state: "monitoring",
+      });
+      state = processMessage(state, {
+        type: "state",
+        state: "monitoring",
+        previous_state: "idle",
+      });
+      expect(state.history).toEqual([]);
+      expect(state.controlHistory).toEqual([]);
+      expect(state.extraChannelHistory).toEqual([]);
+      expect(state.events).toEqual([]);
+    });
+
     it("keeps last 5s of history rebased to t=0 when recording starts", () => {
-      let state = baseState();
+      let state: MachineState = { ...baseState(), sessionState: "monitoring" };
       // Add data at 1s, 3s, 8s (only 3s and 8s are within last 5s of t=8)
       for (const ts of [1000, 3000, 8000]) {
         state = processMessage(state, {
@@ -241,7 +331,7 @@ describe("processMessage", () => {
     });
 
     it("preserves history for non-recording state changes", () => {
-      let state = baseState();
+      let state: MachineState = { ...baseState(), sessionState: "monitoring" };
       state = processMessage(state, {
         type: "temperature",
         timestamp_ms: 1000,
@@ -257,6 +347,16 @@ describe("processMessage", () => {
         previous_state: "recording",
       });
       expect(state.history).toHaveLength(1);
+    });
+
+    it("transitions to idle on stop_monitoring", () => {
+      const state = { ...baseState(), sessionState: "monitoring" as const };
+      const result = processMessage(state, {
+        type: "state",
+        state: "idle",
+        previous_state: "monitoring",
+      });
+      expect(result.sessionState).toBe("idle");
     });
   });
 
