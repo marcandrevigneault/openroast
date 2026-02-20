@@ -175,7 +175,7 @@
       const newSchedule: RoastSchedule = {
         steps: data.steps.map((s) => ({
           id: s.id,
-          trigger: s.trigger as ScheduleTrigger,
+          trigger: s.trigger as unknown as ScheduleTrigger,
           actions: s.actions,
           fired: false,
           enabled: s.enabled,
