@@ -17,7 +17,12 @@
   import {
     listProfiles,
     getProfile,
+    listSchedules,
+    getSchedule,
+    saveSchedule,
+    deleteSchedule,
     type ProfileSummary,
+    type ScheduleSummary,
   } from "$lib/utils/api";
 
   interface Props {
@@ -31,11 +36,17 @@
   let { open, machine, schedule, onclose, onschedulechange }: Props = $props();
 
   // ── Local UI state ──────────────────────────
-  type View = "main" | "import";
+  type View = "main" | "import" | "load" | "save";
   let view = $state<View>("main");
   let profiles = $state<ProfileSummary[]>([]);
   let loadingProfiles = $state(false);
   let importError = $state<string | null>(null);
+
+  // Save/Load state
+  let savedSchedules = $state<ScheduleSummary[]>([]);
+  let loadingSchedules = $state(false);
+  let scheduleError = $state<string | null>(null);
+  let saveName = $state("");
 
   // Add step form
   let showAddForm = $state(false);
@@ -109,6 +120,84 @@
       importError = "Failed to load profile";
     } finally {
       loadingProfiles = false;
+    }
+  }
+
+  // ── Save/Load flow ─────────────────────────
+  function openSave() {
+    saveName = schedule.sourceProfileName
+      ? `${schedule.sourceProfileName} schedule`
+      : "";
+    scheduleError = null;
+    view = "save";
+  }
+
+  async function handleSaveSchedule() {
+    if (!saveName.trim()) return;
+    scheduleError = null;
+    try {
+      await saveSchedule({
+        name: saveName.trim(),
+        machine_name: machine.machineName,
+        steps: schedule.steps.map((s) => ({
+          id: s.id,
+          trigger: s.trigger,
+          actions: s.actions,
+          fired: false,
+          enabled: s.enabled,
+        })),
+        source_profile_name: schedule.sourceProfileName,
+      });
+      view = "main";
+    } catch {
+      scheduleError = "Failed to save schedule";
+    }
+  }
+
+  async function openLoad() {
+    view = "load";
+    loadingSchedules = true;
+    scheduleError = null;
+    try {
+      savedSchedules = await listSchedules();
+    } catch {
+      scheduleError = "Failed to load schedules";
+    } finally {
+      loadingSchedules = false;
+    }
+  }
+
+  async function handleLoadSchedule(id: string) {
+    loadingSchedules = true;
+    scheduleError = null;
+    try {
+      const data = await getSchedule(id);
+      const newSchedule: RoastSchedule = {
+        steps: data.steps.map((s) => ({
+          id: s.id,
+          trigger: s.trigger as ScheduleTrigger,
+          actions: s.actions,
+          fired: false,
+          enabled: s.enabled,
+        })),
+        status: "idle",
+        sourceProfileName: data.source_profile_name,
+      };
+      onschedulechange(newSchedule);
+      view = "main";
+    } catch {
+      scheduleError = "Failed to load schedule";
+    } finally {
+      loadingSchedules = false;
+    }
+  }
+
+  async function handleDeleteSchedule(id: string) {
+    try {
+      await deleteSchedule(id);
+      savedSchedules = savedSchedules.filter((s) => s.id !== id);
+    } catch {
+      scheduleError = "Failed to delete schedule";
     }
   }
 
@@ -274,13 +363,86 @@
             </div>
           {/if}
         </div>
+      {:else if view === "load"}
+        <!-- Load view -->
+        <div class="import-section">
+          <div class="section-header">
+            <h3>Load Schedule</h3>
+            <button class="btn-back" onclick={() => (view = "main")}
+              >&larr; Back</button
+            >
+          </div>
+          {#if loadingSchedules}
+            <p class="loading">Loading schedules...</p>
+          {:else if scheduleError}
+            <p class="error">{scheduleError}</p>
+          {:else if savedSchedules.length === 0}
+            <p class="empty">No saved schedules found.</p>
+          {:else}
+            <div class="profile-list">
+              {#each savedSchedules as s (s.id)}
+                <div class="schedule-list-item">
+                  <button
+                    class="profile-item schedule-item-btn"
+                    onclick={() => handleLoadSchedule(s.id)}
+                  >
+                    <span class="profile-name">{s.name}</span>
+                    <span class="profile-meta"
+                      >{s.machine_name || "Unknown machine"} &middot; {s.step_count}
+                      steps</span
+                    >
+                  </button>
+                  <button
+                    class="btn-delete-schedule"
+                    onclick={() => handleDeleteSchedule(s.id)}
+                    title="Delete schedule">✕</button
+                  >
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {:else if view === "save"}
+        <!-- Save view -->
+        <div class="import-section">
+          <div class="section-header">
+            <h3>Save Schedule</h3>
+            <button class="btn-back" onclick={() => (view = "main")}
+              >&larr; Back</button
+            >
+          </div>
+          {#if scheduleError}
+            <p class="error">{scheduleError}</p>
+          {/if}
+          <div class="save-form">
+            <input
+              type="text"
+              class="input save-name-input"
+              placeholder="Schedule name"
+              bind:value={saveName}
+              aria-label="Schedule name"
+              onkeydown={(e) => {
+                if (e.key === "Enter") handleSaveSchedule();
+              }}
+            />
+            <button
+              class="btn-primary"
+              onclick={handleSaveSchedule}
+              disabled={!saveName.trim()}
+            >
+              Save
+            </button>
+          </div>
+        </div>
       {:else}
         <!-- Main view -->
         <div class="toolbar">
           <button class="btn-secondary" onclick={openImport}
             >Import from Profile</button
           >
+          <button class="btn-secondary" onclick={openLoad}>Load</button>
           {#if schedule.steps.length > 0}
+            <button class="btn-secondary" onclick={openSave}>Save</button>
             <button class="btn-danger" onclick={handleClearAll}
               >Clear All</button
             >
@@ -882,6 +1044,42 @@
   .profile-meta {
     font-size: 0.7rem;
     color: #666;
+  }
+
+  .schedule-list-item {
+    display: flex;
+    gap: 4px;
+    align-items: stretch;
+  }
+
+  .schedule-item-btn {
+    flex: 1;
+  }
+
+  .btn-delete-schedule {
+    background: transparent;
+    border: 1px solid #2a2a4a;
+    border-radius: 6px;
+    color: #555;
+    cursor: pointer;
+    padding: 0 8px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  .btn-delete-schedule:hover {
+    color: #f44336;
+    border-color: #f44336;
+  }
+
+  .save-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .save-name-input {
+    flex: 1;
   }
 
   .loading,

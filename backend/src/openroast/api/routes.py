@@ -10,10 +10,12 @@ from pydantic import BaseModel
 
 from openroast.models.machine import SavedMachine
 from openroast.models.profile import RoastProfile  # noqa: TC001
+from openroast.models.schedule import SavedSchedule  # noqa: TC001
 
 if TYPE_CHECKING:
     from openroast.core.machine_storage import MachineStorage
     from openroast.core.manager import MachineManager
+    from openroast.core.schedule_storage import ScheduleStorage
     from openroast.core.storage import ProfileStorage
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,7 @@ router = APIRouter()
 # Storage instances — set by init_*() at startup
 _storage: ProfileStorage | None = None
 _machine_storage: MachineStorage | None = None
+_schedule_storage: ScheduleStorage | None = None
 _manager: MachineManager | None = None
 
 
@@ -36,6 +39,12 @@ def init_machine_storage(storage: MachineStorage) -> None:
     """Configure the machine storage backend."""
     global _machine_storage
     _machine_storage = storage
+
+
+def init_schedule_storage(storage: ScheduleStorage) -> None:
+    """Configure the schedule storage backend."""
+    global _schedule_storage
+    _schedule_storage = storage
 
 
 def init_manager(manager: MachineManager) -> None:
@@ -54,6 +63,12 @@ def _get_machine_storage() -> MachineStorage:
     if _machine_storage is None:
         raise RuntimeError("Machine storage not initialised")
     return _machine_storage
+
+
+def _get_schedule_storage() -> ScheduleStorage:
+    if _schedule_storage is None:
+        raise RuntimeError("Schedule storage not initialised")
+    return _schedule_storage
 
 
 def _get_manager() -> MachineManager:
@@ -278,3 +293,39 @@ async def delete_profile(profile_id: str) -> None:
     storage = _get_storage()
     if not storage.delete(profile_id):
         raise HTTPException(status_code=404, detail="Profile not found")
+
+
+# --- Schedules CRUD ---
+
+
+@router.post("/schedules", status_code=201)
+async def save_schedule(schedule: SavedSchedule) -> dict:
+    """Save a roast schedule."""
+    storage = _get_schedule_storage()
+    schedule_id = storage.save(schedule)
+    return {"id": schedule_id}
+
+
+@router.get("/schedules")
+async def list_schedules() -> list[dict]:
+    """List saved roast schedules."""
+    storage = _get_schedule_storage()
+    return storage.list_all()
+
+
+@router.get("/schedules/{schedule_id}")
+async def get_schedule(schedule_id: str) -> SavedSchedule:
+    """Get a single schedule by ID."""
+    storage = _get_schedule_storage()
+    schedule = storage.get(schedule_id)
+    if schedule is None:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    return schedule
+
+
+@router.delete("/schedules/{schedule_id}", status_code=204)
+async def delete_schedule(schedule_id: str) -> None:
+    """Delete a schedule."""
+    storage = _get_schedule_storage()
+    if not storage.delete(schedule_id):
+        raise HTTPException(status_code=404, detail="Schedule not found")

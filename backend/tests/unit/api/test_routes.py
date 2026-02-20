@@ -11,9 +11,15 @@ if TYPE_CHECKING:
     from pathlib import Path
 from httpx import ASGITransport, AsyncClient
 
-from openroast.api.routes import init_machine_storage, init_manager, init_storage
+from openroast.api.routes import (
+    init_machine_storage,
+    init_manager,
+    init_schedule_storage,
+    init_storage,
+)
 from openroast.core.machine_storage import MachineStorage
 from openroast.core.manager import MachineManager
+from openroast.core.schedule_storage import ScheduleStorage
 from openroast.core.storage import ProfileStorage
 from openroast.main import app
 
@@ -24,6 +30,7 @@ def _setup_storage(tmp_path: Path) -> None:
     storage = MachineStorage(tmp_path / "machines")
     init_storage(ProfileStorage(tmp_path / "profiles"))
     init_machine_storage(storage)
+    init_schedule_storage(ScheduleStorage(tmp_path / "schedules"))
     init_manager(MachineManager(storage))
 
 
@@ -417,3 +424,79 @@ class TestMachineConnect:
         assert body["connected"] is True
         assert body["driver_state"] == "connected"
         assert body["session_state"] == "idle"
+
+
+# --- Schedules CRUD ---
+
+
+def _schedule_payload(name: str = "Morning Roast") -> dict:
+    return {
+        "name": name,
+        "machine_name": "Stratto 2.0",
+        "steps": [
+            {
+                "id": "s1",
+                "trigger": {"type": "time", "timestamp_ms": 0},
+                "actions": [{"channel": "burner", "value": 50}],
+                "fired": False,
+                "enabled": True,
+            },
+            {
+                "id": "s2",
+                "trigger": {"type": "time", "timestamp_ms": 60000},
+                "actions": [{"channel": "burner", "value": 80}],
+                "fired": False,
+                "enabled": True,
+            },
+        ],
+        "source_profile_name": "Ethiopian Light",
+    }
+
+
+class TestSchedulesEndpoint:
+    async def test_list_schedules_empty(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/schedules")
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+    async def test_save_schedule(self, client: AsyncClient) -> None:
+        resp = await client.post("/api/schedules", json=_schedule_payload())
+        assert resp.status_code == 201
+        assert "id" in resp.json()
+
+    async def test_list_after_save(self, client: AsyncClient) -> None:
+        await client.post("/api/schedules", json=_schedule_payload("Schedule A"))
+        resp = await client.get("/api/schedules")
+        schedules = resp.json()
+        assert len(schedules) == 1
+        assert schedules[0]["name"] == "Schedule A"
+        assert schedules[0]["step_count"] == 2
+
+    async def test_get_schedule(self, client: AsyncClient) -> None:
+        save_resp = await client.post("/api/schedules", json=_schedule_payload("My Schedule"))
+        schedule_id = save_resp.json()["id"]
+
+        resp = await client.get(f"/api/schedules/{schedule_id}")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["name"] == "My Schedule"
+        assert len(body["steps"]) == 2
+        assert body["source_profile_name"] == "Ethiopian Light"
+
+    async def test_get_nonexistent_schedule(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/schedules/nonexistent")
+        assert resp.status_code == 404
+
+    async def test_delete_schedule(self, client: AsyncClient) -> None:
+        save_resp = await client.post("/api/schedules", json=_schedule_payload("Delete Me"))
+        schedule_id = save_resp.json()["id"]
+
+        resp = await client.delete(f"/api/schedules/{schedule_id}")
+        assert resp.status_code == 204
+
+        resp = await client.get(f"/api/schedules/{schedule_id}")
+        assert resp.status_code == 404
+
+    async def test_delete_nonexistent_schedule(self, client: AsyncClient) -> None:
+        resp = await client.delete("/api/schedules/nonexistent")
+        assert resp.status_code == 404

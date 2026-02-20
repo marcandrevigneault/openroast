@@ -297,4 +297,86 @@ describe("SchedulerDialog", () => {
     const updated = onschedulechange.mock.calls[0][0] as RoastSchedule;
     expect(updated.steps).toHaveLength(0);
   });
+
+  it("shows Load button in toolbar", () => {
+    render(SchedulerDialog, {
+      props: {
+        open: true,
+        machine: makeMachine(),
+        schedule: createSchedule(),
+        onclose: vi.fn(),
+        onschedulechange: vi.fn(),
+      },
+    });
+    expect(screen.getByText("Load")).toBeInTheDocument();
+  });
+
+  it("shows Save button when steps exist", () => {
+    const schedule: RoastSchedule = {
+      steps: makeSteps(),
+      status: "idle",
+      sourceProfileName: null,
+    };
+    render(SchedulerDialog, {
+      props: {
+        open: true,
+        machine: makeMachine(),
+        schedule,
+        onclose: vi.fn(),
+        onschedulechange: vi.fn(),
+      },
+    });
+    expect(screen.getByText("Save")).toBeInTheDocument();
+  });
+
+  it("does not show Save button when no steps", () => {
+    render(SchedulerDialog, {
+      props: {
+        open: true,
+        machine: makeMachine(),
+        schedule: createSchedule(),
+        onclose: vi.fn(),
+        onschedulechange: vi.fn(),
+      },
+    });
+    expect(screen.queryByText("Save")).not.toBeInTheDocument();
+  });
+
+  it("opens save view on Save click", async () => {
+    const schedule: RoastSchedule = {
+      steps: makeSteps(),
+      status: "idle",
+      sourceProfileName: null,
+    };
+    render(SchedulerDialog, {
+      props: {
+        open: true,
+        machine: makeMachine(),
+        schedule,
+        onclose: vi.fn(),
+        onschedulechange: vi.fn(),
+      },
+    });
+    await fireEvent.click(screen.getByText("Save"));
+    expect(
+      screen.getByRole("heading", { name: "Save Schedule" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Schedule name")).toBeInTheDocument();
+  });
+
+  it("opens load view on Load click", async () => {
+    render(SchedulerDialog, {
+      props: {
+        open: true,
+        machine: makeMachine(),
+        schedule: createSchedule(),
+        onclose: vi.fn(),
+        onschedulechange: vi.fn(),
+      },
+    });
+    await fireEvent.click(screen.getByText("Load"));
+    expect(
+      screen.getByRole("heading", { name: "Load Schedule" }),
+    ).toBeInTheDocument();
+  });
 });
