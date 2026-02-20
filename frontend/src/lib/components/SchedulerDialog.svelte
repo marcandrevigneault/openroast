@@ -353,121 +353,126 @@
           <!-- Add step form -->
           {#if showAddForm}
             <div class="add-form">
-              <div class="form-row">
-                <div class="field">
-                  <label class="label">Trigger</label>
-                  <select bind:value={triggerType} class="input">
+              <h4 class="form-title">Add Step</h4>
+
+              <!-- Trigger -->
+              <div class="form-group">
+                <span class="form-group-label">When</span>
+                <div class="form-fields">
+                  <select bind:value={triggerType} class="input trigger-select">
                     <option value="time">Time</option>
                     <option value="bt_threshold">BT Threshold</option>
                     <option value="et_threshold">ET Threshold</option>
                   </select>
-                </div>
-
-                {#if triggerType === "time"}
-                  <div class="field">
-                    <label class="label">Min</label>
-                    <input
-                      type="number"
-                      class="input input-narrow"
-                      bind:value={triggerMinutes}
-                      min="0"
-                      max="59"
-                    />
-                  </div>
-                  <div class="field">
-                    <label class="label">Sec</label>
-                    <input
-                      type="number"
-                      class="input input-narrow"
-                      bind:value={triggerSeconds}
-                      min="0"
-                      max="59"
-                    />
-                  </div>
-                {:else}
-                  <div class="field">
-                    <label class="label">Temp (°C)</label>
-                    <input
-                      type="number"
-                      class="input input-narrow"
-                      bind:value={triggerTemp}
-                      min="0"
-                      max="500"
-                    />
-                  </div>
-                  <div class="field">
-                    <label class="label">Direction</label>
-                    <select bind:value={triggerDirection} class="input">
+                  {#if triggerType === "time"}
+                    <div class="inline-field">
+                      <input
+                        type="number"
+                        class="input input-narrow"
+                        bind:value={triggerMinutes}
+                        min="0"
+                        max="59"
+                        aria-label="Minutes"
+                      />
+                      <span class="field-hint">min</span>
+                    </div>
+                    <div class="inline-field">
+                      <input
+                        type="number"
+                        class="input input-narrow"
+                        bind:value={triggerSeconds}
+                        min="0"
+                        max="59"
+                        aria-label="Seconds"
+                      />
+                      <span class="field-hint">sec</span>
+                    </div>
+                  {:else}
+                    <select
+                      bind:value={triggerDirection}
+                      class="input direction-select"
+                    >
                       <option value="rising">Rising (&gt;=)</option>
                       <option value="falling">Falling (&lt;=)</option>
                     </select>
-                  </div>
-                {/if}
+                    <div class="inline-field">
+                      <input
+                        type="number"
+                        class="input input-narrow"
+                        bind:value={triggerTemp}
+                        min="0"
+                        max="500"
+                        aria-label="Temperature"
+                      />
+                      <span class="field-hint">&deg;C</span>
+                    </div>
+                  {/if}
+                </div>
               </div>
 
               <!-- Actions -->
-              {#each formActions as action, i (i)}
-                <div class="form-row action-row">
-                  <div class="field">
-                    <label class="label">Channel</label>
-                    <select
-                      value={action.channel}
-                      class="input"
-                      onchange={(e) =>
-                        updateFormActionChannel(
-                          i,
-                          (e.target as HTMLSelectElement).value,
-                        )}
-                    >
-                      {#each availableControls as ctrl (ctrl.channel)}
-                        <option value={ctrl.channel}>{ctrl.name}</option>
-                      {/each}
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label class="label">Value</label>
-                    <input
-                      type="number"
-                      class="input input-narrow"
-                      value={action.value}
-                      min={findControl(action.channel)?.min ?? 0}
-                      max={findControl(action.channel)?.max ?? 100}
-                      step={findControl(action.channel)?.step ?? 1}
-                      oninput={(e) =>
-                        updateFormActionValue(
-                          i,
-                          parseFloat((e.target as HTMLInputElement).value),
-                        )}
-                    />
-                    <span class="unit"
-                      >{findControl(action.channel)?.unit ?? ""}</span
-                    >
-                  </div>
-                  {#if formActions.length > 1}
-                    <button
-                      class="btn-remove-action"
-                      onclick={() => removeFormAction(i)}
-                      title="Remove action">✕</button
-                    >
-                  {/if}
+              <div class="form-group">
+                <span class="form-group-label">Set</span>
+                <div class="actions-list">
+                  {#each formActions as action, i (i)}
+                    <div class="action-row">
+                      <select
+                        value={action.channel}
+                        class="input channel-select"
+                        aria-label="Channel"
+                        onchange={(e) =>
+                          updateFormActionChannel(
+                            i,
+                            (e.target as HTMLSelectElement).value,
+                          )}
+                      >
+                        {#each availableControls as ctrl (ctrl.channel)}
+                          <option value={ctrl.channel}>{ctrl.name}</option>
+                        {/each}
+                      </select>
+                      <span class="action-to">to</span>
+                      <input
+                        type="number"
+                        class="input input-narrow"
+                        value={action.value}
+                        min={findControl(action.channel)?.min ?? 0}
+                        max={findControl(action.channel)?.max ?? 100}
+                        step={findControl(action.channel)?.step ?? 1}
+                        aria-label="Value"
+                        oninput={(e) =>
+                          updateFormActionValue(
+                            i,
+                            parseFloat((e.target as HTMLInputElement).value),
+                          )}
+                      />
+                      <span class="field-hint"
+                        >{findControl(action.channel)?.unit ?? ""}</span
+                      >
+                      {#if formActions.length > 1}
+                        <button
+                          class="btn-remove-action"
+                          onclick={() => removeFormAction(i)}
+                          title="Remove action">✕</button
+                        >
+                      {/if}
+                    </div>
+                  {/each}
+                  <button class="btn-add-action" onclick={addFormAction}
+                    >+ Action</button
+                  >
                 </div>
-              {/each}
+              </div>
 
               <div class="form-buttons">
-                <button class="btn-secondary btn-small" onclick={addFormAction}
-                  >+ Add Action</button
+                <button
+                  class="btn-secondary btn-small"
+                  onclick={() => (showAddForm = false)}>Cancel</button
                 >
-                <div class="form-buttons-right">
-                  <button
-                    class="btn-secondary btn-small"
-                    onclick={() => (showAddForm = false)}>Cancel</button
-                  >
-                  <button
-                    class="btn-primary btn-small"
-                    onclick={handleAddStep}
-                    disabled={formActions.length === 0}>Add Step</button
-                  >
-                </div>
+                <button
+                  class="btn-primary btn-small"
+                  onclick={handleAddStep}
+                  disabled={formActions.length === 0}>Add Step</button
+                >
               </div>
             </div>
           {/if}
@@ -677,32 +682,49 @@
     padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
 
-  .form-row {
+  .form-title {
+    font-size: 0.8rem;
+    color: #e0e0e0;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .form-group {
     display: flex;
-    gap: 8px;
-    align-items: flex-end;
+    gap: 10px;
+    align-items: baseline;
   }
 
-  .action-row {
-    padding-left: 4px;
-    border-left: 2px solid #2a2a4a;
+  .form-group-label {
+    font-size: 0.7rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    min-width: 32px;
+    flex-shrink: 0;
+    padding-top: 6px;
   }
 
-  .field {
+  .form-fields {
     display: flex;
-    flex-direction: column;
-    gap: 3px;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
     flex: 1;
   }
 
-  .label {
-    font-size: 0.65rem;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+  .inline-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .field-hint {
+    font-size: 0.7rem;
+    color: #666;
   }
 
   .input {
@@ -720,38 +742,74 @@
   }
 
   .input-narrow {
-    width: 60px;
-    flex: 0 0 auto;
+    width: 56px;
   }
 
-  .unit {
+  .trigger-select {
+    width: 120px;
+  }
+
+  .direction-select {
+    width: 110px;
+  }
+
+  .channel-select {
+    width: 100px;
+  }
+
+  .actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .action-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .action-to {
     font-size: 0.7rem;
-    color: #666;
-    padding-bottom: 6px;
+    color: #555;
   }
 
   .btn-remove-action {
     background: transparent;
     border: none;
-    color: #666;
+    color: #555;
     cursor: pointer;
-    padding: 0 4px;
-    padding-bottom: 6px;
+    padding: 0 2px;
+    font-size: 0.8rem;
+    line-height: 1;
   }
 
   .btn-remove-action:hover {
     color: #f44336;
   }
 
-  .form-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .btn-add-action {
+    background: transparent;
+    border: none;
+    color: #4fc3f7;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    width: fit-content;
   }
 
-  .form-buttons-right {
+  .btn-add-action:hover {
+    text-decoration: underline;
+  }
+
+  .form-buttons {
     display: flex;
+    justify-content: flex-end;
     gap: 6px;
+    padding-top: 2px;
+    border-top: 1px solid #2a2a4a;
   }
 
   /* ── Footer ── */

@@ -253,7 +253,9 @@ describe("SchedulerDialog", () => {
     });
     const addBtn = screen.getByText("+ Add");
     await fireEvent.click(addBtn);
-    expect(screen.getByText("Add Step")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Add Step" }),
+    ).toBeInTheDocument();
   });
 
   it("shows Clear All button when steps exist", () => {
