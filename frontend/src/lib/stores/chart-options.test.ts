@@ -45,22 +45,22 @@ describe("DEFAULT_CHART_OPTIONS", () => {
 });
 
 describe("createChartOptions", () => {
-  it("creates options with controls defaulting to hidden", () => {
+  it("creates options with controls defaulting to visible", () => {
     const opts = createChartOptions(["burner", "airflow"], []);
-    expect(opts.showControls.burner).toBe(false);
-    expect(opts.showControls.airflow).toBe(false);
+    expect(opts.showControls.burner).toBe(true);
+    expect(opts.showControls.airflow).toBe(true);
   });
 
-  it("creates options with extra channels defaulting to hidden", () => {
+  it("creates options with extra channels defaulting to visible", () => {
     const opts = createChartOptions([], ["Inlet", "Exhaust"]);
-    expect(opts.showExtraChannels.Inlet).toBe(false);
-    expect(opts.showExtraChannels.Exhaust).toBe(false);
+    expect(opts.showExtraChannels.Inlet).toBe(true);
+    expect(opts.showExtraChannels.Exhaust).toBe(true);
   });
 
   it("creates options with both controls and extra channels", () => {
     const opts = createChartOptions(["burner"], ["Inlet"]);
-    expect(opts.showControls.burner).toBe(false);
-    expect(opts.showExtraChannels.Inlet).toBe(false);
+    expect(opts.showControls.burner).toBe(true);
+    expect(opts.showExtraChannels.Inlet).toBe(true);
     expect(opts.showET).toBe(true);
     expect(opts.showBT).toBe(true);
   });

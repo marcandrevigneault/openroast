@@ -37,7 +37,7 @@ export function smoothRor(values: number[], windowSize: number): number[] {
 }
 
 /**
- * Create chart options with all controls and extra channels defaulting to hidden.
+ * Create chart options with all controls and extra channels defaulting to visible.
  */
 export function createChartOptions(
   controlChannels: string[] = [],
@@ -45,11 +45,11 @@ export function createChartOptions(
 ): ChartOptions {
   const showControls: Record<string, boolean> = {};
   for (const ch of controlChannels) {
-    showControls[ch] = false;
+    showControls[ch] = true;
   }
   const showExtraChannels: Record<string, boolean> = {};
   for (const ch of extraChannelNames) {
-    showExtraChannels[ch] = false;
+    showExtraChannels[ch] = true;
   }
   return {
     showET: true,

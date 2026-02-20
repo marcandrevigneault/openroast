@@ -18,7 +18,9 @@
   import ExtraChannelsBar from "./ExtraChannelsBar.svelte";
   import SaveProfileForm from "./SaveProfileForm.svelte";
   import MachineSettingsPanel from "./MachineSettingsPanel.svelte";
+  import SchedulerDialog from "./SchedulerDialog.svelte";
   import type { SavedMachine } from "$lib/services/machine-api";
+  import { createSchedule, type RoastSchedule } from "$lib/stores/scheduler";
 
   interface Props {
     machine: MachineState;
@@ -39,6 +41,8 @@
       beanName: string;
       beanWeight: number;
     }) => void;
+    schedule?: RoastSchedule;
+    onschedulechange?: (schedule: RoastSchedule) => void;
   }
 
   let {
@@ -56,6 +60,8 @@
     onretry,
     onsettingssaved,
     onsave,
+    schedule,
+    onschedulechange,
   }: Props = $props();
 
   const CONTROL_COLORS = [
@@ -72,7 +78,6 @@
   // Sync slider values from extra channel read-backs (e.g., Burner extra channel → burner slider)
   $effect(() => {
     for (const ctrl of machine.controls) {
-      if (sliderValues[ctrl.channel] !== undefined) continue;
       const readback = machine.currentExtraChannels[ctrl.name];
       if (readback !== undefined) {
         sliderValues[ctrl.channel] = readback;
@@ -83,6 +88,20 @@
   let saving = $state(false);
   let saved = $state(false);
   let settingsOpen = $state(false);
+  let schedulerOpen = $state(false);
+  let localSchedule = $state(createSchedule());
+  let effectiveSchedule = $derived(schedule ?? localSchedule);
+  let scheduleFiredCount = $derived(
+    effectiveSchedule.steps.filter((s) => s.fired).length,
+  );
+  let scheduleEnabledCount = $derived(
+    effectiveSchedule.steps.filter((s) => s.enabled).length,
+  );
+
+  function handleScheduleChange(s: RoastSchedule) {
+    localSchedule = s;
+    onschedulechange?.(s);
+  }
   let lastToastedError = $state<string | null>(null);
 
   // svelte-ignore state_referenced_locally
@@ -204,6 +223,11 @@
   <div class="chart-section">
     <RoastChart history={machine.history} options={effectiveOptions} />
     <div class="chart-toolbar">
+      {#if onreset}
+        <button class="btn-chart-tool" onclick={onreset} title="Reset chart"
+          >&#8634;</button
+        >
+      {/if}
       <ChartOptionsMenu
         options={effectiveOptions}
         controls={machine.controls}
@@ -239,10 +263,20 @@
       {onstoprecord}
     />
     <EventButtons disabled={true} events={machine.events} {onmark} />
-    {#if onreset}
-      <button class="btn-reset" onclick={onreset} title="Reset chart"
-        >&#8634; Reset</button
+    {#if machine.controls.length > 0}
+      <button
+        class="btn-scheduler"
+        class:active={effectiveSchedule.status === "running"}
+        onclick={() => (schedulerOpen = true)}
+        title="Roast schedule"
       >
+        &#128337; Schedule
+        {#if effectiveSchedule.steps.length > 0}
+          <span class="schedule-badge"
+            >({scheduleFiredCount}/{scheduleEnabledCount})</span
+          >
+        {/if}
+      </button>
     {/if}
   </div>
 
@@ -284,6 +318,14 @@
       settingsOpen = false;
       onsettingssaved?.(m);
     }}
+  />
+
+  <SchedulerDialog
+    open={schedulerOpen}
+    {machine}
+    schedule={effectiveSchedule}
+    onclose={() => (schedulerOpen = false)}
+    onschedulechange={handleScheduleChange}
   />
 </div>
 
@@ -395,25 +437,26 @@
 
   .chart-toolbar {
     position: absolute;
-    top: 8px;
+    bottom: 8px;
     right: 8px;
     display: flex;
+    flex-direction: column;
     gap: 4px;
     align-items: center;
   }
 
-  .btn-reset {
-    background: transparent;
+  .btn-chart-tool {
+    background: rgba(13, 13, 26, 0.7);
     border: 1px solid #2a2a4a;
-    border-radius: 6px;
-    color: #888;
-    font-size: 0.8rem;
-    padding: 6px 12px;
+    border-radius: 4px;
+    color: #666;
+    font-size: 0.85rem;
     cursor: pointer;
-    margin-left: auto;
+    padding: 2px 6px;
+    line-height: 1;
   }
 
-  .btn-reset:hover {
+  .btn-chart-tool:hover {
     color: #ccc;
     border-color: #444;
   }
@@ -424,6 +467,34 @@
     gap: 8px;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  .btn-scheduler {
+    background: transparent;
+    border: 1px solid #2a2a4a;
+    border-radius: 6px;
+    color: #888;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: auto;
+  }
+
+  .btn-scheduler:hover {
+    color: #4fc3f7;
+    border-color: #4fc3f7;
+    background: rgba(79, 195, 247, 0.05);
+  }
+
+  .btn-scheduler.active {
+    color: #66bb6a;
+    border-color: #66bb6a;
+    background: rgba(102, 187, 106, 0.1);
+  }
+
+  .schedule-badge {
+    font-size: 0.7rem;
+    opacity: 0.7;
   }
 
   /* --- Controls --- */

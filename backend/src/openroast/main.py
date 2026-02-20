@@ -5,12 +5,18 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from openroast.api.routes import init_machine_storage, init_manager, init_storage
+from openroast.api.routes import (
+    init_machine_storage,
+    init_manager,
+    init_schedule_storage,
+    init_storage,
+)
 from openroast.api.routes import router as api_router
 from openroast.api.simulator_routes import init_simulator_manager
 from openroast.api.simulator_routes import router as sim_router
 from openroast.core.machine_storage import MachineStorage
 from openroast.core.manager import MachineManager
+from openroast.core.schedule_storage import ScheduleStorage
 from openroast.core.storage import ProfileStorage
 from openroast.simulator.manager import SimulatorManager
 from openroast.ws.live import init_manager as init_ws_manager
@@ -35,6 +41,7 @@ _machine_storage = MachineStorage(_data_root / "machines")
 
 init_storage(ProfileStorage(_data_root / "profiles"))
 init_machine_storage(_machine_storage)
+init_schedule_storage(ScheduleStorage(_data_root / "schedules"))
 
 # Initialise machine manager and share with routes + WebSocket handler
 _manager = MachineManager(_machine_storage)

@@ -87,9 +87,10 @@ describe("MachinePanel", () => {
 
   it("shows slider labels", () => {
     render(MachinePanel, { props: { machine: makeMachine() } });
-    expect(screen.getByText("Burner")).toBeInTheDocument();
-    expect(screen.getByText("Airflow")).toBeInTheDocument();
-    expect(screen.getByText("Drum")).toBeInTheDocument();
+    // Labels appear on both sliders and control chart legend
+    expect(screen.getAllByText("Burner").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Airflow").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Drum").length).toBeGreaterThanOrEqual(1);
   });
 
   it("hides controls section when no controls configured", () => {
