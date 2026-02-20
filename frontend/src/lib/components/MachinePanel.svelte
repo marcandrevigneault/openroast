@@ -9,6 +9,7 @@
   import { addToast } from "$lib/stores/toast";
   import TemperatureDisplay from "./TemperatureDisplay.svelte";
   import RoastChart from "./RoastChart.svelte";
+  import ControlChart from "./ControlChart.svelte";
   import ChartOptionsMenu from "./ChartOptionsMenu.svelte";
   import ControlSlider from "./ControlSlider.svelte";
   import EventButtons from "./EventButtons.svelte";
@@ -199,16 +200,9 @@
     </div>
   </div>
 
-  <!-- Full-width chart -->
+  <!-- Temperature chart -->
   <div class="chart-section">
-    <RoastChart
-      history={machine.history}
-      controlHistory={machine.controlHistory}
-      controls={machine.controls}
-      extraChannelHistory={machine.extraChannelHistory}
-      extraChannels={machine.extraChannels}
-      options={effectiveOptions}
-    />
+    <RoastChart history={machine.history} options={effectiveOptions} />
     <div class="chart-toolbar">
       <ChartOptionsMenu
         options={effectiveOptions}
@@ -218,6 +212,16 @@
       />
     </div>
   </div>
+
+  <!-- Controls chart -->
+  <ControlChart
+    history={machine.history}
+    controlHistory={machine.controlHistory}
+    controls={machine.controls}
+    extraChannelHistory={machine.extraChannelHistory}
+    extraChannels={machine.extraChannels}
+    options={effectiveOptions}
+  />
 
   <!-- Extra channels bar -->
   <ExtraChannelsBar
