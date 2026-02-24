@@ -97,3 +97,72 @@ export async function exportChartPng(
     return false;
   }
 }
+
+/**
+ * Combine SVGs from multiple container elements into a single stacked PNG.
+ * Each container's SVG is rendered and stacked vertically.
+ * Returns null if no SVGs are found.
+ */
+export async function combineChartsToPng(
+  containers: HTMLElement[],
+  scale = 2,
+  bgColor = "#0d0d1a",
+): Promise<Blob | null> {
+  const blobs: { blob: Blob; w: number; h: number }[] = [];
+
+  for (const container of containers) {
+    const svg = container.querySelector("svg");
+    if (!svg) continue;
+    const bbox = svg.getBoundingClientRect();
+    const blob = await svgToPng(svg as SVGSVGElement, scale, bgColor);
+    blobs.push({
+      blob,
+      w: Math.round(bbox.width) * scale,
+      h: Math.round(bbox.height) * scale,
+    });
+  }
+
+  if (blobs.length === 0) return null;
+
+  // Stack vertically: canvas width = max width, height = sum of heights
+  const totalWidth = Math.max(...blobs.map((b) => b.w));
+  const totalHeight = blobs.reduce((sum, b) => sum + b.h, 0);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = totalWidth;
+  canvas.height = totalHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  // Fill background
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, totalWidth, totalHeight);
+
+  let yOffset = 0;
+  for (const { blob, w, h } of blobs) {
+    const bitmap = await createImageBitmap(blob);
+    ctx.drawImage(bitmap, 0, yOffset, w, h);
+    yOffset += h;
+  }
+
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), "image/png");
+  });
+}
+
+/**
+ * Convert a Blob to a base64-encoded string (without the data URI prefix).
+ */
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      // Strip the "data:image/png;base64," prefix
+      const base64 = result.split(",")[1] ?? "";
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error("Failed to read blob"));
+    reader.readAsDataURL(blob);
+  });
+}

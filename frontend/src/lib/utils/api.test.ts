@@ -4,6 +4,7 @@ import {
   listProfiles,
   getProfile,
   deleteProfile,
+  getProfileImageUrl,
   saveSchedule,
   listSchedules,
   getSchedule,
@@ -121,6 +122,12 @@ describe("deleteProfile", () => {
   it("throws on error", async () => {
     mockFetch.mockResolvedValue({ ok: false, status: 404 });
     await expect(deleteProfile("nope")).rejects.toThrow("Delete failed: 404");
+  });
+});
+
+describe("getProfileImageUrl", () => {
+  it("returns correct URL", () => {
+    expect(getProfileImageUrl("abc-123")).toBe("/api/profiles/abc-123/image");
   });
 });
 

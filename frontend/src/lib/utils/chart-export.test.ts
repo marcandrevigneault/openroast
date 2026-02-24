@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { svgToPng, downloadBlob, exportChartPng } from "./chart-export";
+import {
+  svgToPng,
+  downloadBlob,
+  exportChartPng,
+  combineChartsToPng,
+  blobToBase64,
+} from "./chart-export";
 
 describe("downloadBlob", () => {
   beforeEach(() => {
@@ -57,5 +63,32 @@ describe("svgToPng", () => {
     await expect(svgToPng(svg)).rejects.toThrow("Canvas context not available");
 
     document.body.removeChild(svg);
+  });
+});
+
+describe("combineChartsToPng", () => {
+  it("returns null when no containers have SVGs", async () => {
+    const div1 = document.createElement("div");
+    const div2 = document.createElement("div");
+    const result = await combineChartsToPng([div1, div2]);
+    expect(result).toBeNull();
+  });
+
+  it("returns null for empty container array", async () => {
+    const result = await combineChartsToPng([]);
+    expect(result).toBeNull();
+  });
+});
+
+describe("blobToBase64", () => {
+  it("converts a blob to base64 string", async () => {
+    const data = new Uint8Array([137, 80, 78, 71]); // PNG header bytes
+    const blob = new Blob([data], { type: "image/png" });
+    const base64 = await blobToBase64(blob);
+    expect(typeof base64).toBe("string");
+    expect(base64.length).toBeGreaterThan(0);
+    // Verify it's valid base64 by decoding
+    const decoded = atob(base64);
+    expect(decoded.length).toBe(4);
   });
 });

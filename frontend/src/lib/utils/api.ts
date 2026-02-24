@@ -11,6 +11,7 @@ export interface ProfileSummary {
   created_at: string;
   bean_name: string;
   data_points: number;
+  has_image: boolean;
 }
 
 export interface SaveProfileRequest {
@@ -28,6 +29,7 @@ export interface SaveProfileRequest {
   name?: string;
   bean_name?: string;
   bean_weight_g?: number;
+  chart_image_base64?: string;
 }
 
 const BASE = "/api";
@@ -74,6 +76,10 @@ export async function getProfile(id: string): Promise<FullProfile> {
 export async function deleteProfile(id: string): Promise<void> {
   const resp = await fetch(`${BASE}/profiles/${id}`, { method: "DELETE" });
   if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
+}
+
+export function getProfileImageUrl(id: string): string {
+  return `${BASE}/profiles/${id}/image`;
 }
 
 // --- Schedules ---

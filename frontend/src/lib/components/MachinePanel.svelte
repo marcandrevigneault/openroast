@@ -21,7 +21,7 @@
   import SchedulerDialog from "./SchedulerDialog.svelte";
   import type { SavedMachine } from "$lib/services/machine-api";
   import { createSchedule, type RoastSchedule } from "$lib/stores/scheduler";
-  import { exportChartPng } from "$lib/utils/chart-export";
+  import { combineChartsToPng, blobToBase64 } from "$lib/utils/chart-export";
 
   interface Props {
     machine: MachineState;
@@ -41,6 +41,7 @@
       name: string;
       beanName: string;
       beanWeight: number;
+      chartImageBase64?: string;
     }) => void;
     schedule?: RoastSchedule;
     onschedulechange?: (schedule: RoastSchedule) => void;
@@ -189,17 +190,24 @@
     beanWeight: number;
   }) {
     saving = true;
-    onsave?.(data);
 
-    // Export chart PNGs
-    const safeName = data.name.replace(/[^a-zA-Z0-9_-]/g, "_") || "roast";
-    if (roastChartEl) {
-      await exportChartPng(roastChartEl, `${safeName}_graph.png`);
-    }
-    if (controlChartEl) {
-      await exportChartPng(controlChartEl, `${safeName}_controls.png`);
+    // Generate combined chart PNG from both chart containers
+    let chartImageBase64: string | undefined;
+    const chartContainers = [roastChartEl, controlChartEl].filter(
+      (el): el is HTMLElement => el !== null,
+    );
+    if (chartContainers.length > 0) {
+      try {
+        const blob = await combineChartsToPng(chartContainers);
+        if (blob) {
+          chartImageBase64 = await blobToBase64(blob);
+        }
+      } catch {
+        // Best-effort — save profile even if image fails
+      }
     }
 
+    onsave?.({ ...data, chartImageBase64 });
     saving = false;
     saved = true;
   }

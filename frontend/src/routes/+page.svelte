@@ -351,7 +351,12 @@
 
   async function handleSaveProfile(
     id: string,
-    data: { name: string; beanName: string; beanWeight: number },
+    data: {
+      name: string;
+      beanName: string;
+      beanWeight: number;
+      chartImageBase64?: string;
+    },
   ) {
     const state = machineStates.get(id);
     if (!state) return;
@@ -384,6 +389,7 @@
       name: data.name,
       bean_name: data.beanName,
       bean_weight_g: data.beanWeight,
+      chart_image_base64: data.chartImageBase64,
     };
 
     try {

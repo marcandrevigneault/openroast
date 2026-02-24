@@ -343,6 +343,71 @@ class TestProfilesEndpoint:
         resp = await client.get(f"/api/profiles/{profile_id}")
         assert resp.json()["name"] == "Override Name"
 
+    async def test_save_with_chart_image(self, client: AsyncClient) -> None:
+        import base64
+
+        png_data = b"\x89PNG\r\n\x1a\nfake"
+        payload = {
+            "profile": {
+                "name": "With Image",
+                "temperatures": [{"timestamp_ms": 0, "et": 200, "bt": 150}],
+            },
+            "chart_image_base64": base64.b64encode(png_data).decode(),
+        }
+        save_resp = await client.post("/api/profiles", json=payload)
+        profile_id = save_resp.json()["id"]
+
+        resp = await client.get(f"/api/profiles/{profile_id}/image")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "image/png"
+        assert resp.content == png_data
+
+    async def test_get_image_nonexistent(self, client: AsyncClient) -> None:
+        resp = await client.get("/api/profiles/nonexistent/image")
+        assert resp.status_code == 404
+
+    async def test_list_profiles_has_image_field(self, client: AsyncClient) -> None:
+        import base64
+
+        # Profile without image
+        await client.post("/api/profiles", json={
+            "profile": {
+                "name": "No Image",
+                "temperatures": [{"timestamp_ms": 0, "et": 200, "bt": 150}],
+            },
+        })
+        # Profile with image
+        await client.post("/api/profiles", json={
+            "profile": {
+                "name": "Has Image",
+                "temperatures": [{"timestamp_ms": 0, "et": 200, "bt": 150}],
+            },
+            "chart_image_base64": base64.b64encode(b"img").decode(),
+        })
+
+        resp = await client.get("/api/profiles")
+        profiles = resp.json()
+        by_name = {p["name"]: p for p in profiles}
+        assert by_name["No Image"]["has_image"] is False
+        assert by_name["Has Image"]["has_image"] is True
+
+    async def test_delete_removes_image(self, client: AsyncClient) -> None:
+        import base64
+
+        payload = {
+            "profile": {
+                "name": "Delete Me",
+                "temperatures": [{"timestamp_ms": 0, "et": 200, "bt": 150}],
+            },
+            "chart_image_base64": base64.b64encode(b"img").decode(),
+        }
+        save_resp = await client.post("/api/profiles", json=payload)
+        profile_id = save_resp.json()["id"]
+
+        await client.delete(f"/api/profiles/{profile_id}")
+        resp = await client.get(f"/api/profiles/{profile_id}/image")
+        assert resp.status_code == 404
+
 
 # --- Machine Connection Endpoints ---
 
