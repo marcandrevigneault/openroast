@@ -317,4 +317,25 @@
   .slider:disabled {
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    .slider-value {
+      padding: 4px 6px;
+      min-height: 32px;
+    }
+
+    .slider {
+      height: 10px;
+    }
+
+    .slider::-webkit-slider-thumb {
+      width: 24px;
+      height: 24px;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+    }
+  }
 </style>

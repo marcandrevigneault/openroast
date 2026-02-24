@@ -93,4 +93,14 @@
     color: #666;
     font-size: 0.75rem;
   }
+
+  @media (max-width: 480px) {
+    .btn-add {
+      padding: 8px 12px;
+    }
+
+    .layout-controls {
+      display: none;
+    }
+  }
 </style>

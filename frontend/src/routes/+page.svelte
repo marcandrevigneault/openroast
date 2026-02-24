@@ -559,4 +559,15 @@
   .btn-start:hover {
     background: #388e3c;
   }
+
+  @media (max-width: 768px) {
+    .machine-grid {
+      grid-template-columns: 1fr !important;
+      gap: 12px;
+    }
+
+    .empty-state {
+      padding: 48px 16px;
+    }
+  }
 </style>

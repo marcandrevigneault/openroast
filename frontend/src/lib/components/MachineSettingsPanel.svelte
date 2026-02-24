@@ -739,4 +739,52 @@
     color: #ff8a80;
     font-size: 0.8rem;
   }
+
+  @media (max-width: 480px) {
+    .dialog {
+      width: 95vw;
+      max-height: 90vh;
+      padding: 14px;
+    }
+
+    .form-scroll {
+      max-height: 70vh;
+    }
+
+    .item-row {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .field-sm {
+      min-width: 45%;
+    }
+
+    .btn-close {
+      padding: 6px 10px;
+    }
+
+    input,
+    select {
+      padding: 8px 10px;
+    }
+
+    .actions {
+      flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-submit {
+      padding: 10px 16px;
+      text-align: center;
+    }
+
+    .btn-add {
+      padding: 6px 12px;
+    }
+
+    .btn-remove-item {
+      padding: 6px 8px;
+    }
+  }
 </style>

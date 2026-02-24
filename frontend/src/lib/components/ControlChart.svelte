@@ -19,8 +19,6 @@
     extraChannelHistory?: ExtraChannelPoint[];
     extraChannels?: ExtraChannelConfig[];
     options?: ChartOptions;
-    width?: number;
-    height?: number;
   }
 
   let {
@@ -30,11 +28,17 @@
     extraChannelHistory = [],
     extraChannels = [],
     options = DEFAULT_CHART_OPTIONS,
-    width = 800,
-    height = 150,
   }: Props = $props();
 
-  const PADDING = { top: 28, right: 40, bottom: 30, left: 50 };
+  let containerWidth = $state(0);
+  let width = $derived(containerWidth > 0 ? containerWidth : 800);
+  let height = $derived(Math.round(width * (width < 500 ? 0.32 : 0.19)));
+
+  let PADDING = $derived(
+    width < 500
+      ? { top: 22, right: 24, bottom: 24, left: 36 }
+      : { top: 28, right: 40, bottom: 30, left: 50 },
+  );
   const CONTROL_COLORS = [
     "#e6c229",
     "#66bb6a",
@@ -159,7 +163,7 @@
 </script>
 
 {#if allPaths.length > 0}
-  <div class="chart-container">
+  <div class="chart-container" bind:clientWidth={containerWidth}>
     <svg {width} {height} viewBox="0 0 {width} {height}">
       <rect x="0" y="0" {width} {height} fill="#0d0d1a" rx="8" />
 

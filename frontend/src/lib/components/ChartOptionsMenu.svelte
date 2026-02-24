@@ -261,4 +261,20 @@
     padding: 2px 4px;
     cursor: pointer;
   }
+
+  @media (max-width: 480px) {
+    .gear-btn {
+      padding: 6px 8px;
+    }
+
+    .popover {
+      min-width: 160px;
+      padding: 10px;
+    }
+
+    .option-row {
+      padding: 6px 4px;
+      font-size: 0.85rem;
+    }
+  }
 </style>

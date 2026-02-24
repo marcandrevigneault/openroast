@@ -125,4 +125,15 @@
     font-size: 0.85rem;
     margin: 0;
   }
+
+  @media (max-width: 480px) {
+    input {
+      padding: 10px 12px;
+    }
+
+    .btn-save {
+      padding: 10px 16px;
+      width: 100%;
+    }
+  }
 </style>

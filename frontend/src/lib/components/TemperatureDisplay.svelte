@@ -109,4 +109,23 @@
     color: #aaa;
     margin-top: 6px;
   }
+
+  @media (max-width: 480px) {
+    .compact-value {
+      font-size: 1.1rem;
+    }
+
+    .compact-ror {
+      font-size: 0.65rem;
+    }
+
+    .temp-display {
+      min-width: 110px;
+      padding: 10px 14px;
+    }
+
+    .value {
+      font-size: 1.8rem;
+    }
+  }
 </style>
