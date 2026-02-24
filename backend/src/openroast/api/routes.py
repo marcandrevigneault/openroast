@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from openroast.models.machine import SavedMachine
@@ -253,6 +255,8 @@ class SaveProfileRequest(BaseModel):
     name: str | None = None
     bean_name: str | None = None
     bean_weight_g: float | None = None
+    chart_image_base64: str | None = None
+    schedule_name: str | None = None
 
 
 @router.post("/profiles", status_code=201)
@@ -266,7 +270,17 @@ async def save_profile(req: SaveProfileRequest) -> dict:
         profile.bean_name = req.bean_name
     if req.bean_weight_g is not None:
         profile.bean_weight_g = req.bean_weight_g
+    if req.schedule_name is not None:
+        profile.schedule_name = req.schedule_name
     profile_id = storage.save(profile)
+
+    if req.chart_image_base64:
+        try:
+            image_data = base64.b64decode(req.chart_image_base64)
+            storage.save_image(profile_id, image_data)
+        except Exception:
+            logger.warning("Failed to save chart image for profile %s", profile_id)
+
     return {"id": profile_id}
 
 
@@ -295,6 +309,16 @@ async def delete_profile(profile_id: str) -> None:
         raise HTTPException(status_code=404, detail="Profile not found")
 
 
+@router.get("/profiles/{profile_id}/image")
+async def get_profile_image(profile_id: str) -> Response:
+    """Get the chart image for a profile."""
+    storage = _get_storage()
+    image_data = storage.get_image(profile_id)
+    if image_data is None:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return Response(content=image_data, media_type="image/png")
+
+
 # --- Schedules CRUD ---
 
 
@@ -320,6 +344,18 @@ async def get_schedule(schedule_id: str) -> SavedSchedule:
     schedule = storage.get(schedule_id)
     if schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+    return schedule
+
+
+@router.put("/schedules/{schedule_id}")
+async def update_schedule(schedule_id: str, schedule: SavedSchedule) -> SavedSchedule:
+    """Update an existing schedule."""
+    storage = _get_schedule_storage()
+    existing = storage.get(schedule_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    schedule.id = schedule_id
+    storage.save(schedule)
     return schedule
 
 

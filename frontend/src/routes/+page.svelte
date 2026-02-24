@@ -2,7 +2,11 @@
   import { onMount, onDestroy } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
   import type { MachineState } from "$lib/stores/machine";
-  import { createInitialState, processMessage } from "$lib/stores/machine";
+  import {
+    createInitialState,
+    processMessage,
+    processControlInput,
+  } from "$lib/stores/machine";
   import type { RoastEventType, ServerMessage } from "$lib/types/ws-messages";
   import {
     createDashboardState,
@@ -29,7 +33,11 @@
   import CatalogSelector from "$lib/components/CatalogSelector.svelte";
   import ToastContainer from "$lib/components/ToastContainer.svelte";
   import { addToast } from "$lib/stores/toast";
-  import { evaluateSchedule, type RoastSchedule } from "$lib/stores/scheduler";
+  import {
+    evaluateSchedule,
+    resetSchedule,
+    type RoastSchedule,
+  } from "$lib/stores/scheduler";
   import { saveProfile, type SaveProfileRequest } from "$lib/utils/api";
 
   let dashboard = $state<DashboardState>(createDashboardState());
@@ -52,6 +60,14 @@
       onMessage: (msg: ServerMessage) => {
         const current = machineStates.get(machineId);
         if (!current) return;
+        // Reset sync timestamp when backend clock resets to avoid
+        // replaying stale data on reconnect
+        if (
+          msg.type === "state" &&
+          (msg.state === "monitoring" || msg.state === "recording")
+        ) {
+          client.resetSyncTimestamp();
+        }
         machineStates.set(machineId, processMessage(current, msg));
       },
       onStateChange: (wsState) => {
@@ -325,8 +341,13 @@
     const client = wsClients.get(id);
     if (!client) return;
 
-    // Normalize native slider value to 0.0-1.0 using control config
+    // Record native-value control change immediately in state
     const state = machineStates.get(id);
+    if (state) {
+      machineStates.set(id, processControlInput(state, channel, value));
+    }
+
+    // Normalize native slider value to 0.0-1.0 using control config
     const ctrl = state?.controls.find((c) => c.channel === channel);
     const min = ctrl?.min ?? 0;
     const max = ctrl?.max ?? 100;
@@ -342,16 +363,26 @@
 
   async function handleSaveProfile(
     id: string,
-    data: { name: string; beanName: string; beanWeight: number },
+    data: {
+      name: string;
+      beanName: string;
+      beanWeight: number;
+      chartImageBase64?: string;
+    },
   ) {
     const state = machineStates.get(id);
     if (!state) return;
 
-    const controls: Record<string, [number, number][]> = {};
+    // Filter out negative-timestamp data (pre-record monitoring tail)
+    const recordedHistory = state.history.filter((p) => p.timestamp_ms >= 0);
+
+    // Build controls from controlHistory (already in native slider values)
+    const recordedControls: Record<string, [number, number][]> = {};
     for (const cp of state.controlHistory) {
+      if (cp.timestamp_ms < 0) continue;
       for (const [ch, val] of Object.entries(cp.values)) {
-        if (!controls[ch]) controls[ch] = [];
-        controls[ch].push([cp.timestamp_ms, val]);
+        if (!recordedControls[ch]) recordedControls[ch] = [];
+        recordedControls[ch].push([cp.timestamp_ms, val]);
       }
     }
 
@@ -359,17 +390,19 @@
       profile: {
         name: data.name,
         machine: state.machineName,
-        temperatures: state.history,
+        temperatures: recordedHistory,
         events: state.events.map((e) => ({
           event_type: e.event_type,
           timestamp_ms: e.timestamp_ms,
           auto_detected: e.auto_detected,
         })),
-        controls,
+        controls: recordedControls,
       },
       name: data.name,
       bean_name: data.beanName,
       bean_weight_g: data.beanWeight,
+      chart_image_base64: data.chartImageBase64,
+      schedule_name: scheduleMap.get(id)?.sourceProfileName ?? null,
     };
 
     try {
@@ -385,19 +418,40 @@
     scheduleMap.set(id, s);
   }
 
-  // Evaluate running schedules on every machine state change
+  // Auto-start schedule when recording begins, auto-reset when recording ends.
+  // Evaluate running schedules only during recording.
   $effect(() => {
     for (const [machineId, sched] of scheduleMap) {
-      if (sched.status !== "running") continue;
-
       const state = machineStates.get(machineId);
-      if (!state?.currentTemp) continue;
-      if (state.driverState !== "connected") continue;
+      if (!state) continue;
+
+      // Auto-start: schedule has steps and is idle → start when recording begins
       if (
-        state.sessionState !== "monitoring" &&
-        state.sessionState !== "recording"
-      )
+        state.sessionState === "recording" &&
+        sched.status === "idle" &&
+        sched.steps.length > 0
+      ) {
+        scheduleMap.set(machineId, {
+          ...resetSchedule(sched),
+          status: "running",
+        });
         continue;
+      }
+
+      // Auto-reset: recording ended while schedule was active
+      if (
+        state.sessionState !== "recording" &&
+        (sched.status === "running" || sched.status === "paused")
+      ) {
+        scheduleMap.set(machineId, resetSchedule(sched));
+        continue;
+      }
+
+      // Only evaluate during recording
+      if (sched.status !== "running") continue;
+      if (!state.currentTemp) continue;
+      if (state.driverState !== "connected") continue;
+      if (state.sessionState !== "recording") continue;
 
       const histLen = state.history.length;
       const prevTemp =

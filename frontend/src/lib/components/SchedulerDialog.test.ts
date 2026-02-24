@@ -59,7 +59,7 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    expect(screen.queryByText("Roast Schedule")).not.toBeInTheDocument();
+    expect(screen.queryByText("Automation")).not.toBeInTheDocument();
   });
 
   it("renders when open is true", () => {
@@ -72,7 +72,7 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    expect(screen.getByText("Roast Schedule")).toBeInTheDocument();
+    expect(screen.getByText("Automation")).toBeInTheDocument();
   });
 
   it("shows empty state when no steps", () => {
@@ -147,7 +147,7 @@ describe("SchedulerDialog", () => {
     expect(updated.steps).toHaveLength(1);
   });
 
-  it("shows Start Schedule button when idle with steps", () => {
+  it("shows auto-start hint when idle with steps", () => {
     const schedule: RoastSchedule = {
       steps: makeSteps(),
       status: "idle",
@@ -162,7 +162,9 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    expect(screen.getByText("Start Schedule")).toBeInTheDocument();
+    expect(
+      screen.getByText("Starts automatically when recording"),
+    ).toBeInTheDocument();
   });
 
   it("shows Pause and Stop when running", () => {
@@ -308,7 +310,7 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    expect(screen.getByText("Load")).toBeInTheDocument();
+    expect(screen.getByText("Load Control Profile")).toBeInTheDocument();
   });
 
   it("shows Save button when steps exist", () => {
@@ -326,7 +328,7 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    expect(screen.getByText("Save")).toBeInTheDocument();
+    expect(screen.getByText("Save as Control Profile")).toBeInTheDocument();
   });
 
   it("does not show Save button when no steps", () => {
@@ -339,7 +341,9 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    expect(screen.queryByText("Save")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Save as Control Profile"),
+    ).not.toBeInTheDocument();
   });
 
   it("opens save view on Save click", async () => {
@@ -357,11 +361,11 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    await fireEvent.click(screen.getByText("Save"));
+    await fireEvent.click(screen.getByText("Save as Control Profile"));
     expect(
-      screen.getByRole("heading", { name: "Save Schedule" }),
+      screen.getByRole("heading", { name: "Save as Control Profile" }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Schedule name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Control profile name")).toBeInTheDocument();
   });
 
   it("opens load view on Load click", async () => {
@@ -374,9 +378,9 @@ describe("SchedulerDialog", () => {
         onschedulechange: vi.fn(),
       },
     });
-    await fireEvent.click(screen.getByText("Load"));
+    await fireEvent.click(screen.getByText("Load Control Profile"));
     expect(
-      screen.getByRole("heading", { name: "Load Schedule" }),
+      screen.getByRole("heading", { name: "Load Control Profile" }),
     ).toBeInTheDocument();
   });
 });

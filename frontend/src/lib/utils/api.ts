@@ -11,6 +11,8 @@ export interface ProfileSummary {
   created_at: string;
   bean_name: string;
   data_points: number;
+  has_image: boolean;
+  schedule_name: string | null;
 }
 
 export interface SaveProfileRequest {
@@ -28,6 +30,8 @@ export interface SaveProfileRequest {
   name?: string;
   bean_name?: string;
   bean_weight_g?: number;
+  chart_image_base64?: string;
+  schedule_name?: string | null;
 }
 
 const BASE = "/api";
@@ -56,6 +60,7 @@ export interface FullProfile {
   machine: string;
   created_at: string;
   bean_name: string;
+  schedule_name: string | null;
   temperatures: TemperaturePoint[];
   events: {
     event_type: string;
@@ -74,6 +79,10 @@ export async function getProfile(id: string): Promise<FullProfile> {
 export async function deleteProfile(id: string): Promise<void> {
   const resp = await fetch(`${BASE}/profiles/${id}`, { method: "DELETE" });
   if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
+}
+
+export function getProfileImageUrl(id: string): string {
+  return `${BASE}/profiles/${id}/image`;
 }
 
 // --- Schedules ---
@@ -128,6 +137,19 @@ export async function listSchedules(): Promise<ScheduleSummary[]> {
 export async function getSchedule(id: string): Promise<SavedScheduleData> {
   const resp = await fetch(`${BASE}/schedules/${id}`);
   if (!resp.ok) throw new Error(`Get schedule failed: ${resp.status}`);
+  return resp.json();
+}
+
+export async function updateSchedule(
+  id: string,
+  req: SaveScheduleRequest,
+): Promise<SavedScheduleData> {
+  const resp = await fetch(`${BASE}/schedules/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!resp.ok) throw new Error(`Update schedule failed: ${resp.status}`);
   return resp.json();
 }
 

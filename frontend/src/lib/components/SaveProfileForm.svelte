@@ -5,11 +5,12 @@
       beanName: string;
       beanWeight: number;
     }) => void;
+    oncancel?: () => void;
     saving?: boolean;
     saved?: boolean;
   }
 
-  let { onsave, saving = false, saved = false }: Props = $props();
+  let { onsave, oncancel, saving = false, saved = false }: Props = $props();
 
   let name = $state("");
   let beanName = $state("");
@@ -24,7 +25,7 @@
 </script>
 
 <div class="save-form">
-  <h4>Save Profile</h4>
+  <h4>Save Profile, Graph &amp; Controls</h4>
   {#if saved}
     <p class="saved-msg">Profile saved successfully.</p>
   {:else}
@@ -49,9 +50,20 @@
         <span class="label">Bean Weight (g)</span>
         <input type="number" bind:value={beanWeight} min="0" step="1" />
       </label>
-      <button type="submit" class="btn-save" disabled={!name.trim() || saving}>
-        {saving ? "Saving…" : "Save Profile"}
-      </button>
+      <div class="button-row">
+        <button
+          type="submit"
+          class="btn-save"
+          disabled={!name.trim() || saving}
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+        {#if oncancel}
+          <button type="button" class="btn-cancel" onclick={oncancel}>
+            Cancel
+          </button>
+        {/if}
+      </div>
     </form>
   {/if}
 </div>
@@ -103,6 +115,12 @@
     border-color: #4fc3f7;
   }
 
+  .button-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
   .btn-save {
     background: #2e7d32;
     color: white;
@@ -112,12 +130,26 @@
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 4px;
   }
 
   .btn-save:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+
+  .btn-cancel {
+    background: transparent;
+    color: #999;
+    border: 1px solid #2a2a4a;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+
+  .btn-cancel:hover {
+    color: #e0e0e0;
+    border-color: #444;
   }
 
   .saved-msg {
@@ -131,7 +163,12 @@
       padding: 10px 12px;
     }
 
-    .btn-save {
+    .button-row {
+      flex-direction: column;
+    }
+
+    .btn-save,
+    .btn-cancel {
       padding: 10px 16px;
       width: 100%;
     }

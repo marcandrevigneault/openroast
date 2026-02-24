@@ -445,6 +445,59 @@ class TestHandleSessionCommand:
         await manager.disconnect_machine(machine.id)
 
     @patch("openroast.core.manager.create_driver")
+    async def test_start_monitoring_clears_ring_buffer(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """Ring buffer is cleared on start_monitoring to prevent stale data replay."""
+        machine = _make_machine()
+        storage = _mock_storage({machine.id: machine})
+        mock_factory.return_value = _mock_driver()
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        # Let some data accumulate
+        await asyncio.sleep(0.6)
+        instance = manager.get_instance(machine.id)
+        assert len(instance.ring_buffer) >= 1
+
+        # Start monitoring — should clear ring buffer
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_MONITORING
+        )
+        assert len(instance.ring_buffer) == 0
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
+    async def test_start_recording_clears_ring_buffer(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """Ring buffer is cleared on start_recording to prevent stale data replay."""
+        machine = _make_machine()
+        storage = _mock_storage({machine.id: machine})
+        mock_factory.return_value = _mock_driver()
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        # Move to monitoring and let data accumulate
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_MONITORING
+        )
+        await asyncio.sleep(0.6)
+        instance = manager.get_instance(machine.id)
+        assert len(instance.ring_buffer) >= 1
+
+        # Start recording — should clear ring buffer
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_RECORDING
+        )
+        assert len(instance.ring_buffer) == 0
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
     async def test_start_recording_resets_clock(
         self, mock_factory: MagicMock
     ) -> None:

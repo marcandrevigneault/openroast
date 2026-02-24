@@ -114,6 +114,15 @@ export class WSClient {
     }
   }
 
+  /**
+   * Reset the tracked timestamp used for reconnect sync.
+   * Call this when the backend clock resets (e.g., monitoring restart)
+   * to prevent stale data from being replayed on reconnect.
+   */
+  resetSyncTimestamp(): void {
+    this.lastTimestampMs = 0;
+  }
+
   private setState(state: WSClientState): void {
     this._state = state;
     this.callbacks.onStateChange(state);

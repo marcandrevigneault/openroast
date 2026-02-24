@@ -46,6 +46,9 @@ class RoastProfile(BaseModel):
     # Control curves (slider values over time for replay)
     controls: dict[str, list[tuple[float, float]]] = Field(default_factory=dict)
 
+    # Name of the schedule/control profile used during this roast
+    schedule_name: str | None = Field(default=None)
+
 
 class MachineConfig(BaseModel):
     """Configuration for a roasting machine connection."""

@@ -259,6 +259,7 @@ class MachineManager:
                 instance.start_time_ms = time.monotonic() * 1000
                 instance.prev_et = None
                 instance.prev_bt = None
+                instance.ring_buffer.clear()
             elif action == CommandAction.STOP_MONITORING:
                 session.stop_monitoring()
             elif action == CommandAction.START_RECORDING:
@@ -267,6 +268,7 @@ class MachineManager:
                 instance.start_time_ms = time.monotonic() * 1000
                 instance.prev_et = None
                 instance.prev_bt = None
+                instance.ring_buffer.clear()
             elif action == CommandAction.STOP_RECORDING:
                 session.stop_recording()
             elif action == CommandAction.MARK_EVENT:
@@ -282,6 +284,7 @@ class MachineManager:
             elif action == CommandAction.RESET:
                 instance.session = RoastSession(machine_name=instance.machine.name)
                 instance.start_time_ms = time.monotonic() * 1000
+                instance.ring_buffer.clear()
                 return StateMessage(
                     state=SessionStateValue.IDLE,
                     previous_state=prev_state,

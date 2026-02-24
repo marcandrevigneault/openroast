@@ -88,6 +88,35 @@ class TestListAll:
         assert summary["data_points"] == 2
 
 
+class TestImage:
+    def test_save_and_get_image(self, storage: ProfileStorage) -> None:
+        profile_id = storage.save(_make_profile())
+        png_data = b"\x89PNG\r\n\x1a\nfake-image-data"
+        storage.save_image(profile_id, png_data)
+        assert storage.get_image(profile_id) == png_data
+
+    def test_get_image_nonexistent(self, storage: ProfileStorage) -> None:
+        assert storage.get_image("nonexistent") is None
+
+    def test_has_image_true(self, storage: ProfileStorage) -> None:
+        profile_id = storage.save(_make_profile())
+        storage.save_image(profile_id, b"img")
+        assert storage.has_image(profile_id) is True
+
+    def test_has_image_false(self, storage: ProfileStorage) -> None:
+        profile_id = storage.save(_make_profile())
+        assert storage.has_image(profile_id) is False
+
+    def test_list_all_includes_has_image(self, storage: ProfileStorage) -> None:
+        id1 = storage.save(_make_profile("With Image"))
+        storage.save_image(id1, b"img")
+        storage.save(_make_profile("No Image"))
+        summaries = storage.list_all()
+        by_name = {s["name"]: s for s in summaries}
+        assert by_name["With Image"]["has_image"] is True
+        assert by_name["No Image"]["has_image"] is False
+
+
 class TestDelete:
     def test_delete_existing(self, storage: ProfileStorage) -> None:
         profile_id = storage.save(_make_profile())
@@ -96,3 +125,10 @@ class TestDelete:
 
     def test_delete_nonexistent(self, storage: ProfileStorage) -> None:
         assert storage.delete("nonexistent") is False
+
+    def test_delete_removes_image(self, storage: ProfileStorage) -> None:
+        profile_id = storage.save(_make_profile())
+        storage.save_image(profile_id, b"img")
+        assert storage.has_image(profile_id) is True
+        storage.delete(profile_id)
+        assert storage.has_image(profile_id) is False

@@ -21,6 +21,7 @@
   import SchedulerDialog from "./SchedulerDialog.svelte";
   import type { SavedMachine } from "$lib/services/machine-api";
   import { createSchedule, type RoastSchedule } from "$lib/stores/scheduler";
+  import { combineChartsToPng, blobToBase64 } from "$lib/utils/chart-export";
 
   interface Props {
     machine: MachineState;
@@ -40,6 +41,7 @@
       name: string;
       beanName: string;
       beanWeight: number;
+      chartImageBase64?: string;
     }) => void;
     schedule?: RoastSchedule;
     onschedulechange?: (schedule: RoastSchedule) => void;
@@ -97,6 +99,8 @@
     }
   });
 
+  let roastChartEl = $state<HTMLElement | null>(null);
+  let controlChartEl = $state<HTMLElement | null>(null);
   let saving = $state(false);
   let saved = $state(false);
   let settingsOpen = $state(false);
@@ -160,6 +164,16 @@
     machine.sessionState === "finished" && machine.history.length > 0 && !saved,
   );
 
+  // Reset saved flag when a new session begins
+  $effect(() => {
+    if (
+      machine.sessionState === "monitoring" ||
+      machine.sessionState === "idle"
+    ) {
+      saved = false;
+    }
+  });
+
   // Dispatch machine errors as toast notifications
   $effect(() => {
     if (machine.error && machine.error !== lastToastedError) {
@@ -170,15 +184,36 @@
     }
   });
 
-  function handleSave(data: {
+  async function handleSave(data: {
     name: string;
     beanName: string;
     beanWeight: number;
   }) {
     saving = true;
-    onsave?.(data);
+
+    // Generate combined chart PNG from both chart containers
+    let chartImageBase64: string | undefined;
+    const chartContainers = [roastChartEl, controlChartEl].filter(
+      (el): el is HTMLElement => el !== null,
+    );
+    if (chartContainers.length > 0) {
+      try {
+        const blob = await combineChartsToPng(chartContainers);
+        if (blob) {
+          chartImageBase64 = await blobToBase64(blob);
+        }
+      } catch {
+        // Best-effort — save profile even if image fails
+      }
+    }
+
+    onsave?.({ ...data, chartImageBase64 });
     saving = false;
     saved = true;
+  }
+
+  function handleCancelSave() {
+    saved = true; // Hides the form
   }
 </script>
 
@@ -232,7 +267,7 @@
   </div>
 
   <!-- Temperature chart -->
-  <div class="chart-section">
+  <div class="chart-section" bind:this={roastChartEl}>
     <RoastChart history={machine.history} options={effectiveOptions} />
     <div class="chart-toolbar">
       {#if onreset}
@@ -250,14 +285,16 @@
   </div>
 
   <!-- Controls chart -->
-  <ControlChart
-    history={machine.history}
-    controlHistory={machine.controlHistory}
-    controls={machine.controls}
-    extraChannelHistory={machine.extraChannelHistory}
-    extraChannels={machine.extraChannels}
-    options={effectiveOptions}
-  />
+  <div bind:this={controlChartEl}>
+    <ControlChart
+      history={machine.history}
+      controlHistory={machine.controlHistory}
+      controls={machine.controls}
+      extraChannelHistory={machine.extraChannelHistory}
+      extraChannels={machine.extraChannels}
+      options={effectiveOptions}
+    />
+  </div>
 
   <!-- Extra channels bar -->
   <ExtraChannelsBar
@@ -265,7 +302,7 @@
     values={machine.currentExtraChannels}
   />
 
-  <!-- Session controls + event buttons in one compact row -->
+  <!-- Session controls + automation button -->
   <div class="actions-row">
     <SessionControls
       sessionState={machine.sessionState}
@@ -274,23 +311,25 @@
       {onrecord}
       {onstoprecord}
     />
-    <EventButtons disabled={true} events={machine.events} {onmark} />
     {#if machine.controls.length > 0}
       <button
-        class="btn-scheduler"
+        class="btn-automation"
         class:active={effectiveSchedule.status === "running"}
         onclick={() => (schedulerOpen = true)}
-        title="Roast schedule"
+        title="Roast automation"
       >
-        &#128337; Schedule
+        <span class="automation-icon">&#9881;</span> Automation
         {#if effectiveSchedule.steps.length > 0}
-          <span class="schedule-badge"
+          <span class="automation-badge"
             >({scheduleFiredCount}/{scheduleEnabledCount})</span
           >
         {/if}
       </button>
     {/if}
   </div>
+
+  <!-- Event markers -->
+  <EventButtons disabled={true} events={machine.events} {onmark} />
 
   <!-- Controls -->
   {#if machine.controls.length > 0}
@@ -347,7 +386,12 @@
   {/if}
 
   {#if showSaveForm}
-    <SaveProfileForm onsave={handleSave} {saving} {saved} />
+    <SaveProfileForm
+      onsave={handleSave}
+      oncancel={handleCancelSave}
+      {saving}
+      {saved}
+    />
   {/if}
 
   <MachineSettingsPanel
@@ -479,8 +523,8 @@
 
   .chart-toolbar {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    top: 6px;
+    right: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -488,13 +532,13 @@
   }
 
   .btn-chart-tool {
-    background: rgba(13, 13, 26, 0.7);
+    background: transparent;
     border: 1px solid #2a2a4a;
     border-radius: 4px;
-    color: #666;
-    font-size: 0.85rem;
+    color: #888;
+    font-size: 0.8rem;
     cursor: pointer;
-    padding: 2px 6px;
+    padding: 2px 5px;
     line-height: 1;
   }
 
@@ -511,31 +555,44 @@
     flex-wrap: wrap;
   }
 
-  .btn-scheduler {
-    background: transparent;
-    border: 1px solid #2a2a4a;
+  .btn-automation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #2a2a4a;
+    border: none;
     border-radius: 6px;
-    color: #888;
-    font-size: 0.75rem;
-    padding: 5px 10px;
+    color: #ccc;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 18px;
     cursor: pointer;
     margin-left: auto;
+    transition:
+      background-color 0.15s,
+      transform 0.1s;
   }
 
-  .btn-scheduler:hover {
-    color: #4fc3f7;
-    border-color: #4fc3f7;
-    background: rgba(79, 195, 247, 0.05);
+  .btn-automation:hover {
+    background: #3a3a5a;
+    transform: scale(1.02);
   }
 
-  .btn-scheduler.active {
+  .btn-automation:active {
+    transform: scale(0.98);
+  }
+
+  .btn-automation.active {
     color: #66bb6a;
-    border-color: #66bb6a;
-    background: rgba(102, 187, 106, 0.1);
+    background: rgba(102, 187, 106, 0.15);
   }
 
-  .schedule-badge {
-    font-size: 0.7rem;
+  .automation-icon {
+    font-size: 0.8rem;
+  }
+
+  .automation-badge {
+    font-size: 0.75rem;
     opacity: 0.7;
   }
 

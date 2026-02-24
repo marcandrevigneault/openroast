@@ -1,7 +1,9 @@
 <script lang="ts">
   import favicon from "$lib/assets/favicon.svg";
+  import AppMenu from "$lib/components/AppMenu.svelte";
 
   let { children } = $props();
+  let menuOpen = $state(false);
 </script>
 
 <svelte:head>
@@ -11,12 +13,23 @@
 
 <div class="app">
   <header class="app-header">
+    <button
+      class="btn-menu"
+      onclick={() => (menuOpen = true)}
+      aria-label="Open menu"
+    >
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
     <h1 class="logo">OpenRoast</h1>
   </header>
   <main class="app-main">
     {@render children()}
   </main>
 </div>
+
+<AppMenu open={menuOpen} onclose={() => (menuOpen = false)} />
 
 <style>
   :global(*, *::before, *::after) {
@@ -62,9 +75,34 @@
   .app-header {
     display: flex;
     align-items: center;
+    gap: 12px;
     padding: 10px 20px;
     background: #12122a;
     border-bottom: 1px solid #2a2a4a;
+  }
+
+  .btn-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .hamburger-line {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: #999;
+    border-radius: 1px;
+    transition: background 0.15s;
+  }
+
+  .btn-menu:hover .hamburger-line {
+    background: #4fc3f7;
   }
 
   .logo {

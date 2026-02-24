@@ -4,9 +4,11 @@ import {
   listProfiles,
   getProfile,
   deleteProfile,
+  getProfileImageUrl,
   saveSchedule,
   listSchedules,
   getSchedule,
+  updateSchedule,
   deleteSchedule,
 } from "./api";
 
@@ -124,6 +126,12 @@ describe("deleteProfile", () => {
   });
 });
 
+describe("getProfileImageUrl", () => {
+  it("returns correct URL", () => {
+    expect(getProfileImageUrl("abc-123")).toBe("/api/profiles/abc-123/image");
+  });
+});
+
 // --- Schedules ---
 
 describe("saveSchedule", () => {
@@ -209,6 +217,43 @@ describe("getSchedule", () => {
     await expect(getSchedule("nope")).rejects.toThrow(
       "Get schedule failed: 404",
     );
+  });
+});
+
+describe("updateSchedule", () => {
+  it("sends PUT request with updated data", async () => {
+    const updated = {
+      id: "sched-1",
+      name: "Updated",
+      machine_name: "Stratto",
+      created_at: "2026-01-01",
+      steps: [],
+      source_profile_name: null,
+    };
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(updated),
+    });
+
+    const result = await updateSchedule("sched-1", {
+      name: "Updated",
+      machine_name: "Stratto",
+      steps: [],
+    });
+
+    expect(result.name).toBe("Updated");
+    expect(mockFetch).toHaveBeenCalledWith("/api/schedules/sched-1", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: expect.any(String),
+    });
+  });
+
+  it("throws on error response", async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 404 });
+    await expect(
+      updateSchedule("nope", { name: "x", machine_name: "", steps: [] }),
+    ).rejects.toThrow("Update schedule failed: 404");
   });
 });
 

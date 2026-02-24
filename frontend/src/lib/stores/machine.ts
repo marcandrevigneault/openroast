@@ -113,10 +113,42 @@ export function processMessage(
       const isActive =
         state.sessionState === "monitoring" ||
         state.sessionState === "recording";
+
+      // Detect readback value changes and record as control changes
+      let updatedCurrentControls = state.currentControls;
+      let updatedControlHistory = state.controlHistory;
+
+      if (hasExtras && state.controls.length > 0) {
+        const changedValues: Record<string, number> = {};
+        for (const ctrl of state.controls) {
+          const newVal = extras[ctrl.name];
+          const prevVal = state.currentExtraChannels[ctrl.name];
+          if (newVal !== undefined && newVal !== prevVal) {
+            changedValues[ctrl.channel] = newVal;
+          }
+        }
+        if (Object.keys(changedValues).length > 0) {
+          const prevValues = updatedCurrentControls?.values ?? {};
+          const roundedTs = Math.round(msg.timestamp_ms / 1000) * 1000;
+          updatedCurrentControls = {
+            timestamp_ms: roundedTs,
+            values: { ...prevValues, ...changedValues },
+          };
+          if (isActive && state.sessionState === "recording") {
+            updatedControlHistory = [
+              ...updatedControlHistory,
+              { timestamp_ms: roundedTs, values: changedValues },
+            ];
+          }
+        }
+      }
+
       return {
         ...state,
         currentTemp: point,
         history: isActive ? [...state.history, point] : state.history,
+        currentControls: updatedCurrentControls,
+        controlHistory: updatedControlHistory,
         currentExtraChannels: hasExtras ? extras : state.currentExtraChannels,
         extraChannelHistory:
           isActive && hasExtras
@@ -155,6 +187,22 @@ export function processMessage(
         // Offset so the last monitoring point lands at t=0
         const offset = lastTs;
 
+        // Snapshot control values at t=0 from both readback and slider values
+        const snapshotValues: Record<string, number> = {};
+        for (const ctrl of state.controls) {
+          const readback = state.currentExtraChannels[ctrl.name];
+          if (readback !== undefined) {
+            snapshotValues[ctrl.channel] = readback;
+          }
+        }
+        if (state.currentControls) {
+          Object.assign(snapshotValues, state.currentControls.values);
+        }
+        const initialControls: ControlPoint[] =
+          Object.keys(snapshotValues).length > 0
+            ? [{ timestamp_ms: 0, values: snapshotValues }]
+            : [];
+
         return {
           ...state,
           sessionState: msg.state,
@@ -162,9 +210,7 @@ export function processMessage(
             .filter((p) => p.timestamp_ms >= cutoff)
             .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
           events: [],
-          controlHistory: state.controlHistory
-            .filter((p) => p.timestamp_ms >= cutoff)
-            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
+          controlHistory: initialControls,
           extraChannelHistory: state.extraChannelHistory
             .filter((p) => p.timestamp_ms >= cutoff)
             .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
@@ -174,6 +220,7 @@ export function processMessage(
         return {
           ...state,
           sessionState: msg.state,
+          currentTemp: null,
           history: [],
           controlHistory: [],
           extraChannelHistory: [],
@@ -192,23 +239,45 @@ export function processMessage(
         ...state,
         error: msg.message,
       };
-    case "control_ack": {
-      const prev = state.currentControls ?? {
-        timestamp_ms: 0,
-        values: {},
-      };
-      return {
-        ...state,
-        currentControls: {
-          timestamp_ms: state.currentTemp?.timestamp_ms ?? 0,
-          values: { ...prev.values, [msg.channel]: msg.value },
-        },
-      };
-    }
+    case "control_ack":
+      // No-op — control values tracked via readback (temperature messages)
+      // and slider input (processControlInput). The ack carries normalized
+      // 0-1 values which would overwrite native values.
+      return state;
     case "alarm":
     case "replay":
       return state;
   }
+}
+
+/**
+ * Record a user-initiated control change with native slider values.
+ * Always updates currentControls; appends to controlHistory only during recording.
+ * Called directly when the user moves a slider — does not depend on WS round-trip.
+ */
+export function processControlInput(
+  state: MachineState,
+  channel: string,
+  nativeValue: number,
+): MachineState {
+  const rawTs = state.currentTemp?.timestamp_ms ?? 0;
+  const ts = Math.round(rawTs / 1000) * 1000;
+  const prevValues = state.currentControls?.values ?? {};
+  const newControls: ControlPoint = {
+    timestamp_ms: ts,
+    values: { ...prevValues, [channel]: nativeValue },
+  };
+  const isRecording = state.sessionState === "recording";
+  return {
+    ...state,
+    currentControls: newControls,
+    controlHistory: isRecording
+      ? [
+          ...state.controlHistory,
+          { timestamp_ms: ts, values: { [channel]: nativeValue } },
+        ]
+      : state.controlHistory,
+  };
 }
 
 /**
