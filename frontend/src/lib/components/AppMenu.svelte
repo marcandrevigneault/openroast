@@ -9,7 +9,10 @@
 
   let { open, onclose }: Props = $props();
 
-  const links: { href: "/" | "/profiles" | "/control-profiles"; label: string }[] = [
+  const links: {
+    href: "/" | "/profiles" | "/control-profiles";
+    label: string;
+  }[] = [
     { href: "/", label: "Dashboard" },
     { href: "/profiles", label: "Profiles" },
     { href: "/control-profiles", label: "Control Profiles" },
