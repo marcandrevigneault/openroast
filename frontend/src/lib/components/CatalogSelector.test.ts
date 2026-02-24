@@ -8,6 +8,7 @@ vi.mock("$lib/services/machine-api", () => ({
   listModels: vi.fn(),
   createFromCatalog: vi.fn(),
   createCustomMachine: vi.fn(),
+  updateMachine: vi.fn(),
 }));
 
 import {
@@ -15,12 +16,14 @@ import {
   listModels,
   createFromCatalog,
   createCustomMachine,
+  updateMachine,
 } from "$lib/services/machine-api";
 
 const mockListManufacturers = listManufacturers as ReturnType<typeof vi.fn>;
 const mockListModels = listModels as ReturnType<typeof vi.fn>;
 const mockCreateFromCatalog = createFromCatalog as ReturnType<typeof vi.fn>;
 const mockCreateCustomMachine = createCustomMachine as ReturnType<typeof vi.fn>;
+const mockUpdateMachine = updateMachine as ReturnType<typeof vi.fn>;
 
 describe("CatalogSelector", () => {
   const onadd = vi.fn();
@@ -97,7 +100,7 @@ describe("CatalogSelector", () => {
     expect(await screen.findByText("Stratto 2.0")).toBeInTheDocument();
   });
 
-  it("shows confirm step and creates machine from catalog", async () => {
+  it("shows confirm step with host/port and creates machine from catalog", async () => {
     mockListManufacturers.mockResolvedValue([
       { id: "carmomaq", name: "Carmomaq", country: "BR", model_count: 1 },
     ]);
@@ -108,10 +111,24 @@ describe("CatalogSelector", () => {
         protocol: "modbus_tcp",
         controls: [{ name: "Air" }],
         extra_channels: [],
+        connection: { host: "192.168.5.11", port: 502 },
       },
     ]);
-    const machine = { id: "m1", name: "Stratto 2.0", protocol: "modbus_tcp" };
-    mockCreateFromCatalog.mockResolvedValue({ id: "m1", machine });
+    const createdMachine = {
+      id: "m1",
+      name: "Stratto 2.0",
+      protocol: "modbus_tcp",
+      connection: { type: "modbus_tcp", host: "192.168.5.11", port: 502 },
+    };
+    const patchedMachine = {
+      ...createdMachine,
+      connection: { type: "modbus_tcp", host: "192.168.5.11", port: 502 },
+    };
+    mockCreateFromCatalog.mockResolvedValue({
+      id: "m1",
+      machine: createdMachine,
+    });
+    mockUpdateMachine.mockResolvedValue(patchedMachine);
 
     renderOpen();
     await fireEvent.click(screen.getByText("From Catalog"));
@@ -121,6 +138,12 @@ describe("CatalogSelector", () => {
     await fireEvent.click(screen.getByText("Stratto 2.0"));
 
     expect(screen.getByText("Confirm")).toBeInTheDocument();
+    // Host/port fields should be pre-populated from catalog
+    const hostInput = screen.getByDisplayValue("192.168.5.11");
+    expect(hostInput).toBeInTheDocument();
+    const portInput = screen.getByDisplayValue("502");
+    expect(portInput).toBeInTheDocument();
+
     await fireEvent.click(screen.getByText("Add Machine"));
 
     expect(mockCreateFromCatalog).toHaveBeenCalledWith(
@@ -128,7 +151,63 @@ describe("CatalogSelector", () => {
       "stratto-2.0",
       "Stratto 2.0",
     );
-    expect(onadd).toHaveBeenCalledWith(machine);
+    expect(mockUpdateMachine).toHaveBeenCalledWith("m1", {
+      ...createdMachine,
+      connection: { type: "modbus_tcp", host: "192.168.5.11", port: 502 },
+    });
+    expect(onadd).toHaveBeenCalledWith(patchedMachine);
+  });
+
+  it("allows editing host/port on confirm step for independent machines", async () => {
+    mockListManufacturers.mockResolvedValue([
+      { id: "carmomaq", name: "Carmomaq", country: "BR", model_count: 1 },
+    ]);
+    mockListModels.mockResolvedValue([
+      {
+        id: "stratto-2.0",
+        name: "Stratto 2.0",
+        protocol: "modbus_tcp",
+        controls: [{ name: "Air" }],
+        extra_channels: [],
+        connection: { host: "192.168.5.11", port: 502 },
+      },
+    ]);
+    const createdMachine = {
+      id: "m2",
+      name: "Stratto 2.0",
+      protocol: "modbus_tcp",
+      connection: { type: "modbus_tcp", host: "192.168.5.11", port: 502 },
+    };
+    const patchedMachine = {
+      ...createdMachine,
+      connection: { type: "modbus_tcp", host: "192.168.5.12", port: 502 },
+    };
+    mockCreateFromCatalog.mockResolvedValue({
+      id: "m2",
+      machine: createdMachine,
+    });
+    mockUpdateMachine.mockResolvedValue(patchedMachine);
+
+    renderOpen();
+    await fireEvent.click(screen.getByText("From Catalog"));
+    await screen.findByText("Carmomaq");
+    await fireEvent.click(screen.getByText("Carmomaq"));
+    await screen.findByText("Stratto 2.0");
+    await fireEvent.click(screen.getByText("Stratto 2.0"));
+
+    // Change host to a different IP for a second machine
+    const hostInput = screen.getByDisplayValue("192.168.5.11");
+    await fireEvent.input(hostInput, {
+      target: { value: "192.168.5.12" },
+    });
+
+    await fireEvent.click(screen.getByText("Add Machine"));
+
+    expect(mockUpdateMachine).toHaveBeenCalledWith("m2", {
+      ...createdMachine,
+      connection: { type: "modbus_tcp", host: "192.168.5.12", port: 502 },
+    });
+    expect(onadd).toHaveBeenCalledWith(patchedMachine);
   });
 
   // --- Custom flow ---

@@ -245,7 +245,7 @@
     }
   }
 
-  function handleSettingsSaved(id: string, machine: SavedMachine) {
+  async function handleSettingsSaved(id: string, machine: SavedMachine) {
     const current = machineStates.get(id);
     if (!current) return;
 
@@ -270,6 +270,30 @@
           m.id === id ? { ...m, name: machine.name } : m,
         ),
       };
+    }
+
+    // Reconnect backend driver so it picks up the new connection config
+    const existingClient = wsClients.get(id);
+    if (existingClient) {
+      existingClient.disconnect();
+      wsClients.delete(id);
+      try {
+        await disconnectMachine(id);
+      } catch {
+        // Best-effort disconnect
+      }
+      try {
+        await connectMachine(id);
+        const client = createWSClient(id);
+        client.connect();
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Reconnection failed";
+        const state = machineStates.get(id);
+        if (state) {
+          machineStates.set(id, { ...state, driverState: "error" });
+          addToast(msg, "error", state.machineName);
+        }
+      }
     }
   }
 

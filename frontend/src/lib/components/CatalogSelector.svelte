@@ -4,6 +4,7 @@
     listModels,
     createFromCatalog,
     createCustomMachine,
+    updateMachine,
     type ManufacturerSummary,
     type CatalogModel,
     type SavedMachine,
@@ -40,6 +41,10 @@
   let customHost = $state("192.168.1.1");
   let customPort = $state(502);
 
+  // Catalog confirm step — editable connection fields
+  let confirmHost = $state("");
+  let confirmPort = $state(502);
+
   function reset() {
     step = "choose";
     manufacturers = [];
@@ -50,6 +55,8 @@
     customProtocol = "modbus_tcp";
     customHost = "192.168.1.1";
     customPort = 502;
+    confirmHost = "";
+    confirmPort = 502;
     loading = false;
     error = null;
   }
@@ -98,6 +105,15 @@
   function handleSelectModel(model: CatalogModel) {
     selectedModel = model;
     customName = model.name;
+    const conn = model.connection ?? {};
+    confirmHost =
+      (conn as { host?: string }).host ??
+      (conn as { comport?: string }).comport ??
+      "";
+    confirmPort =
+      (conn as { port?: number }).port ??
+      (conn as { baudrate?: number }).baudrate ??
+      502;
     step = "confirm";
   }
 
@@ -111,7 +127,18 @@
         selectedModel.id,
         customName.trim() || undefined,
       );
-      onadd(result.machine);
+
+      // Patch the connection with user-provided host/port
+      const conn = result.machine.connection ?? {};
+      const isSerial = selectedModel.protocol === "serial";
+      const updatedConn = isSerial
+        ? { ...conn, comport: confirmHost, baudrate: confirmPort }
+        : { ...conn, host: confirmHost, port: confirmPort };
+      const patched = await updateMachine(result.id, {
+        ...result.machine,
+        connection: updatedConn,
+      });
+      onadd(patched);
       handleClose();
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to create machine";
@@ -255,6 +282,22 @@
             <span class="label">Name</span>
             <!-- svelte-ignore a11y_autofocus -->
             <input type="text" bind:value={customName} autofocus />
+          </label>
+          <label class="field">
+            <span class="label"
+              >{selectedModel?.protocol === "serial"
+                ? "Serial Port"
+                : "Host"}</span
+            >
+            <input type="text" bind:value={confirmHost} />
+          </label>
+          <label class="field">
+            <span class="label"
+              >{selectedModel?.protocol === "serial"
+                ? "Baudrate"
+                : "Port"}</span
+            >
+            <input type="number" bind:value={confirmPort} min="1" />
           </label>
           <div class="detail-row">
             <span class="detail-label">Protocol</span>
