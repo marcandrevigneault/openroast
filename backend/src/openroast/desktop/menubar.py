@@ -17,7 +17,7 @@ import uvicorn
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_HOST = "127.0.0.1"
+DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8080
 
 
@@ -55,7 +55,7 @@ class OpenRoastApp(rumps.App):
     @rumps.clicked("Open in Browser")
     def open_browser(self, _sender: rumps.MenuItem) -> None:
         """Open the OpenRoast UI in the default browser."""
-        webbrowser.open(f"http://{self._host}:{self._port}")
+        webbrowser.open(f"http://127.0.0.1:{self._port}")
 
     def _run_server(self) -> None:
         """Run the uvicorn server (blocking, called in background thread)."""
@@ -80,7 +80,7 @@ class OpenRoastApp(rumps.App):
                 f"Server: Running ({self._port})"
             )
             self._started = True
-            webbrowser.open(f"http://{self._host}:{self._port}")
+            webbrowser.open(f"http://127.0.0.1:{self._port}")
 
         threading.Timer(1.5, _open_after_delay).start()
 
