@@ -144,7 +144,10 @@ async def _handle_control(
         await ws.send_json(error.model_dump())
         return
 
-    ack = await manager.handle_control(machine_id, channel, value)
+    enabled = data.get("enabled", True)
+    ack = await manager.handle_control(
+        machine_id, channel, value, enabled=bool(enabled),
+    )
     await ws.send_json(ack.model_dump())
 
 

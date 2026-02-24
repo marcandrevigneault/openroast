@@ -143,28 +143,15 @@ export function processMessage(
     }
     case "state": {
       if (msg.state === "recording") {
-        // Keep last 5 seconds of data, rebased so the tail starts near t=0
-        const TAIL_MS = 5000;
-        const lastTs =
-          state.history.length > 0
-            ? state.history[state.history.length - 1].timestamp_ms
-            : 0;
-        const cutoff = lastTs - TAIL_MS;
-        const offset = Math.max(0, cutoff);
-
+        // Clear all history — backend resets its clock to t=0 on
+        // START_RECORDING, so fresh data will arrive starting from 0.
         return {
           ...state,
           sessionState: msg.state,
-          history: state.history
-            .filter((p) => p.timestamp_ms >= cutoff)
-            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
+          history: [],
           events: [],
-          controlHistory: state.controlHistory
-            .filter((p) => p.timestamp_ms >= cutoff)
-            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
-          extraChannelHistory: state.extraChannelHistory
-            .filter((p) => p.timestamp_ms >= cutoff)
-            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
+          controlHistory: [],
+          extraChannelHistory: [],
         };
       }
       if (msg.state === "monitoring") {

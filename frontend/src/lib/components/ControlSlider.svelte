@@ -8,9 +8,11 @@
     color?: string;
     unit?: string;
     disabled?: boolean;
+    enabled?: boolean;
     onchange?: (value: number) => void;
     ondragstart?: () => void;
     ondragend?: () => void;
+    ontoggle?: (enabled: boolean) => void;
   }
 
   let {
@@ -22,12 +24,15 @@
     color = "#4fc3f7",
     unit = "",
     disabled = false,
+    enabled = true,
     onchange,
     ondragstart,
     ondragend,
+    ontoggle,
   }: Props = $props();
 
   let percentage = $derived(((value - min) / (max - min)) * 100);
+  let effectiveDisabled = $derived(disabled || !enabled);
 
   // --- Drag tracking ---
   let dragging = $state(false);
@@ -63,7 +68,7 @@
   let inputRef = $state<HTMLInputElement | null>(null);
 
   function startEdit() {
-    if (disabled) return;
+    if (effectiveDisabled) return;
     editing = true;
     editValue = String(value);
   }
@@ -100,11 +105,30 @@
       inputRef.select();
     }
   });
+
+  function handleToggle() {
+    if (disabled) return;
+    ontoggle?.(!enabled);
+  }
 </script>
 
-<div class="slider-control" class:disabled>
+<div class="slider-control" class:disabled={effectiveDisabled}>
   <div class="slider-header">
-    <span class="slider-label">{label}</span>
+    <div class="label-group">
+      {#if ontoggle}
+        <button
+          class="toggle-btn"
+          class:on={enabled}
+          onclick={handleToggle}
+          {disabled}
+          type="button"
+          title={enabled ? "Turn off" : "Turn on"}
+        >
+          {enabled ? "ON" : "OFF"}
+        </button>
+      {/if}
+      <span class="slider-label">{label}</span>
+    </div>
     {#if editing}
       <input
         bind:this={inputRef}
@@ -123,7 +147,7 @@
         class="slider-value"
         style="color: {color}"
         onclick={startEdit}
-        {disabled}
+        disabled={effectiveDisabled}
         type="button"
         title="Click to edit"
       >
@@ -137,7 +161,7 @@
     {max}
     {step}
     {value}
-    {disabled}
+    disabled={effectiveDisabled}
     oninput={handleInput}
     onpointerdown={handlePointerDown}
     class="slider"
@@ -161,6 +185,42 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .label-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .toggle-btn {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid #555;
+    background: #2a2a4a;
+    color: #888;
+    line-height: 1;
+  }
+
+  .toggle-btn.on {
+    background: rgba(102, 187, 106, 0.2);
+    border-color: #66bb6a;
+    color: #66bb6a;
+  }
+
+  .toggle-btn:hover:not(:disabled) {
+    border-color: #4fc3f7;
+    color: #4fc3f7;
+  }
+
+  .toggle-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 
   .slider-label {

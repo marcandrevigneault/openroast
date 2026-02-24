@@ -59,6 +59,7 @@ class MachineInstance:
     prev_bt: float | None = None
     start_time_ms: float = 0.0
     consecutive_errors: int = 0
+    control_enabled: dict[str, bool] = field(default_factory=dict)
 
 
 class MachineManager:
@@ -165,17 +166,24 @@ class MachineManager:
             instance.subscribers.discard(ws)
 
     async def handle_control(
-        self, machine_id: str, channel: str, value_normalized: float
+        self,
+        machine_id: str,
+        channel: str,
+        value_normalized: float,
+        *,
+        enabled: bool = True,
     ) -> ControlAckMessage:
         """Handle a control command from a WebSocket client.
 
         Scales the normalized 0-1 value to the control's native range and
-        forwards it to the driver.
+        forwards it to the driver.  When *enabled* is False the driver
+        receives 0 regardless of the requested value.
 
         Args:
             machine_id: Target machine.
             channel: Control channel name.
             value_normalized: Value in 0.0-1.0 range.
+            enabled: Whether the control is active.
 
         Returns:
             ControlAckMessage indicating success or failure.
@@ -184,17 +192,21 @@ class MachineManager:
         if instance is None:
             return ControlAckMessage(
                 channel=channel, value=value_normalized,
-                applied=False, message="Machine not connected",
+                applied=False, enabled=enabled,
+                message="Machine not connected",
             )
 
         control = self._find_control(instance.machine, channel)
         if control is None:
             return ControlAckMessage(
                 channel=channel, value=value_normalized,
-                applied=False, message=f"Unknown control channel: {channel}",
+                applied=False, enabled=enabled,
+                message=f"Unknown control channel: {channel}",
             )
 
-        native_value = self._scale_to_native(control, value_normalized)
+        instance.control_enabled[channel] = enabled
+        write_value = value_normalized if enabled else 0.0
+        native_value = self._scale_to_native(control, write_value)
 
         try:
             await instance.driver.write_control(channel, native_value)
@@ -204,12 +216,13 @@ class MachineManager:
             instance.session.add_control_change(elapsed_ms, channel, native_value)
 
             return ControlAckMessage(
-                channel=channel, value=value_normalized, applied=True,
+                channel=channel, value=value_normalized,
+                applied=True, enabled=enabled,
             )
         except (ConnectionError, NotImplementedError) as e:
             return ControlAckMessage(
                 channel=channel, value=value_normalized,
-                applied=False, message=str(e),
+                applied=False, enabled=enabled, message=str(e),
             )
 
     async def handle_session_command(
@@ -250,6 +263,10 @@ class MachineManager:
                 session.stop_monitoring()
             elif action == CommandAction.START_RECORDING:
                 session.start_recording()
+                # Reset clock so chart starts at t=0 for the recording
+                instance.start_time_ms = time.monotonic() * 1000
+                instance.prev_et = None
+                instance.prev_bt = None
             elif action == CommandAction.STOP_RECORDING:
                 session.stop_recording()
             elif action == CommandAction.MARK_EVENT:

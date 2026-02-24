@@ -30,7 +30,7 @@
     onrecord?: () => void;
     onstoprecord?: () => void;
     onmark?: (eventType: RoastEventType) => void;
-    oncontrol?: (channel: string, value: number) => void;
+    oncontrol?: (channel: string, value: number, enabled?: boolean) => void;
     onchartoptionschange?: (options: ChartOptions) => void;
     onreset?: () => void;
     onremove?: () => void;
@@ -76,6 +76,8 @@
   let sliderValues = $state<Record<string, number>>({});
   let draggingChannels = $state<Record<string, boolean>>({});
   let cooldownUntil = $state<Record<string, number>>({});
+  let controlsEnabled = $state<Record<string, boolean>>({});
+  let lastControlValues = $state<Record<string, number>>({});
   const READBACK_COOLDOWN_MS = 1500;
 
   // Sync slider values from extra channel read-backs, but skip channels
@@ -306,6 +308,7 @@
               machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
             ]}
             disabled={!isConnected}
+            enabled={controlsEnabled[ctrl.channel] ?? true}
             ondragstart={() => {
               draggingChannels[ctrl.channel] = true;
             }}
@@ -317,6 +320,25 @@
               sliderValues[ctrl.channel] = v;
               cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
               oncontrol?.(ctrl.channel, v);
+            }}
+            ontoggle={(on) => {
+              controlsEnabled[ctrl.channel] = on;
+              if (on) {
+                const restored =
+                  lastControlValues[ctrl.channel] ??
+                  sliderValues[ctrl.channel] ??
+                  ctrl.min;
+                sliderValues[ctrl.channel] = restored;
+                oncontrol?.(ctrl.channel, restored, true);
+              } else {
+                lastControlValues[ctrl.channel] =
+                  sliderValues[ctrl.channel] ?? ctrl.min;
+                oncontrol?.(
+                  ctrl.channel,
+                  sliderValues[ctrl.channel] ?? ctrl.min,
+                  false,
+                );
+              }
             }}
           />
         {/each}
