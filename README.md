@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/coffeebean.png" alt="OpenRoast" width="120" />
+  <img src="docs/coffeebean-nobg.png" alt="OpenRoast" width="120" />
 </p>
 
 <h1 align="center">OpenRoast</h1>
