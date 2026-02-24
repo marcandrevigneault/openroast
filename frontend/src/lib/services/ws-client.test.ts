@@ -233,6 +233,35 @@ describe("WSClient", () => {
     expect(onMessage).not.toHaveBeenCalled();
   });
 
+  it("resetSyncTimestamp prevents stale data on reconnect", () => {
+    const client = new WSClient("machine-1", callbacks);
+    client.connect();
+    MockWebSocket.instances[0].simulateOpen();
+
+    // Receive a temperature to set lastTimestampMs
+    MockWebSocket.instances[0].simulateMessage({
+      type: "temperature",
+      timestamp_ms: 60000,
+      et: 200,
+      bt: 180,
+      et_ror: 0,
+      bt_ror: 0,
+      extra_channels: {},
+    });
+
+    // Reset sync timestamp (simulating monitoring restart)
+    client.resetSyncTimestamp();
+
+    // Simulate disconnect + reconnect
+    MockWebSocket.instances[0].simulateClose();
+    vi.advanceTimersByTime(2000);
+    const newWs = MockWebSocket.instances[MockWebSocket.instances.length - 1];
+    newWs.simulateOpen();
+
+    // Should NOT send sync since timestamp was reset to 0
+    expect(newWs.sentMessages).toHaveLength(0);
+  });
+
   it("retryNow forces immediate reconnect and resets backoff", () => {
     const client = new WSClient("machine-1", callbacks);
     client.connect();

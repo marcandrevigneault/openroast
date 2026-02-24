@@ -56,6 +56,14 @@
       onMessage: (msg: ServerMessage) => {
         const current = machineStates.get(machineId);
         if (!current) return;
+        // Reset sync timestamp when backend clock resets to avoid
+        // replaying stale data on reconnect
+        if (
+          msg.type === "state" &&
+          (msg.state === "monitoring" || msg.state === "recording")
+        ) {
+          client.resetSyncTimestamp();
+        }
         machineStates.set(machineId, processMessage(current, msg));
       },
       onStateChange: (wsState) => {

@@ -179,6 +179,7 @@ export function processMessage(
         return {
           ...state,
           sessionState: msg.state,
+          currentTemp: null,
           history: [],
           controlHistory: [],
           extraChannelHistory: [],

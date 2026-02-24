@@ -246,7 +246,7 @@ describe("processMessage", () => {
       expect(result.sessionState).toBe("monitoring");
     });
 
-    it("clears history when monitoring starts", () => {
+    it("clears history and currentTemp when monitoring starts", () => {
       let state: MachineState = { ...baseState(), sessionState: "monitoring" };
       state = processMessage(state, {
         type: "temperature",
@@ -258,6 +258,7 @@ describe("processMessage", () => {
         extra_channels: {},
       });
       expect(state.history).toHaveLength(1);
+      expect(state.currentTemp).toBeTruthy();
       // Stop monitoring → idle, then start again
       state = processMessage(state, {
         type: "state",
@@ -273,6 +274,7 @@ describe("processMessage", () => {
       expect(state.controlHistory).toEqual([]);
       expect(state.extraChannelHistory).toEqual([]);
       expect(state.events).toEqual([]);
+      expect(state.currentTemp).toBeNull();
     });
 
     it("keeps last 5s of history rebased to negative timestamps when recording starts", () => {
