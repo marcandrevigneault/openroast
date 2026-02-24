@@ -9,7 +9,7 @@
 
   let { open, onclose }: Props = $props();
 
-  const links = [
+  const links: { href: "/" | "/profiles" | "/control-profiles"; label: string }[] = [
     { href: "/", label: "Dashboard" },
     { href: "/profiles", label: "Profiles" },
     { href: "/control-profiles", label: "Control Profiles" },
@@ -23,7 +23,7 @@
 {#if open}
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div class="overlay" onkeydown={() => {}} onclick={onclose}></div>
-  <nav class="drawer" role="navigation" aria-label="Main navigation">
+  <nav class="drawer" aria-label="Main navigation">
     <div class="drawer-header">
       <span class="drawer-title">OpenRoast</span>
       <button class="btn-close" onclick={onclose} aria-label="Close menu"

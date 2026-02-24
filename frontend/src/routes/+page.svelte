@@ -402,7 +402,7 @@
       bean_name: data.beanName,
       bean_weight_g: data.beanWeight,
       chart_image_base64: data.chartImageBase64,
-      schedule_name: scheduleMap.get(id)?.name ?? null,
+      schedule_name: scheduleMap.get(id)?.sourceProfileName ?? null,
     };
 
     try {

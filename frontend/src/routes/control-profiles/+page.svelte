@@ -350,7 +350,7 @@
                   >
                 </div>
                 <div class="step-edit-trigger">
-                  <label class="edit-label">Trigger</label>
+                  <span class="edit-label">Trigger</span>
                   <select
                     class="edit-select"
                     value={step.trigger.type}
@@ -423,7 +423,7 @@
                   {/if}
                 </div>
                 <div class="step-edit-actions">
-                  <label class="edit-label">Actions</label>
+                  <span class="edit-label">Actions</span>
                   {#each step.actions as action, j (j)}
                     <div class="action-row">
                       <input
