@@ -69,6 +69,7 @@ omit = [
     "*/tests/*",
     "*/desktop/*",
 ]
+relative_files = true
 
 [tool.coverage.report]
 fail_under = 90
