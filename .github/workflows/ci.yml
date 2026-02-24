@@ -56,10 +56,9 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: backend/coverage.xml
-          flags: backend
-          root_dir: backend
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
+          fail_ci_if_error: true
 
   frontend:
     name: Frontend (SvelteKit)
