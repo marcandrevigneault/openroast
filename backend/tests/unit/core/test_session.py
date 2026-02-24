@@ -25,7 +25,7 @@ class TestSessionLifecycle:
 
     def test_stop_recording(self, recording_session: RoastSession) -> None:
         recording_session.stop_recording()
-        assert recording_session.state == SessionState.FINISHED
+        assert recording_session.state == SessionState.MONITORING
 
     def test_cannot_record_from_idle(self, session: RoastSession) -> None:
         with pytest.raises(ValueError, match="Cannot start recording"):
@@ -61,10 +61,21 @@ class TestSessionLifecycle:
         with pytest.raises(ValueError, match="Cannot start monitoring"):
             recording_session.start_monitoring()
 
+    def test_stop_recording_then_stop_monitoring_finishes(
+        self, recording_session: RoastSession,
+    ) -> None:
+        recording_session.add_reading(0, 200.0, 180.0)
+        recording_session.stop_recording()
+        assert recording_session.state == SessionState.MONITORING
+        recording_session.stop_monitoring()
+        assert recording_session.state == SessionState.FINISHED
+
     def test_can_restart_monitoring_after_finished(
         self, recording_session: RoastSession,
     ) -> None:
+        recording_session.add_reading(0, 200.0, 180.0)
         recording_session.stop_recording()
+        recording_session.stop_monitoring()
         recording_session.start_monitoring()
         assert recording_session.state == SessionState.MONITORING
 
@@ -96,8 +107,7 @@ class TestDataRecording:
         monitoring_session.add_reading(0, 210.0, 155.0)
         assert monitoring_session.data_points == 1
         monitoring_session.stop_recording()
-        # Start a new recording
-        monitoring_session.start_monitoring()
+        # Already in MONITORING after stop_recording, start a new recording
         monitoring_session.start_recording()
         assert monitoring_session.data_points == 0
 
@@ -168,8 +178,7 @@ class TestControlTracking:
         monitoring_session.add_control_change(0, "burner", 0.8)
         monitoring_session.add_reading(0, 210.0, 155.0)
         monitoring_session.stop_recording()
-        # Start new recording
-        monitoring_session.start_monitoring()
+        # Already in MONITORING after stop_recording, start a new recording
         monitoring_session.start_recording()
         monitoring_session.add_reading(0, 210.0, 155.0)
         profile = monitoring_session.to_profile("test")

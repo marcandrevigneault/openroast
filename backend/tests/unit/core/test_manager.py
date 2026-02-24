@@ -435,12 +435,23 @@ class TestHandleSessionCommand:
         assert isinstance(r2, StateMessage)
         assert r2.state == SessionStateValue.RECORDING
 
-        # RECORDING → FINISHED
+        # Add a data point so session has recorded data
+        instance = manager.get_instance(machine.id)
+        instance.session.add_reading(0, 200.0, 180.0)
+
+        # RECORDING → MONITORING
         r3 = await manager.handle_session_command(
             machine.id, CommandAction.STOP_RECORDING
         )
         assert isinstance(r3, StateMessage)
-        assert r3.state == SessionStateValue.FINISHED
+        assert r3.state == SessionStateValue.MONITORING
+
+        # MONITORING → FINISHED (recorded data exists)
+        r4 = await manager.handle_session_command(
+            machine.id, CommandAction.STOP_MONITORING
+        )
+        assert isinstance(r4, StateMessage)
+        assert r4.state == SessionStateValue.FINISHED
 
         await manager.disconnect_machine(machine.id)
 
