@@ -21,6 +21,11 @@ _CATALOG_PATH: Path | None = None
 def _default_catalog_path() -> Path:
     from pathlib import Path
 
+    from openroast.core.paths import get_bundle_root
+
+    bundle = get_bundle_root()
+    if bundle is not None:
+        return bundle / "openroast" / "catalog" / "machines.json"
     return Path(__file__).parent / "machines.json"
 
 

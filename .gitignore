@@ -33,6 +33,10 @@ frontend/.svelte-kit/
 *.swo
 *~
 
+# PyInstaller
+*.spec.bak
+packaging/build/
+
 # OS
 .DS_Store
 Thumbs.db
