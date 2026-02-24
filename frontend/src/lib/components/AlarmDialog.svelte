@@ -13,6 +13,7 @@
     type AlarmDirection,
     type AlarmSound,
     type AlarmRepeat,
+    type AlarmDef,
   } from "$lib/stores/alarms";
   import {
     playAlarmSound,
@@ -39,8 +40,12 @@
   let formRepeat = $state<AlarmRepeat>("once");
 
   // Derived stats
-  let firedCount = $derived(alarmSet.alarms.filter((a) => a.fired).length);
-  let enabledCount = $derived(alarmSet.alarms.filter((a) => a.enabled).length);
+  let firedCount = $derived(
+    alarmSet.alarms.filter((a: AlarmDef) => a.fired).length,
+  );
+  let enabledCount = $derived(
+    alarmSet.alarms.filter((a: AlarmDef) => a.enabled).length,
+  );
 
   // Sensor options for the dropdown
   let sensorOptions = $derived([
@@ -89,7 +94,7 @@
 
   function handleRemoveAlarm(alarmId: string) {
     // Stop any active sound for this alarm
-    const alarm = alarmSet.alarms.find((a) => a.id === alarmId);
+    const alarm = alarmSet.alarms.find((a: AlarmDef) => a.id === alarmId);
     if (alarm?.playbackId) {
       stopAlarmSound(alarm.playbackId);
     }
@@ -119,7 +124,10 @@
     onalarmsetchange({
       ...alarmSet,
       status: "idle",
-      alarms: alarmSet.alarms.map((a) => ({ ...a, playbackId: null })),
+      alarms: alarmSet.alarms.map((a: AlarmDef) => ({
+        ...a,
+        playbackId: null,
+      })),
     });
   }
 
@@ -131,7 +139,10 @@
     }
     onalarmsetchange({
       ...alarmSet,
-      alarms: alarmSet.alarms.map((a) => ({ ...a, playbackId: null })),
+      alarms: alarmSet.alarms.map((a: AlarmDef) => ({
+        ...a,
+        playbackId: null,
+      })),
     });
   }
 
@@ -152,6 +163,8 @@
         return "Armed";
       case "completed":
         return "Completed";
+      default:
+        return status;
     }
   }
 </script>

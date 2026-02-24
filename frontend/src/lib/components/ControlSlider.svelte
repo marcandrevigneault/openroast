@@ -201,6 +201,7 @@
     width: 60px;
     text-align: right;
     outline: none;
+    appearance: textfield;
     -moz-appearance: textfield;
   }
 
@@ -258,12 +259,6 @@
   }
 
   @media (max-width: 480px) {
-    .toggle-btn {
-      font-size: 0.65rem;
-      padding: 4px 8px;
-      min-height: 28px;
-    }
-
     .slider-value {
       padding: 4px 6px;
       min-height: 32px;
