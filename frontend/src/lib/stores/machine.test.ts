@@ -313,8 +313,10 @@ describe("processMessage", () => {
       expect(state.history[0].timestamp_ms).toBe(-5000);
       expect(state.history[1].timestamp_ms).toBe(0);
       expect(state.events).toEqual([]);
-      expect(state.controlHistory).toHaveLength(2);
-      expect(state.controlHistory[0].timestamp_ms).toBe(-5000);
+      // Control history is replaced with a t=0 snapshot of currentControls
+      expect(state.controlHistory).toHaveLength(1);
+      expect(state.controlHistory[0].timestamp_ms).toBe(0);
+      expect(state.controlHistory[0].values.burner).toBe(80);
       expect(state.extraChannelHistory).toHaveLength(2);
       expect(state.extraChannelHistory[0].timestamp_ms).toBe(-5000);
     });
@@ -435,6 +437,90 @@ describe("processMessage", () => {
       });
       expect(state.currentControls!.values.burner).toBe(80);
       expect(state.currentControls!.values.airflow).toBe(60);
+    });
+
+    it("records control_ack to controlHistory during recording", () => {
+      let state: MachineState = {
+        ...baseState(),
+        sessionState: "recording",
+        currentTemp: {
+          timestamp_ms: 5000,
+          et: 200,
+          bt: 180,
+          et_ror: 0,
+          bt_ror: 0,
+        },
+      };
+      state = processMessage(state, {
+        type: "control_ack",
+        channel: "burner",
+        value: 75,
+        applied: true,
+        enabled: true,
+        message: "ok",
+      });
+      expect(state.controlHistory).toHaveLength(1);
+      expect(state.controlHistory[0].timestamp_ms).toBe(5000);
+      expect(state.controlHistory[0].values.burner).toBe(75);
+    });
+
+    it("does not record control_ack to controlHistory outside recording", () => {
+      let state: MachineState = {
+        ...baseState(),
+        sessionState: "monitoring",
+        currentTemp: {
+          timestamp_ms: 5000,
+          et: 200,
+          bt: 180,
+          et_ror: 0,
+          bt_ror: 0,
+        },
+      };
+      state = processMessage(state, {
+        type: "control_ack",
+        channel: "burner",
+        value: 75,
+        applied: true,
+        enabled: true,
+        message: "ok",
+      });
+      expect(state.currentControls!.values.burner).toBe(75);
+      expect(state.controlHistory).toHaveLength(0);
+    });
+
+    it("snapshots current controls at t=0 when recording starts", () => {
+      let state = baseState();
+      // Set up controls during monitoring
+      state = processMessage(
+        { ...state, sessionState: "monitoring" },
+        {
+          type: "control_ack",
+          channel: "burner",
+          value: 80,
+          applied: true,
+          enabled: true,
+          message: "ok",
+        },
+      );
+      state = processMessage(state, {
+        type: "control_ack",
+        channel: "airflow",
+        value: 50,
+        applied: true,
+        enabled: true,
+        message: "ok",
+      });
+      // Start recording
+      state = processMessage(state, {
+        type: "state",
+        state: "recording",
+        previous_state: "monitoring",
+      });
+      // Should have a single snapshot at t=0 with all control values
+      expect(state.controlHistory).toHaveLength(1);
+      expect(state.controlHistory[0].timestamp_ms).toBe(0);
+      expect(state.controlHistory[0].values.burner).toBe(80);
+      expect(state.controlHistory[0].values.airflow).toBe(50);
     });
 
     it("returns state unchanged for replay", () => {

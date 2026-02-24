@@ -155,6 +155,13 @@ export function processMessage(
         // Offset so the last monitoring point lands at t=0
         const offset = lastTs;
 
+        // Snapshot current control values at t=0 as the initial state
+        const initialControls: ControlPoint[] =
+          state.currentControls &&
+          Object.keys(state.currentControls.values).length > 0
+            ? [{ timestamp_ms: 0, values: { ...state.currentControls.values } }]
+            : [];
+
         return {
           ...state,
           sessionState: msg.state,
@@ -162,9 +169,7 @@ export function processMessage(
             .filter((p) => p.timestamp_ms >= cutoff)
             .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
           events: [],
-          controlHistory: state.controlHistory
-            .filter((p) => p.timestamp_ms >= cutoff)
-            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
+          controlHistory: initialControls,
           extraChannelHistory: state.extraChannelHistory
             .filter((p) => p.timestamp_ms >= cutoff)
             .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
@@ -197,12 +202,22 @@ export function processMessage(
         timestamp_ms: 0,
         values: {},
       };
+      const ts = state.currentTemp?.timestamp_ms ?? 0;
+      const newControls: ControlPoint = {
+        timestamp_ms: ts,
+        values: { ...prev.values, [msg.channel]: msg.value },
+      };
+      // Record to controlHistory during recording
+      const isRecording = state.sessionState === "recording";
       return {
         ...state,
-        currentControls: {
-          timestamp_ms: state.currentTemp?.timestamp_ms ?? 0,
-          values: { ...prev.values, [msg.channel]: msg.value },
-        },
+        currentControls: newControls,
+        controlHistory: isRecording
+          ? [
+              ...state.controlHistory,
+              { timestamp_ms: ts, values: { [msg.channel]: msg.value } },
+            ]
+          : state.controlHistory,
       };
     }
     case "alarm":
