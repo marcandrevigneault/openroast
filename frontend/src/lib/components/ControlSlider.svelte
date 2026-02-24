@@ -256,4 +256,31 @@
   .slider:disabled {
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    .toggle-btn {
+      font-size: 0.65rem;
+      padding: 4px 8px;
+      min-height: 28px;
+    }
+
+    .slider-value {
+      padding: 4px 6px;
+      min-height: 32px;
+    }
+
+    .slider {
+      height: 10px;
+    }
+
+    .slider::-webkit-slider-thumb {
+      width: 24px;
+      height: 24px;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+    }
+  }
 </style>

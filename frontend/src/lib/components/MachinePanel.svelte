@@ -526,4 +526,40 @@
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 0 16px;
   }
+
+  @media (max-width: 480px) {
+    .panel-header {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .header-left {
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-temps {
+      gap: 10px;
+    }
+
+    .header-right {
+      gap: 6px;
+    }
+
+    .btn-settings,
+    .btn-remove,
+    .btn-retry-header {
+      padding: 6px 8px;
+    }
+
+    .actions-row {
+      gap: 6px;
+    }
+
+    .controls-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
 </style>

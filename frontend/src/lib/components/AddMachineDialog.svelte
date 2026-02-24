@@ -143,4 +143,26 @@
     opacity: 0.4;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    .dialog {
+      min-width: 0;
+      width: 90vw;
+      padding: 16px;
+    }
+
+    .actions {
+      flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-submit {
+      padding: 10px 16px;
+      text-align: center;
+    }
+
+    input {
+      padding: 10px 12px;
+    }
+  }
 </style>

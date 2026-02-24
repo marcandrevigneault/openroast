@@ -31,10 +31,18 @@
     font-family:
       -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  :global(input, select, textarea) {
+    font-size: 16px;
   }
 
   .app {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
   }
@@ -58,5 +66,15 @@
   .app-main {
     flex: 1;
     padding: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 8px 12px;
+    }
+
+    .app-main {
+      padding: 8px;
+    }
   }
 </style>
