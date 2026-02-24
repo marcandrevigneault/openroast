@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
+from openroast import __version__
 from openroast.api.routes import (
     init_machine_storage,
     init_manager,
@@ -28,7 +29,7 @@ from openroast.ws.live import router as ws_router
 
 app = FastAPI(
     title="OpenRoast",
-    version="0.1.0",
+    version=__version__,
     description="Browser-based coffee roasting software",
 )
 
@@ -64,7 +65,7 @@ app.include_router(ws_router, prefix="/ws")
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Health check endpoint."""
-    return {"status": "ok"}
+    return {"status": "ok", "version": __version__}
 
 
 # ── Static frontend serving (production only) ──────────────────────

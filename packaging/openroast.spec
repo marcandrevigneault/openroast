@@ -1,7 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller spec for OpenRoast macOS .app bundle."""
 
+import re
 from pathlib import Path
+
+from PyInstaller.utils.hooks import copy_metadata
 
 block_cipher = None
 
@@ -10,6 +13,15 @@ BACKEND_SRC = ROOT / "backend" / "src"
 FRONTEND_BUILD = ROOT / "frontend" / "build"
 ICON_ICNS = ROOT / "packaging" / "icon.icns"
 ICON_PNG = ROOT / "packaging" / "icon.png"
+
+# Read version from pyproject.toml (single source of truth)
+_pyproject = ROOT / "backend" / "pyproject.toml"
+_version_match = re.search(
+    r'^version\s*=\s*"([^"]+)"',
+    _pyproject.read_text(),
+    re.MULTILINE,
+)
+VERSION = _version_match.group(1) if _version_match else "0.0.0"
 
 if not FRONTEND_BUILD.exists():
     raise FileNotFoundError(
@@ -27,7 +39,7 @@ a = Analysis(
             "openroast/catalog",
         ),
         (str(ICON_PNG), "."),
-    ],
+    ] + copy_metadata("openroast"),
     hiddenimports=[
         "uvicorn.logging",
         "uvicorn.protocols.http.auto",
@@ -102,8 +114,8 @@ app = BUNDLE(
     info_plist={
         "CFBundleName": "OpenRoast",
         "CFBundleDisplayName": "OpenRoast",
-        "CFBundleShortVersionString": "0.1.0",
-        "CFBundleVersion": "0.1.0",
+        "CFBundleShortVersionString": VERSION,
+        "CFBundleVersion": VERSION,
         "LSUIElement": True,
         "NSHighResolutionCapable": True,
     },

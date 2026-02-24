@@ -36,6 +36,17 @@ export interface SaveProfileRequest {
 
 const BASE = "/api";
 
+export async function fetchVersion(): Promise<string> {
+  try {
+    const resp = await fetch("/health");
+    if (!resp.ok) return "unknown";
+    const data: { status: string; version: string } = await resp.json();
+    return data.version ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 export async function saveProfile(
   req: SaveProfileRequest,
 ): Promise<{ id: string }> {

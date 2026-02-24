@@ -2,6 +2,7 @@
   import { page } from "$app/state";
   import { resolve } from "$app/paths";
   import favicon from "$lib/assets/favicon.png";
+  import { fetchVersion } from "$lib/utils/api";
 
   interface Props {
     open: boolean;
@@ -9,6 +10,13 @@
   }
 
   let { open, onclose }: Props = $props();
+  let version: string = $state("...");
+
+  $effect(() => {
+    fetchVersion().then((v) => {
+      version = v;
+    });
+  });
 
   const links: {
     href: "/" | "/profiles" | "/control-profiles";
@@ -51,6 +59,9 @@
         </li>
       {/each}
     </ul>
+    <div class="drawer-footer">
+      <span class="version-label">v{version}</span>
+    </div>
   </nav>
 {/if}
 
@@ -154,5 +165,17 @@
     color: #4fc3f7;
     background: rgba(79, 195, 247, 0.12);
     border-left: 3px solid #4fc3f7;
+  }
+
+  .drawer-footer {
+    margin-top: auto;
+    padding: 12px 20px;
+    border-top: 1px solid #2a2a4a;
+  }
+
+  .version-label {
+    font-size: 0.75rem;
+    color: #666;
+    letter-spacing: 0.03em;
   }
 </style>
