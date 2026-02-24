@@ -444,6 +444,42 @@ class TestHandleSessionCommand:
 
         await manager.disconnect_machine(machine.id)
 
+    @patch("openroast.core.manager.create_driver")
+    async def test_start_recording_resets_clock(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """start_time_ms must reset on START_RECORDING so the chart starts at t=0."""
+        machine = _make_machine()
+        storage = _mock_storage({machine.id: machine})
+        mock_factory.return_value = _mock_driver()
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        # Move to monitoring
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_MONITORING
+        )
+
+        instance = manager.get_instance(machine.id)
+        old_start = instance.start_time_ms
+
+        # Simulate some time passing
+        import time
+        time.sleep(0.01)
+
+        # Start recording
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_RECORDING
+        )
+
+        assert instance.start_time_ms > old_start
+        # prev values should be cleared for fresh RoR
+        assert instance.prev_et is None
+        assert instance.prev_bt is None
+
+        await manager.disconnect_machine(machine.id)
+
 
 # ── RoR computation tests ────────────────────────────────────────────
 

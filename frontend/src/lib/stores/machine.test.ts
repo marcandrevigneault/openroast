@@ -274,7 +274,7 @@ describe("processMessage", () => {
       expect(state.events).toEqual([]);
     });
 
-    it("keeps last 5s of history rebased to t=0 when recording starts", () => {
+    it("keeps last 5s of history rebased to negative timestamps when recording starts", () => {
       let state: MachineState = { ...baseState(), sessionState: "monitoring" };
       // Add data at 1s, 3s, 8s (only 3s and 8s are within last 5s of t=8)
       for (const ts of [1000, 3000, 8000]) {
@@ -306,15 +306,17 @@ describe("processMessage", () => {
         previous_state: "monitoring",
       });
       // Only points at 3000 and 8000 kept (cutoff = 8000 - 5000 = 3000)
-      // Rebased by offset 3000: 3000→0, 8000→5000
+      // Rebased by lastTs 8000: 3000→-5000, 8000→0
+      // The last monitoring point lands at 0, tail is negative.
+      // Backend resets its clock so new data arrives starting from ~0.
       expect(state.history).toHaveLength(2);
-      expect(state.history[0].timestamp_ms).toBe(0);
-      expect(state.history[1].timestamp_ms).toBe(5000);
+      expect(state.history[0].timestamp_ms).toBe(-5000);
+      expect(state.history[1].timestamp_ms).toBe(0);
       expect(state.events).toEqual([]);
       expect(state.controlHistory).toHaveLength(2);
-      expect(state.controlHistory[0].timestamp_ms).toBe(0);
+      expect(state.controlHistory[0].timestamp_ms).toBe(-5000);
       expect(state.extraChannelHistory).toHaveLength(2);
-      expect(state.extraChannelHistory[0].timestamp_ms).toBe(0);
+      expect(state.extraChannelHistory[0].timestamp_ms).toBe(-5000);
     });
 
     it("clears all history when recording starts with no data", () => {

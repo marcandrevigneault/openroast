@@ -143,14 +143,17 @@ export function processMessage(
     }
     case "state": {
       if (msg.state === "recording") {
-        // Keep last 5 seconds of data, rebased so the tail starts near t=0
+        // Keep last 5 seconds of monitoring data, rebased to negative
+        // timestamps (e.g. -5000 to 0). The backend resets its clock on
+        // START_RECORDING, so fresh data will arrive starting from ~0.
         const TAIL_MS = 5000;
         const lastTs =
           state.history.length > 0
             ? state.history[state.history.length - 1].timestamp_ms
             : 0;
         const cutoff = lastTs - TAIL_MS;
-        const offset = Math.max(0, cutoff);
+        // Offset so the last monitoring point lands at t=0
+        const offset = lastTs;
 
         return {
           ...state,
