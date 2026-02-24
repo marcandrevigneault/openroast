@@ -196,6 +196,180 @@ describe("processMessage", () => {
       });
       expect(result.extraChannelHistory).toHaveLength(0);
     });
+
+    it("updates currentControls when readback value changes", () => {
+      const controls = [
+        {
+          name: "Burner",
+          channel: "burner",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "monitoring",
+      };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Burner: 75 },
+      });
+      expect(state.currentControls).toBeTruthy();
+      expect(state.currentControls!.values.burner).toBe(75);
+      expect(state.currentControls!.timestamp_ms).toBe(1000);
+    });
+
+    it("does not update currentControls when readback is unchanged", () => {
+      const controls = [
+        {
+          name: "Burner",
+          channel: "burner",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "monitoring",
+        currentExtraChannels: { Burner: 75 },
+      };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 2000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Burner: 75 },
+      });
+      // currentControls should remain null since value didn't change
+      expect(state.currentControls).toBeNull();
+    });
+
+    it("records readback changes to controlHistory during recording", () => {
+      const controls = [
+        {
+          name: "Burner",
+          channel: "burner",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "recording",
+        currentExtraChannels: { Burner: 50 },
+      };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 3000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Burner: 60 },
+      });
+      expect(state.controlHistory).toHaveLength(1);
+      expect(state.controlHistory[0].timestamp_ms).toBe(3000);
+      expect(state.controlHistory[0].values.burner).toBe(60);
+    });
+
+    it("rounds readback control timestamps to nearest second", () => {
+      const controls = [
+        {
+          name: "Burner",
+          channel: "burner",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "recording",
+      };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 3456,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Burner: 70 },
+      });
+      expect(state.currentControls!.timestamp_ms).toBe(3000);
+      expect(state.controlHistory[0].timestamp_ms).toBe(3000);
+    });
+
+    it("does not record readback to controlHistory during monitoring", () => {
+      const controls = [
+        {
+          name: "Burner",
+          channel: "burner",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "monitoring",
+        currentExtraChannels: { Burner: 50 },
+      };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 3000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Burner: 60 },
+      });
+      // currentControls updated, but not controlHistory
+      expect(state.currentControls!.values.burner).toBe(60);
+      expect(state.controlHistory).toHaveLength(0);
+    });
+
+    it("ignores extra channels not matching control configs", () => {
+      const controls = [
+        {
+          name: "Burner",
+          channel: "burner",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "monitoring",
+      };
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Inlet: 250 },
+      });
+      // "Inlet" doesn't match any control name, so no control update
+      expect(state.currentControls).toBeNull();
+    });
   });
 
   describe("event messages", () => {
@@ -406,7 +580,7 @@ describe("processMessage", () => {
       expect(result).toBe(state);
     });
 
-    it("updates currentControls on control_ack", () => {
+    it("control_ack is a no-op (does not update state)", () => {
       const state = baseState();
       const result = processMessage(state, {
         type: "control_ack",
@@ -416,78 +590,41 @@ describe("processMessage", () => {
         enabled: true,
         message: "ok",
       });
-      expect(result.currentControls).toBeTruthy();
-      expect(result.currentControls!.values.burner).toBe(50);
+      expect(result).toBe(state);
     });
 
-    it("preserves other channels on control_ack", () => {
-      let state = baseState();
-      state = processMessage(state, {
-        type: "control_ack",
-        channel: "burner",
-        value: 80,
-        applied: true,
-        enabled: true,
-        message: "ok",
-      });
-      state = processMessage(state, {
-        type: "control_ack",
-        channel: "airflow",
-        value: 60,
-        applied: true,
-        enabled: true,
-        message: "ok",
-      });
-      expect(state.currentControls!.values.burner).toBe(80);
-      expect(state.currentControls!.values.airflow).toBe(60);
-    });
-
-    it("does not record control_ack to controlHistory (even during recording)", () => {
-      let state: MachineState = {
-        ...baseState(),
-        sessionState: "recording",
-        currentTemp: {
-          timestamp_ms: 5000,
-          et: 200,
-          bt: 180,
-          et_ror: 0,
-          bt_ror: 0,
-        },
-      };
-      state = processMessage(state, {
-        type: "control_ack",
-        channel: "burner",
-        value: 75,
-        applied: true,
-        enabled: true,
-        message: "ok",
-      });
-      // control_ack only updates currentControls for display, not controlHistory
-      expect(state.currentControls!.values.burner).toBe(75);
-      expect(state.controlHistory).toHaveLength(0);
-    });
-
-    it("snapshots current controls at t=0 when recording starts", () => {
-      let state = baseState();
-      // Set up controls during monitoring
-      state = processMessage(
-        { ...state, sessionState: "monitoring" },
+    it("snapshots readback values at t=0 when recording starts", () => {
+      const controls = [
         {
-          type: "control_ack",
+          name: "Burner",
           channel: "burner",
-          value: 80,
-          applied: true,
-          enabled: true,
-          message: "ok",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
         },
-      );
+        {
+          name: "Airflow",
+          channel: "airflow",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "monitoring",
+      };
+      // Simulate readback values arriving during monitoring
       state = processMessage(state, {
-        type: "control_ack",
-        channel: "airflow",
-        value: 50,
-        applied: true,
-        enabled: true,
-        message: "ok",
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Burner: 80, Airflow: 50 },
       });
       // Start recording
       state = processMessage(state, {
@@ -495,11 +632,48 @@ describe("processMessage", () => {
         state: "recording",
         previous_state: "monitoring",
       });
-      // Should have a single snapshot at t=0 with all control values
+      // Should have a single snapshot at t=0 with readback-sourced values
       expect(state.controlHistory).toHaveLength(1);
       expect(state.controlHistory[0].timestamp_ms).toBe(0);
       expect(state.controlHistory[0].values.burner).toBe(80);
       expect(state.controlHistory[0].values.airflow).toBe(50);
+    });
+
+    it("t=0 snapshot overlays slider values on top of readback", () => {
+      const controls = [
+        {
+          name: "Burner",
+          channel: "burner",
+          min: 0,
+          max: 100,
+          step: 5,
+          unit: "%",
+        },
+      ];
+      let state: MachineState = {
+        ...createInitialState("m1", "Test", controls),
+        sessionState: "monitoring",
+      };
+      // Readback arrives
+      state = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: { Burner: 60 },
+      });
+      // User manually sets slider to different value
+      state = processControlInput(state, "burner", 75);
+      // Start recording — slider value (75) should win over readback (60)
+      state = processMessage(state, {
+        type: "state",
+        state: "recording",
+        previous_state: "monitoring",
+      });
+      expect(state.controlHistory).toHaveLength(1);
+      expect(state.controlHistory[0].values.burner).toBe(75);
     });
 
     it("returns state unchanged for replay", () => {
@@ -625,6 +799,23 @@ describe("processControlInput", () => {
     };
     const result = processControlInput(state, "burner", 50);
     expect(result.controlHistory[0].timestamp_ms).toBe(0);
+  });
+
+  it("rounds slider control timestamps to nearest second", () => {
+    const state: MachineState = {
+      ...baseState(),
+      sessionState: "recording",
+      currentTemp: {
+        timestamp_ms: 4700,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+      },
+    };
+    const result = processControlInput(state, "burner", 80);
+    expect(result.currentControls!.timestamp_ms).toBe(5000);
+    expect(result.controlHistory[0].timestamp_ms).toBe(5000);
   });
 
   it("records individual channel per history entry", () => {

@@ -113,10 +113,42 @@ export function processMessage(
       const isActive =
         state.sessionState === "monitoring" ||
         state.sessionState === "recording";
+
+      // Detect readback value changes and record as control changes
+      let updatedCurrentControls = state.currentControls;
+      let updatedControlHistory = state.controlHistory;
+
+      if (hasExtras && state.controls.length > 0) {
+        const changedValues: Record<string, number> = {};
+        for (const ctrl of state.controls) {
+          const newVal = extras[ctrl.name];
+          const prevVal = state.currentExtraChannels[ctrl.name];
+          if (newVal !== undefined && newVal !== prevVal) {
+            changedValues[ctrl.channel] = newVal;
+          }
+        }
+        if (Object.keys(changedValues).length > 0) {
+          const prevValues = updatedCurrentControls?.values ?? {};
+          const roundedTs = Math.round(msg.timestamp_ms / 1000) * 1000;
+          updatedCurrentControls = {
+            timestamp_ms: roundedTs,
+            values: { ...prevValues, ...changedValues },
+          };
+          if (isActive && state.sessionState === "recording") {
+            updatedControlHistory = [
+              ...updatedControlHistory,
+              { timestamp_ms: roundedTs, values: changedValues },
+            ];
+          }
+        }
+      }
+
       return {
         ...state,
         currentTemp: point,
         history: isActive ? [...state.history, point] : state.history,
+        currentControls: updatedCurrentControls,
+        controlHistory: updatedControlHistory,
         currentExtraChannels: hasExtras ? extras : state.currentExtraChannels,
         extraChannelHistory:
           isActive && hasExtras
@@ -155,11 +187,20 @@ export function processMessage(
         // Offset so the last monitoring point lands at t=0
         const offset = lastTs;
 
-        // Snapshot current control values at t=0 as the initial state
+        // Snapshot control values at t=0 from both readback and slider values
+        const snapshotValues: Record<string, number> = {};
+        for (const ctrl of state.controls) {
+          const readback = state.currentExtraChannels[ctrl.name];
+          if (readback !== undefined) {
+            snapshotValues[ctrl.channel] = readback;
+          }
+        }
+        if (state.currentControls) {
+          Object.assign(snapshotValues, state.currentControls.values);
+        }
         const initialControls: ControlPoint[] =
-          state.currentControls &&
-          Object.keys(state.currentControls.values).length > 0
-            ? [{ timestamp_ms: 0, values: { ...state.currentControls.values } }]
+          Object.keys(snapshotValues).length > 0
+            ? [{ timestamp_ms: 0, values: snapshotValues }]
             : [];
 
         return {
@@ -198,23 +239,11 @@ export function processMessage(
         ...state,
         error: msg.message,
       };
-    case "control_ack": {
-      // Only update currentControls for readback display.
-      // Control recording happens via processControlInput() at slider-change
-      // time so we capture native values and don't depend on WS round-trip.
-      const prev = state.currentControls ?? {
-        timestamp_ms: 0,
-        values: {},
-      };
-      const ts = state.currentTemp?.timestamp_ms ?? 0;
-      return {
-        ...state,
-        currentControls: {
-          timestamp_ms: ts,
-          values: { ...prev.values, [msg.channel]: msg.value },
-        },
-      };
-    }
+    case "control_ack":
+      // No-op — control values tracked via readback (temperature messages)
+      // and slider input (processControlInput). The ack carries normalized
+      // 0-1 values which would overwrite native values.
+      return state;
     case "alarm":
     case "replay":
       return state;
@@ -231,7 +260,8 @@ export function processControlInput(
   channel: string,
   nativeValue: number,
 ): MachineState {
-  const ts = state.currentTemp?.timestamp_ms ?? 0;
+  const rawTs = state.currentTemp?.timestamp_ms ?? 0;
+  const ts = Math.round(rawTs / 1000) * 1000;
   const prevValues = state.currentControls?.values ?? {};
   const newControls: ControlPoint = {
     timestamp_ms: ts,

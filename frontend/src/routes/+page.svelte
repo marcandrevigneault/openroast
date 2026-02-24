@@ -33,7 +33,11 @@
   import CatalogSelector from "$lib/components/CatalogSelector.svelte";
   import ToastContainer from "$lib/components/ToastContainer.svelte";
   import { addToast } from "$lib/stores/toast";
-  import { evaluateSchedule, type RoastSchedule } from "$lib/stores/scheduler";
+  import {
+    evaluateSchedule,
+    resetSchedule,
+    type RoastSchedule,
+  } from "$lib/stores/scheduler";
   import { saveProfile, type SaveProfileRequest } from "$lib/utils/api";
 
   let dashboard = $state<DashboardState>(createDashboardState());
@@ -398,6 +402,7 @@
       bean_name: data.beanName,
       bean_weight_g: data.beanWeight,
       chart_image_base64: data.chartImageBase64,
+      schedule_name: scheduleMap.get(id)?.name ?? null,
     };
 
     try {
@@ -413,19 +418,40 @@
     scheduleMap.set(id, s);
   }
 
-  // Evaluate running schedules on every machine state change
+  // Auto-start schedule when recording begins, auto-reset when recording ends.
+  // Evaluate running schedules only during recording.
   $effect(() => {
     for (const [machineId, sched] of scheduleMap) {
-      if (sched.status !== "running") continue;
-
       const state = machineStates.get(machineId);
-      if (!state?.currentTemp) continue;
-      if (state.driverState !== "connected") continue;
+      if (!state) continue;
+
+      // Auto-start: schedule has steps and is idle → start when recording begins
       if (
-        state.sessionState !== "monitoring" &&
-        state.sessionState !== "recording"
-      )
+        state.sessionState === "recording" &&
+        sched.status === "idle" &&
+        sched.steps.length > 0
+      ) {
+        scheduleMap.set(machineId, {
+          ...resetSchedule(sched),
+          status: "running",
+        });
         continue;
+      }
+
+      // Auto-reset: recording ended while schedule was active
+      if (
+        state.sessionState !== "recording" &&
+        (sched.status === "running" || sched.status === "paused")
+      ) {
+        scheduleMap.set(machineId, resetSchedule(sched));
+        continue;
+      }
+
+      // Only evaluate during recording
+      if (sched.status !== "running") continue;
+      if (!state.currentTemp) continue;
+      if (state.driverState !== "connected") continue;
+      if (state.sessionState !== "recording") continue;
 
       const histLen = state.history.length;
       const prevTemp =

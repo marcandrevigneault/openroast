@@ -70,6 +70,7 @@ class ProfileStorage:
                     "bean_name": data.get("bean_name", ""),
                     "data_points": len(data.get("temperatures", [])),
                     "has_image": self.has_image(profile_id),
+                    "schedule_name": data.get("schedule_name"),
                 })
             except (json.JSONDecodeError, KeyError):
                 continue

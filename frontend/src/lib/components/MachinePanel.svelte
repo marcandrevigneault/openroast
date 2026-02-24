@@ -302,7 +302,7 @@
     values={machine.currentExtraChannels}
   />
 
-  <!-- Session controls + event buttons in one compact row -->
+  <!-- Session controls + automation button -->
   <div class="actions-row">
     <SessionControls
       sessionState={machine.sessionState}
@@ -311,23 +311,25 @@
       {onrecord}
       {onstoprecord}
     />
-    <EventButtons disabled={true} events={machine.events} {onmark} />
     {#if machine.controls.length > 0}
       <button
-        class="btn-scheduler"
+        class="btn-automation"
         class:active={effectiveSchedule.status === "running"}
         onclick={() => (schedulerOpen = true)}
-        title="Roast schedule"
+        title="Roast automation"
       >
-        &#128337; Schedule
+        <span class="automation-icon">&#9881;</span> Automation
         {#if effectiveSchedule.steps.length > 0}
-          <span class="schedule-badge"
+          <span class="automation-badge"
             >({scheduleFiredCount}/{scheduleEnabledCount})</span
           >
         {/if}
       </button>
     {/if}
   </div>
+
+  <!-- Event markers -->
+  <EventButtons disabled={true} events={machine.events} {onmark} />
 
   <!-- Controls -->
   {#if machine.controls.length > 0}
@@ -553,31 +555,44 @@
     flex-wrap: wrap;
   }
 
-  .btn-scheduler {
-    background: transparent;
-    border: 1px solid #2a2a4a;
+  .btn-automation {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #2a2a4a;
+    border: none;
     border-radius: 6px;
-    color: #888;
-    font-size: 0.75rem;
-    padding: 5px 10px;
+    color: #ccc;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 8px 18px;
     cursor: pointer;
     margin-left: auto;
+    transition:
+      background-color 0.15s,
+      transform 0.1s;
   }
 
-  .btn-scheduler:hover {
-    color: #4fc3f7;
-    border-color: #4fc3f7;
-    background: rgba(79, 195, 247, 0.05);
+  .btn-automation:hover {
+    background: #3a3a5a;
+    transform: scale(1.02);
   }
 
-  .btn-scheduler.active {
+  .btn-automation:active {
+    transform: scale(0.98);
+  }
+
+  .btn-automation.active {
     color: #66bb6a;
-    border-color: #66bb6a;
-    background: rgba(102, 187, 106, 0.1);
+    background: rgba(102, 187, 106, 0.15);
   }
 
-  .schedule-badge {
-    font-size: 0.7rem;
+  .automation-icon {
+    font-size: 0.8rem;
+  }
+
+  .automation-badge {
+    font-size: 0.75rem;
     opacity: 0.7;
   }
 

@@ -127,7 +127,15 @@
   });
 
   let timeGridLines = $derived(() => {
-    const interval = timeRangeMs <= 120000 ? 30000 : 60000;
+    // Choose interval so labels don't overlap (~40px minimum per label)
+    const MIN_LABEL_PX = 40;
+    const maxLabels = Math.max(2, Math.floor(plotW / MIN_LABEL_PX));
+    const candidates = [30000, 60000, 120000, 300000, 600000];
+    let interval = candidates[0];
+    for (const c of candidates) {
+      interval = c;
+      if (Math.floor(timeSpanMs / c) + 1 <= maxLabels) break;
+    }
     const lines: number[] = [];
     // Start from first grid line at or before minTimeMs
     const start = Math.floor(minTimeMs / interval) * interval;

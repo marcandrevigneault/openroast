@@ -150,7 +150,7 @@
       });
       view = "main";
     } catch {
-      scheduleError = "Failed to save schedule";
+      scheduleError = "Failed to save control profile";
     }
   }
 
@@ -161,7 +161,7 @@
     try {
       savedSchedules = await listSchedules();
     } catch {
-      scheduleError = "Failed to load schedules";
+      scheduleError = "Failed to load control profiles";
     } finally {
       loadingSchedules = false;
     }
@@ -186,7 +186,7 @@
       onschedulechange(newSchedule);
       view = "main";
     } catch {
-      scheduleError = "Failed to load schedule";
+      scheduleError = "Failed to load control profile";
     } finally {
       loadingSchedules = false;
     }
@@ -197,7 +197,7 @@
       await deleteSchedule(id);
       savedSchedules = savedSchedules.filter((s) => s.id !== id);
     } catch {
-      scheduleError = "Failed to delete schedule";
+      scheduleError = "Failed to delete control profile";
     }
   }
 
@@ -239,10 +239,6 @@
   }
 
   // ── Schedule control ────────────────────────
-  function handleStart() {
-    onschedulechange({ ...resetSchedule(schedule), status: "running" });
-  }
-
   function handlePause() {
     onschedulechange({ ...schedule, status: "paused" });
   }
@@ -324,7 +320,7 @@
     <div class="dialog">
       <!-- Header -->
       <div class="dialog-header">
-        <h2>Roast Schedule</h2>
+        <h2>Automation</h2>
         {#if schedule.sourceProfileName}
           <span class="source-label">from: {schedule.sourceProfileName}</span>
         {/if}
@@ -367,17 +363,17 @@
         <!-- Load view -->
         <div class="import-section">
           <div class="section-header">
-            <h3>Load Schedule</h3>
+            <h3>Load Control Profile</h3>
             <button class="btn-back" onclick={() => (view = "main")}
               >&larr; Back</button
             >
           </div>
           {#if loadingSchedules}
-            <p class="loading">Loading schedules...</p>
+            <p class="loading">Loading control profiles...</p>
           {:else if scheduleError}
             <p class="error">{scheduleError}</p>
           {:else if savedSchedules.length === 0}
-            <p class="empty">No saved schedules found.</p>
+            <p class="empty">No saved control profiles found.</p>
           {:else}
             <div class="profile-list">
               {#each savedSchedules as s (s.id)}
@@ -406,7 +402,7 @@
         <!-- Save view -->
         <div class="import-section">
           <div class="section-header">
-            <h3>Save Schedule</h3>
+            <h3>Save as Control Profile</h3>
             <button class="btn-back" onclick={() => (view = "main")}
               >&larr; Back</button
             >
@@ -418,9 +414,9 @@
             <input
               type="text"
               class="input save-name-input"
-              placeholder="Schedule name"
+              placeholder="Control profile name"
               bind:value={saveName}
-              aria-label="Schedule name"
+              aria-label="Control profile name"
               onkeydown={(e) => {
                 if (e.key === "Enter") handleSaveSchedule();
               }}
@@ -438,11 +434,15 @@
         <!-- Main view -->
         <div class="toolbar">
           <button class="btn-secondary" onclick={openImport}
-            >Import from Profile</button
+            >Import from Roast</button
           >
-          <button class="btn-secondary" onclick={openLoad}>Load</button>
+          <button class="btn-secondary" onclick={openLoad}
+            >Load Control Profile</button
+          >
           {#if schedule.steps.length > 0}
-            <button class="btn-secondary" onclick={openSave}>Save</button>
+            <button class="btn-secondary" onclick={openSave}
+              >Save as Control Profile</button
+            >
             <button class="btn-danger" onclick={handleClearAll}
               >Clear All</button
             >
@@ -646,8 +646,8 @@
           <div class="footer-buttons">
             <button class="btn-secondary" onclick={onclose}>Close</button>
             {#if schedule.status === "idle" && schedule.steps.length > 0}
-              <button class="btn-primary" onclick={handleStart}
-                >Start Schedule</button
+              <span class="auto-start-hint"
+                >Starts automatically when recording</span
               >
             {:else if schedule.status === "running"}
               <button class="btn-secondary" onclick={handlePause}>Pause</button>
@@ -990,9 +990,16 @@
     letter-spacing: 0.05em;
   }
 
+  .auto-start-hint {
+    font-size: 0.72rem;
+    color: #66bb6a;
+    font-style: italic;
+  }
+
   .footer-buttons {
     display: flex;
     gap: 6px;
+    align-items: center;
   }
 
   /* ── Import ── */

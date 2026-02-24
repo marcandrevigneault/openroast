@@ -256,6 +256,7 @@ class SaveProfileRequest(BaseModel):
     bean_name: str | None = None
     bean_weight_g: float | None = None
     chart_image_base64: str | None = None
+    schedule_name: str | None = None
 
 
 @router.post("/profiles", status_code=201)
@@ -269,6 +270,8 @@ async def save_profile(req: SaveProfileRequest) -> dict:
         profile.bean_name = req.bean_name
     if req.bean_weight_g is not None:
         profile.bean_weight_g = req.bean_weight_g
+    if req.schedule_name is not None:
+        profile.schedule_name = req.schedule_name
     profile_id = storage.save(profile)
 
     if req.chart_image_base64:
@@ -341,6 +344,18 @@ async def get_schedule(schedule_id: str) -> SavedSchedule:
     schedule = storage.get(schedule_id)
     if schedule is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+    return schedule
+
+
+@router.put("/schedules/{schedule_id}")
+async def update_schedule(schedule_id: str, schedule: SavedSchedule) -> SavedSchedule:
+    """Update an existing schedule."""
+    storage = _get_schedule_storage()
+    existing = storage.get(schedule_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    schedule.id = schedule_id
+    storage.save(schedule)
     return schedule
 
 

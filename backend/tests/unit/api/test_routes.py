@@ -565,3 +565,65 @@ class TestSchedulesEndpoint:
     async def test_delete_nonexistent_schedule(self, client: AsyncClient) -> None:
         resp = await client.delete("/api/schedules/nonexistent")
         assert resp.status_code == 404
+
+    async def test_update_schedule(self, client: AsyncClient) -> None:
+        save_resp = await client.post("/api/schedules", json=_schedule_payload("Original"))
+        schedule_id = save_resp.json()["id"]
+
+        updated = _schedule_payload("Updated Name")
+        updated["steps"] = updated["steps"][:1]  # Remove one step
+        resp = await client.put(f"/api/schedules/{schedule_id}", json=updated)
+        assert resp.status_code == 200
+        assert resp.json()["name"] == "Updated Name"
+        assert len(resp.json()["steps"]) == 1
+
+        # Verify persisted
+        resp = await client.get(f"/api/schedules/{schedule_id}")
+        assert resp.json()["name"] == "Updated Name"
+
+    async def test_update_nonexistent_schedule(self, client: AsyncClient) -> None:
+        resp = await client.put("/api/schedules/nonexistent", json=_schedule_payload())
+        assert resp.status_code == 404
+
+
+class TestProfileScheduleName:
+    """Tests for schedule_name field on profiles."""
+
+    async def test_save_with_schedule_name(self, client: AsyncClient) -> None:
+        payload = {
+            "profile": {
+                "name": "Roast With Schedule",
+                "temperatures": [{"timestamp_ms": 0, "et": 200, "bt": 150}],
+            },
+            "schedule_name": "Morning Roast",
+        }
+        save_resp = await client.post("/api/profiles", json=payload)
+        profile_id = save_resp.json()["id"]
+
+        resp = await client.get(f"/api/profiles/{profile_id}")
+        assert resp.json()["schedule_name"] == "Morning Roast"
+
+    async def test_profile_without_schedule_name(self, client: AsyncClient) -> None:
+        payload = {
+            "profile": {
+                "name": "Plain Roast",
+                "temperatures": [{"timestamp_ms": 0, "et": 200, "bt": 150}],
+            },
+        }
+        save_resp = await client.post("/api/profiles", json=payload)
+        profile_id = save_resp.json()["id"]
+
+        resp = await client.get(f"/api/profiles/{profile_id}")
+        assert resp.json()["schedule_name"] is None
+
+    async def test_list_profiles_includes_schedule_name(self, client: AsyncClient) -> None:
+        await client.post("/api/profiles", json={
+            "profile": {
+                "name": "With Schedule",
+                "temperatures": [{"timestamp_ms": 0, "et": 200, "bt": 150}],
+            },
+            "schedule_name": "My Schedule",
+        })
+        resp = await client.get("/api/profiles")
+        profiles = resp.json()
+        assert profiles[0]["schedule_name"] == "My Schedule"
