@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   createInitialState,
   processMessage,
+  processControlInput,
   recordControlChange,
   formatTime,
   type MachineState,
@@ -439,7 +440,7 @@ describe("processMessage", () => {
       expect(state.currentControls!.values.airflow).toBe(60);
     });
 
-    it("records control_ack to controlHistory during recording", () => {
+    it("does not record control_ack to controlHistory (even during recording)", () => {
       let state: MachineState = {
         ...baseState(),
         sessionState: "recording",
@@ -459,31 +460,7 @@ describe("processMessage", () => {
         enabled: true,
         message: "ok",
       });
-      expect(state.controlHistory).toHaveLength(1);
-      expect(state.controlHistory[0].timestamp_ms).toBe(5000);
-      expect(state.controlHistory[0].values.burner).toBe(75);
-    });
-
-    it("does not record control_ack to controlHistory outside recording", () => {
-      let state: MachineState = {
-        ...baseState(),
-        sessionState: "monitoring",
-        currentTemp: {
-          timestamp_ms: 5000,
-          et: 200,
-          bt: 180,
-          et_ror: 0,
-          bt_ror: 0,
-        },
-      };
-      state = processMessage(state, {
-        type: "control_ack",
-        channel: "burner",
-        value: 75,
-        applied: true,
-        enabled: true,
-        message: "ok",
-      });
+      // control_ack only updates currentControls for display, not controlHistory
       expect(state.currentControls!.values.burner).toBe(75);
       expect(state.controlHistory).toHaveLength(0);
     });
@@ -571,6 +548,100 @@ describe("recordControlChange", () => {
     const state = recordControlChange(baseState(), "drum", 90, 1000);
     expect(state.currentControls!.values.drum).toBe(90);
     expect(state.currentControls!.values.burner).toBeUndefined();
+  });
+});
+
+describe("processControlInput", () => {
+  function baseState(): MachineState {
+    return createInitialState("m1", "Test");
+  }
+
+  it("updates currentControls with native value", () => {
+    const state = processControlInput(baseState(), "burner", 75);
+    expect(state.currentControls).toBeTruthy();
+    expect(state.currentControls!.values.burner).toBe(75);
+  });
+
+  it("records to controlHistory during recording", () => {
+    const state: MachineState = {
+      ...baseState(),
+      sessionState: "recording",
+      currentTemp: {
+        timestamp_ms: 5000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+      },
+    };
+    const result = processControlInput(state, "burner", 80);
+    expect(result.controlHistory).toHaveLength(1);
+    expect(result.controlHistory[0].timestamp_ms).toBe(5000);
+    expect(result.controlHistory[0].values.burner).toBe(80);
+  });
+
+  it("does not record to controlHistory outside recording", () => {
+    const state: MachineState = {
+      ...baseState(),
+      sessionState: "monitoring",
+      currentTemp: {
+        timestamp_ms: 5000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+      },
+    };
+    const result = processControlInput(state, "burner", 80);
+    expect(result.currentControls!.values.burner).toBe(80);
+    expect(result.controlHistory).toHaveLength(0);
+  });
+
+  it("preserves other channels in currentControls", () => {
+    let state: MachineState = {
+      ...baseState(),
+      sessionState: "recording",
+      currentTemp: {
+        timestamp_ms: 3000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+      },
+    };
+    state = processControlInput(state, "burner", 80);
+    state = processControlInput(state, "airflow", 60);
+    expect(state.currentControls!.values.burner).toBe(80);
+    expect(state.currentControls!.values.airflow).toBe(60);
+    expect(state.controlHistory).toHaveLength(2);
+  });
+
+  it("uses timestamp 0 when no current temperature", () => {
+    const state: MachineState = {
+      ...baseState(),
+      sessionState: "recording",
+    };
+    const result = processControlInput(state, "burner", 50);
+    expect(result.controlHistory[0].timestamp_ms).toBe(0);
+  });
+
+  it("records individual channel per history entry", () => {
+    let state: MachineState = {
+      ...baseState(),
+      sessionState: "recording",
+      currentTemp: {
+        timestamp_ms: 2000,
+        et: 200,
+        bt: 180,
+        et_ror: 0,
+        bt_ror: 0,
+      },
+    };
+    state = processControlInput(state, "burner", 70);
+    state = processControlInput(state, "airflow", 40);
+    // Each entry should only have the channel that was changed
+    expect(state.controlHistory[0].values).toEqual({ burner: 70 });
+    expect(state.controlHistory[1].values).toEqual({ airflow: 40 });
   });
 });
 

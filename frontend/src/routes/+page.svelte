@@ -2,7 +2,11 @@
   import { onMount, onDestroy } from "svelte";
   import { SvelteMap } from "svelte/reactivity";
   import type { MachineState } from "$lib/stores/machine";
-  import { createInitialState, processMessage } from "$lib/stores/machine";
+  import {
+    createInitialState,
+    processMessage,
+    processControlInput,
+  } from "$lib/stores/machine";
   import type { RoastEventType, ServerMessage } from "$lib/types/ws-messages";
   import {
     createDashboardState,
@@ -325,8 +329,13 @@
     const client = wsClients.get(id);
     if (!client) return;
 
-    // Normalize native slider value to 0.0-1.0 using control config
+    // Record native-value control change immediately in state
     const state = machineStates.get(id);
+    if (state) {
+      machineStates.set(id, processControlInput(state, channel, value));
+    }
+
+    // Normalize native slider value to 0.0-1.0 using control config
     const ctrl = state?.controls.find((c) => c.channel === channel);
     const min = ctrl?.min ?? 0;
     const max = ctrl?.max ?? 100;
@@ -350,17 +359,13 @@
     // Filter out negative-timestamp data (pre-record monitoring tail)
     const recordedHistory = state.history.filter((p) => p.timestamp_ms >= 0);
 
-    // Denormalize control values from 0-1 to native slider range
+    // Build controls from controlHistory (already in native slider values)
     const recordedControls: Record<string, [number, number][]> = {};
     for (const cp of state.controlHistory) {
       if (cp.timestamp_ms < 0) continue;
       for (const [ch, val] of Object.entries(cp.values)) {
-        const ctrl = state.controls.find((c) => c.channel === ch);
-        const min = ctrl?.min ?? 0;
-        const max = ctrl?.max ?? 100;
-        const native = min + val * (max - min);
         if (!recordedControls[ch]) recordedControls[ch] = [];
-        recordedControls[ch].push([cp.timestamp_ms, native]);
+        recordedControls[ch].push([cp.timestamp_ms, val]);
       }
     }
 

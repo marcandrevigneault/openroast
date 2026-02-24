@@ -198,32 +198,55 @@ export function processMessage(
         error: msg.message,
       };
     case "control_ack": {
+      // Only update currentControls for readback display.
+      // Control recording happens via processControlInput() at slider-change
+      // time so we capture native values and don't depend on WS round-trip.
       const prev = state.currentControls ?? {
         timestamp_ms: 0,
         values: {},
       };
       const ts = state.currentTemp?.timestamp_ms ?? 0;
-      const newControls: ControlPoint = {
-        timestamp_ms: ts,
-        values: { ...prev.values, [msg.channel]: msg.value },
-      };
-      // Record to controlHistory during recording
-      const isRecording = state.sessionState === "recording";
       return {
         ...state,
-        currentControls: newControls,
-        controlHistory: isRecording
-          ? [
-              ...state.controlHistory,
-              { timestamp_ms: ts, values: { [msg.channel]: msg.value } },
-            ]
-          : state.controlHistory,
+        currentControls: {
+          timestamp_ms: ts,
+          values: { ...prev.values, [msg.channel]: msg.value },
+        },
       };
     }
     case "alarm":
     case "replay":
       return state;
   }
+}
+
+/**
+ * Record a user-initiated control change with native slider values.
+ * Always updates currentControls; appends to controlHistory only during recording.
+ * Called directly when the user moves a slider — does not depend on WS round-trip.
+ */
+export function processControlInput(
+  state: MachineState,
+  channel: string,
+  nativeValue: number,
+): MachineState {
+  const ts = state.currentTemp?.timestamp_ms ?? 0;
+  const prevValues = state.currentControls?.values ?? {};
+  const newControls: ControlPoint = {
+    timestamp_ms: ts,
+    values: { ...prevValues, [channel]: nativeValue },
+  };
+  const isRecording = state.sessionState === "recording";
+  return {
+    ...state,
+    currentControls: newControls,
+    controlHistory: isRecording
+      ? [
+          ...state.controlHistory,
+          { timestamp_ms: ts, values: { [channel]: nativeValue } },
+        ]
+      : state.controlHistory,
+  };
 }
 
 /**
