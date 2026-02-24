@@ -106,7 +106,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path dist/OpenRoast -DestinationPath "${{ matrix.artifact_name }}.zip"
+          Compress-Archive -Path dist/OpenRoast.exe -DestinationPath "${{ matrix.artifact_name }}.zip"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

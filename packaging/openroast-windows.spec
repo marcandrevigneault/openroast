@@ -83,8 +83,8 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
-    [],
-    exclude_binaries=True,
+    a.binaries,
+    a.datas,
     name="OpenRoast",
     debug=False,
     bootloader_ignore_signals=False,
@@ -95,14 +95,4 @@ exe = EXE(
     argv_emulation=False,
     target_arch=None,
     icon=str(ICON_ICO) if ICON_ICO.exists() else None,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="OpenRoast",
 )
