@@ -21,6 +21,7 @@
   import SchedulerDialog from "./SchedulerDialog.svelte";
   import type { SavedMachine } from "$lib/services/machine-api";
   import { createSchedule, type RoastSchedule } from "$lib/stores/scheduler";
+  import { exportChartPng } from "$lib/utils/chart-export";
 
   interface Props {
     machine: MachineState;
@@ -97,6 +98,8 @@
     }
   });
 
+  let roastChartEl = $state<HTMLElement | null>(null);
+  let controlChartEl = $state<HTMLElement | null>(null);
   let saving = $state(false);
   let saved = $state(false);
   let settingsOpen = $state(false);
@@ -180,15 +183,29 @@
     }
   });
 
-  function handleSave(data: {
+  async function handleSave(data: {
     name: string;
     beanName: string;
     beanWeight: number;
   }) {
     saving = true;
     onsave?.(data);
+
+    // Export chart PNGs
+    const safeName = data.name.replace(/[^a-zA-Z0-9_-]/g, "_") || "roast";
+    if (roastChartEl) {
+      await exportChartPng(roastChartEl, `${safeName}_graph.png`);
+    }
+    if (controlChartEl) {
+      await exportChartPng(controlChartEl, `${safeName}_controls.png`);
+    }
+
     saving = false;
     saved = true;
+  }
+
+  function handleCancelSave() {
+    saved = true; // Hides the form
   }
 </script>
 
@@ -242,7 +259,7 @@
   </div>
 
   <!-- Temperature chart -->
-  <div class="chart-section">
+  <div class="chart-section" bind:this={roastChartEl}>
     <RoastChart history={machine.history} options={effectiveOptions} />
     <div class="chart-toolbar">
       {#if onreset}
@@ -260,14 +277,16 @@
   </div>
 
   <!-- Controls chart -->
-  <ControlChart
-    history={machine.history}
-    controlHistory={machine.controlHistory}
-    controls={machine.controls}
-    extraChannelHistory={machine.extraChannelHistory}
-    extraChannels={machine.extraChannels}
-    options={effectiveOptions}
-  />
+  <div bind:this={controlChartEl}>
+    <ControlChart
+      history={machine.history}
+      controlHistory={machine.controlHistory}
+      controls={machine.controls}
+      extraChannelHistory={machine.extraChannelHistory}
+      extraChannels={machine.extraChannels}
+      options={effectiveOptions}
+    />
+  </div>
 
   <!-- Extra channels bar -->
   <ExtraChannelsBar
@@ -357,7 +376,12 @@
   {/if}
 
   {#if showSaveForm}
-    <SaveProfileForm onsave={handleSave} {saving} {saved} />
+    <SaveProfileForm
+      onsave={handleSave}
+      oncancel={handleCancelSave}
+      {saving}
+      {saved}
+    />
   {/if}
 
   <MachineSettingsPanel

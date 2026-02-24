@@ -6,7 +6,7 @@ describe("SaveProfileForm", () => {
   it("renders form fields", () => {
     render(SaveProfileForm, { props: { onsave: () => {} } });
     expect(
-      screen.getByText("Save Profile", { selector: "h4" }),
+      screen.getByText("Save Profile, Graph & Controls", { selector: "h4" }),
     ).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText("e.g. Ethiopian Light"),
@@ -16,7 +16,7 @@ describe("SaveProfileForm", () => {
 
   it("disables save button when name is empty", () => {
     render(SaveProfileForm, { props: { onsave: () => {} } });
-    const btn = screen.getByRole("button", { name: "Save Profile" });
+    const btn = screen.getByRole("button", { name: "Save" });
     expect(btn).toBeDisabled();
   });
 
@@ -24,7 +24,7 @@ describe("SaveProfileForm", () => {
     render(SaveProfileForm, { props: { onsave: () => {} } });
     const input = screen.getByPlaceholderText("e.g. Ethiopian Light");
     await fireEvent.input(input, { target: { value: "My Roast" } });
-    const btn = screen.getByRole("button", { name: "Save Profile" });
+    const btn = screen.getByRole("button", { name: "Save" });
     expect(btn).not.toBeDisabled();
   });
 
@@ -37,7 +37,7 @@ describe("SaveProfileForm", () => {
 
     await fireEvent.input(nameInput, { target: { value: "  My Roast  " } });
     await fireEvent.input(beanInput, { target: { value: "Ethiopian" } });
-    const btn = screen.getByRole("button", { name: "Save Profile" });
+    const btn = screen.getByRole("button", { name: "Save" });
     await fireEvent.submit(btn.closest("form")!);
 
     expect(onsave).toHaveBeenCalledWith({
@@ -49,11 +49,31 @@ describe("SaveProfileForm", () => {
 
   it("shows saving state", () => {
     render(SaveProfileForm, { props: { onsave: () => {}, saving: true } });
-    expect(screen.getByText("Saving…")).toBeInTheDocument();
+    expect(screen.getByText("Saving...")).toBeInTheDocument();
   });
 
   it("shows saved message when saved", () => {
     render(SaveProfileForm, { props: { onsave: () => {}, saved: true } });
     expect(screen.getByText("Profile saved successfully.")).toBeInTheDocument();
+  });
+
+  it("renders cancel button when oncancel is provided", () => {
+    const oncancel = vi.fn();
+    render(SaveProfileForm, { props: { onsave: () => {}, oncancel } });
+    const btn = screen.getByRole("button", { name: "Cancel" });
+    expect(btn).toBeInTheDocument();
+  });
+
+  it("calls oncancel when cancel button is clicked", async () => {
+    const oncancel = vi.fn();
+    render(SaveProfileForm, { props: { onsave: () => {}, oncancel } });
+    const btn = screen.getByRole("button", { name: "Cancel" });
+    await fireEvent.click(btn);
+    expect(oncancel).toHaveBeenCalled();
+  });
+
+  it("does not render cancel button when oncancel is not provided", () => {
+    render(SaveProfileForm, { props: { onsave: () => {} } });
+    expect(screen.queryByRole("button", { name: "Cancel" })).toBeNull();
   });
 });

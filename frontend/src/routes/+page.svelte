@@ -349,12 +349,18 @@
 
     // Filter out negative-timestamp data (pre-record monitoring tail)
     const recordedHistory = state.history.filter((p) => p.timestamp_ms >= 0);
+
+    // Denormalize control values from 0-1 to native slider range
     const recordedControls: Record<string, [number, number][]> = {};
     for (const cp of state.controlHistory) {
       if (cp.timestamp_ms < 0) continue;
       for (const [ch, val] of Object.entries(cp.values)) {
+        const ctrl = state.controls.find((c) => c.channel === ch);
+        const min = ctrl?.min ?? 0;
+        const max = ctrl?.max ?? 100;
+        const native = min + val * (max - min);
         if (!recordedControls[ch]) recordedControls[ch] = [];
-        recordedControls[ch].push([cp.timestamp_ms, val]);
+        recordedControls[ch].push([cp.timestamp_ms, native]);
       }
     }
 
