@@ -74,13 +74,23 @@
   ];
 
   let sliderValues = $state<Record<string, number>>({});
+  let draggingChannels = $state<Record<string, boolean>>({});
+  let cooldownUntil = $state<Record<string, number>>({});
+  const READBACK_COOLDOWN_MS = 1500;
 
-  // Sync slider values from extra channel read-backs (e.g., Burner extra channel → burner slider)
+  // Sync slider values from extra channel read-backs, but skip channels
+  // the user is actively dragging or that are within the post-drag cooldown
+  // to prevent jitter from lagging hardware read-backs.
   $effect(() => {
+    const now = Date.now();
     for (const ctrl of machine.controls) {
       const readback = machine.currentExtraChannels[ctrl.name];
       if (readback !== undefined) {
-        sliderValues[ctrl.channel] = readback;
+        const isDragging = draggingChannels[ctrl.channel];
+        const inCooldown = (cooldownUntil[ctrl.channel] ?? 0) > now;
+        if (!isDragging && !inCooldown) {
+          sliderValues[ctrl.channel] = readback;
+        }
       }
     }
   });
@@ -296,8 +306,16 @@
               machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
             ]}
             disabled={!isConnected}
+            ondragstart={() => {
+              draggingChannels[ctrl.channel] = true;
+            }}
+            ondragend={() => {
+              draggingChannels[ctrl.channel] = false;
+              cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
+            }}
             onchange={(v) => {
               sliderValues[ctrl.channel] = v;
+              cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
               oncontrol?.(ctrl.channel, v);
             }}
           />

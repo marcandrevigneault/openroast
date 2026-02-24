@@ -221,4 +221,22 @@ describe("MachinePanel", () => {
       expect(btn).toBeDisabled();
     });
   });
+
+  it("slider values are editable buttons", () => {
+    render(MachinePanel, { props: { machine: makeMachine() } });
+    const editBtns = screen.getAllByTitle("Click to edit");
+    expect(editBtns).toHaveLength(3);
+  });
+
+  it("syncs slider values from extra channel read-backs", async () => {
+    const machine = makeMachine({
+      currentExtraChannels: { Burner: 42, Airflow: 60 },
+    });
+    render(MachinePanel, { props: { machine } });
+    await vi.advanceTimersByTimeAsync(0);
+    // The effect should sync read-back values into the slider display
+    const editBtns = screen.getAllByTitle("Click to edit");
+    expect(editBtns[0].textContent).toContain("42");
+    expect(editBtns[1].textContent).toContain("60");
+  });
 });
