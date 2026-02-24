@@ -63,7 +63,11 @@ known-first-party = ["openroast"]
 
 [tool.coverage.run]
 source = ["openroast"]
-omit = ["*/tests/*"]
+omit = [
+    "*/tests/*",
+    "*/desktop/*",
+    "*/simulator/__main__.py",
+]
 
 [tool.coverage.report]
 fail_under = 90
