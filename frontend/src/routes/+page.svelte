@@ -30,6 +30,7 @@
   import ToastContainer from "$lib/components/ToastContainer.svelte";
   import { addToast } from "$lib/stores/toast";
   import { evaluateSchedule, type RoastSchedule } from "$lib/stores/scheduler";
+  import { saveProfile, type SaveProfileRequest } from "$lib/utils/api";
 
   let dashboard = $state<DashboardState>(createDashboardState());
   let machineStates = new SvelteMap<string, MachineState>();
@@ -315,7 +316,12 @@
     }
   }
 
-  function handleControl(id: string, channel: string, value: number) {
+  function handleControl(
+    id: string,
+    channel: string,
+    value: number,
+    enabled?: boolean,
+  ) {
     const client = wsClients.get(id);
     if (!client) return;
 
@@ -330,7 +336,49 @@
       type: "control",
       channel,
       value: normalized,
+      ...(enabled !== undefined && { enabled }),
     });
+  }
+
+  async function handleSaveProfile(
+    id: string,
+    data: { name: string; beanName: string; beanWeight: number },
+  ) {
+    const state = machineStates.get(id);
+    if (!state) return;
+
+    const controls: Record<string, [number, number][]> = {};
+    for (const cp of state.controlHistory) {
+      for (const [ch, val] of Object.entries(cp.values)) {
+        if (!controls[ch]) controls[ch] = [];
+        controls[ch].push([cp.timestamp_ms, val]);
+      }
+    }
+
+    const req: SaveProfileRequest = {
+      profile: {
+        name: data.name,
+        machine: state.machineName,
+        temperatures: state.history,
+        events: state.events.map((e) => ({
+          event_type: e.event_type,
+          timestamp_ms: e.timestamp_ms,
+          auto_detected: e.auto_detected,
+        })),
+        controls,
+      },
+      name: data.name,
+      bean_name: data.beanName,
+      bean_weight_g: data.beanWeight,
+    };
+
+    try {
+      await saveProfile(req);
+      addToast("Profile saved", "info", state.machineName);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to save profile";
+      addToast(msg, "error", state.machineName);
+    }
   }
 
   function handleScheduleChange(id: string, s: RoastSchedule) {
@@ -444,7 +492,8 @@
           onrecord={() => handleRecord(m.id)}
           onstoprecord={() => handleStopRecord(m.id)}
           onmark={(eventType) => handleMark(m.id, eventType)}
-          oncontrol={(channel, value) => handleControl(m.id, channel, value)}
+          oncontrol={(channel, value, enabled) =>
+            handleControl(m.id, channel, value, enabled)}
           onchartoptionschange={(opts) => handleChartOptionsChange(m.id, opts)}
           onreset={() => handleReset(m.id)}
           onretry={() => handleRetryConnection(m.id)}
@@ -452,6 +501,7 @@
           onremove={() => handleRemoveMachine(m.id)}
           schedule={scheduleMap.get(m.id)}
           onschedulechange={(s) => handleScheduleChange(m.id, s)}
+          onsave={(data) => handleSaveProfile(m.id, data)}
         />
       {/if}
     {/each}

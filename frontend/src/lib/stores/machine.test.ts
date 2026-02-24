@@ -274,9 +274,9 @@ describe("processMessage", () => {
       expect(state.events).toEqual([]);
     });
 
-    it("keeps last 5s of history rebased to t=0 when recording starts", () => {
+    it("clears all history when recording starts", () => {
       let state: MachineState = { ...baseState(), sessionState: "monitoring" };
-      // Add data at 1s, 3s, 8s (only 3s and 8s are within last 5s of t=8)
+      // Add data during monitoring
       for (const ts of [1000, 3000, 8000]) {
         state = processMessage(state, {
           type: "temperature",
@@ -305,16 +305,11 @@ describe("processMessage", () => {
         state: "recording",
         previous_state: "monitoring",
       });
-      // Only points at 3000 and 8000 kept (cutoff = 8000 - 5000 = 3000)
-      // Rebased by offset 3000: 3000→0, 8000→5000
-      expect(state.history).toHaveLength(2);
-      expect(state.history[0].timestamp_ms).toBe(0);
-      expect(state.history[1].timestamp_ms).toBe(5000);
+      // All monitoring data cleared — backend resets clock to t=0
+      expect(state.history).toHaveLength(0);
       expect(state.events).toEqual([]);
-      expect(state.controlHistory).toHaveLength(2);
-      expect(state.controlHistory[0].timestamp_ms).toBe(0);
-      expect(state.extraChannelHistory).toHaveLength(2);
-      expect(state.extraChannelHistory[0].timestamp_ms).toBe(0);
+      expect(state.controlHistory).toHaveLength(0);
+      expect(state.extraChannelHistory).toHaveLength(0);
     });
 
     it("clears all history when recording starts with no data", () => {
@@ -406,6 +401,7 @@ describe("processMessage", () => {
         channel: "burner",
         value: 50,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       expect(result.currentControls).toBeTruthy();
@@ -419,6 +415,7 @@ describe("processMessage", () => {
         channel: "burner",
         value: 80,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       state = processMessage(state, {
@@ -426,6 +423,7 @@ describe("processMessage", () => {
         channel: "airflow",
         value: 60,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       expect(state.currentControls!.values.burner).toBe(80);
