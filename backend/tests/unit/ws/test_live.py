@@ -149,7 +149,7 @@ class TestWebSocketControl:
             assert ack["channel"] == "burner"
             assert ack["applied"] is True
 
-        manager.handle_control.assert_called_once_with("m1", "burner", 0.8)
+        manager.handle_control.assert_called_once_with("m1", "burner", 0.8, enabled=True)
 
     def test_control_value_out_of_range(self) -> None:
         """Control value > 1.0 returns error."""

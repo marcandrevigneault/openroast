@@ -401,6 +401,7 @@ describe("processMessage", () => {
         channel: "burner",
         value: 50,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       expect(result.currentControls).toBeTruthy();
@@ -414,6 +415,7 @@ describe("processMessage", () => {
         channel: "burner",
         value: 80,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       state = processMessage(state, {
@@ -421,6 +423,7 @@ describe("processMessage", () => {
         channel: "airflow",
         value: 60,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       expect(state.currentControls!.values.burner).toBe(80);

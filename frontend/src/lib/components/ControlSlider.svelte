@@ -261,6 +261,7 @@
     width: 60px;
     text-align: right;
     outline: none;
+    appearance: textfield;
     -moz-appearance: textfield;
   }
 
