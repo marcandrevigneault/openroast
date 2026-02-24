@@ -32,7 +32,7 @@
 
   let containerWidth = $state(0);
   let width = $derived(containerWidth > 0 ? containerWidth : 800);
-  let height = $derived(Math.round(width * 0.19));
+  let height = $derived(Math.round(width * (width < 500 ? 0.32 : 0.19)));
 
   let PADDING = $derived(
     width < 500
