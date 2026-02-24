@@ -24,7 +24,7 @@ class SessionState(Enum):
 class RoastSession:
     """Manages the lifecycle of a single roast.
 
-    State machine: IDLE → MONITORING ⇄ RECORDING → MONITORING → FINISHED
+    State machine: IDLE → MONITORING → RECORDING → FINISHED
     """
 
     __slots__ = ["_controls", "_data", "_events", "_machine_name", "_state"]
@@ -64,21 +64,18 @@ class RoastSession:
         self._controls.clear()
 
     def stop_monitoring(self) -> None:
-        """Stop monitoring.
-
-        Transitions to FINISHED if data was recorded, otherwise to IDLE.
-        """
+        """Stop monitoring and return to idle."""
         if self._state != SessionState.MONITORING:
             msg = f"Cannot stop monitoring from {self._state.value}"
             raise ValueError(msg)
-        self._state = SessionState.FINISHED if self._data else SessionState.IDLE
+        self._state = SessionState.IDLE
 
     def stop_recording(self) -> None:
-        """Stop recording and return to monitoring."""
+        """Stop recording and finalize the roast."""
         if self._state != SessionState.RECORDING:
             msg = f"Cannot stop recording from {self._state.value}"
             raise ValueError(msg)
-        self._state = SessionState.MONITORING
+        self._state = SessionState.FINISHED
 
     def add_reading(self, timestamp_ms: float, et: float, bt: float) -> None:
         """Add a temperature reading to the session.
