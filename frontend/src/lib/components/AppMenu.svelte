@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { resolve } from "$app/paths";
+  import favicon from "$lib/assets/favicon.png";
 
   interface Props {
     open: boolean;
@@ -28,7 +29,10 @@
   <div class="overlay" onkeydown={() => {}} onclick={onclose}></div>
   <nav class="drawer" aria-label="Main navigation">
     <div class="drawer-header">
-      <span class="drawer-title">OpenRoast</span>
+      <span class="drawer-brand">
+        <span class="drawer-title">OpenRoast</span>
+        <img class="drawer-logo" src={favicon} alt="" />
+      </span>
       <button class="btn-close" onclick={onclose} aria-label="Close menu"
         >&times;</button
       >
@@ -90,11 +94,23 @@
     border-bottom: 1px solid #2a2a4a;
   }
 
+  .drawer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .drawer-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #4fc3f7;
+    color: #f5f0e8;
     letter-spacing: 0.05em;
+  }
+
+  .drawer-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
   }
 
   .btn-close {
