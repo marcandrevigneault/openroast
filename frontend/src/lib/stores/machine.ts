@@ -143,15 +143,31 @@ export function processMessage(
     }
     case "state": {
       if (msg.state === "recording") {
-        // Clear all history — backend resets its clock to t=0 on
-        // START_RECORDING, so fresh data will arrive starting from 0.
+        // Keep last 5 seconds of monitoring data, rebased to negative
+        // timestamps (e.g. -5000 to 0). The backend resets its clock on
+        // START_RECORDING, so fresh data will arrive starting from ~0.
+        const TAIL_MS = 5000;
+        const lastTs =
+          state.history.length > 0
+            ? state.history[state.history.length - 1].timestamp_ms
+            : 0;
+        const cutoff = lastTs - TAIL_MS;
+        // Offset so the last monitoring point lands at t=0
+        const offset = lastTs;
+
         return {
           ...state,
           sessionState: msg.state,
-          history: [],
+          history: state.history
+            .filter((p) => p.timestamp_ms >= cutoff)
+            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
           events: [],
-          controlHistory: [],
-          extraChannelHistory: [],
+          controlHistory: state.controlHistory
+            .filter((p) => p.timestamp_ms >= cutoff)
+            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
+          extraChannelHistory: state.extraChannelHistory
+            .filter((p) => p.timestamp_ms >= cutoff)
+            .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),
         };
       }
       if (msg.state === "monitoring") {

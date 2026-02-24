@@ -1,0 +1,1 @@
+python3 -m openroast.simulator --manufacturer carmomaq --model carmomaq-stratto-2.0 
