@@ -20,7 +20,6 @@
     listSchedules,
     getSchedule,
     saveSchedule,
-    deleteSchedule,
     type ProfileSummary,
     type ScheduleSummary,
   } from "$lib/utils/api";
@@ -189,15 +188,6 @@
       scheduleError = "Failed to load control profile";
     } finally {
       loadingSchedules = false;
-    }
-  }
-
-  async function handleDeleteSchedule(id: string) {
-    try {
-      await deleteSchedule(id);
-      savedSchedules = savedSchedules.filter((s) => s.id !== id);
-    } catch {
-      scheduleError = "Failed to delete control profile";
     }
   }
 
@@ -377,23 +367,16 @@
           {:else}
             <div class="profile-list">
               {#each savedSchedules as s (s.id)}
-                <div class="schedule-list-item">
-                  <button
-                    class="profile-item schedule-item-btn"
-                    onclick={() => handleLoadSchedule(s.id)}
+                <button
+                  class="profile-item schedule-item-btn"
+                  onclick={() => handleLoadSchedule(s.id)}
+                >
+                  <span class="profile-name">{s.name}</span>
+                  <span class="profile-meta"
+                    >{s.machine_name || "Unknown machine"} &middot; {s.step_count}
+                    steps</span
                   >
-                    <span class="profile-name">{s.name}</span>
-                    <span class="profile-meta"
-                      >{s.machine_name || "Unknown machine"} &middot; {s.step_count}
-                      steps</span
-                    >
-                  </button>
-                  <button
-                    class="btn-delete-schedule"
-                    onclick={() => handleDeleteSchedule(s.id)}
-                    title="Delete schedule">✕</button
-                  >
-                </div>
+                </button>
               {/each}
             </div>
           {/if}
@@ -1053,30 +1036,8 @@
     color: #666;
   }
 
-  .schedule-list-item {
-    display: flex;
-    gap: 4px;
-    align-items: stretch;
-  }
-
   .schedule-item-btn {
-    flex: 1;
-  }
-
-  .btn-delete-schedule {
-    background: transparent;
-    border: 1px solid #2a2a4a;
-    border-radius: 6px;
-    color: #555;
-    cursor: pointer;
-    padding: 0 8px;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-  }
-
-  .btn-delete-schedule:hover {
-    color: #f44336;
-    border-color: #f44336;
+    width: 100%;
   }
 
   .save-form {
