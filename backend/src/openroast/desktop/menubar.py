@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import atexit
 import logging
+import os
 import signal
 import socket
 import sys
@@ -41,8 +42,10 @@ class OpenRoastApp(rumps.App):
                 "Open in Browser",
                 None,
                 rumps.MenuItem("Server: Starting...", callback=None),
+                None,
+                rumps.MenuItem("Quit", callback=self._on_quit),
             ],
-            quit_button="Quit",
+            quit_button=None,
         )
         self._server: uvicorn.Server | None = None
         self._server_thread: threading.Thread | None = None
@@ -99,12 +102,20 @@ class OpenRoastApp(rumps.App):
 
         threading.Timer(1.5, _open_after_delay).start()
 
+    def _on_quit(self, _sender: rumps.MenuItem) -> None:
+        """Stop the server and force-quit the application."""
+        self.stop_server()
+        rumps.quit_application()
+        # Force exit — uvicorn's event loop may keep the process alive
+        # even after should_exit is set and the thread join times out.
+        os._exit(0)
+
     def stop_server(self) -> None:
         """Signal the server to shut down."""
         if self._server:
             self._server.should_exit = True
         if self._server_thread:
-            self._server_thread.join(timeout=5)
+            self._server_thread.join(timeout=3)
             self._server_thread = None
 
 

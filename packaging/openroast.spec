@@ -116,7 +116,7 @@ app = BUNDLE(
         "CFBundleDisplayName": "OpenRoast",
         "CFBundleShortVersionString": VERSION,
         "CFBundleVersion": VERSION,
-        "LSUIElement": True,
+        "LSUIElement": False,
         "NSHighResolutionCapable": True,
     },
 )
