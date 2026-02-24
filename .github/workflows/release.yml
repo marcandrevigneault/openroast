@@ -18,12 +18,12 @@ jobs:
       - name: Extract version from pyproject.toml
         id: get_version
         run: |
-          VERSION=$(python3 -c "
-          import re
-          text = open('backend/pyproject.toml').read()
-          m = re.search(r'^version\s*=\"([^\"]+)\"', text, re.MULTILINE)
+          VERSION=$(python3 -c '
+          import re, pathlib
+          text = pathlib.Path("backend/pyproject.toml").read_text()
+          m = re.search(r"^version\s*=\s*\"([^\"]+)\"", text, re.MULTILINE)
           print(m.group(1))
-          ")
+          ')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
 
