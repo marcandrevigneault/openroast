@@ -1,5 +1,5 @@
 <script lang="ts">
-  import favicon from "$lib/assets/favicon.svg";
+  import favicon from "$lib/assets/favicon.png";
   import AppMenu from "$lib/components/AppMenu.svelte";
 
   let { children } = $props();
@@ -23,6 +23,7 @@
       <span class="hamburger-line"></span>
     </button>
     <h1 class="logo">OpenRoast</h1>
+    <img class="logo-icon" src={favicon} alt="" />
   </header>
   <main class="app-main">
     {@render children()}
@@ -108,9 +109,15 @@
   .logo {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #4fc3f7;
+    color: #f5f0e8;
     margin: 0;
     letter-spacing: 0.05em;
+  }
+
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
   }
 
   .app-main {
