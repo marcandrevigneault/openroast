@@ -35,9 +35,21 @@
     overflow-x: hidden;
   }
 
-  /* Prevent iOS zoom on input focus */
-  :global(input, select, textarea) {
-    font-size: 16px;
+  /* Prevent iOS zoom on text input focus (16px minimum prevents auto-zoom).
+     Only target text-entry elements — not range sliders or styled inputs. */
+  :global(
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    input:not([type]),
+    select,
+    textarea
+  ) {
+    font-size: max(16px, 1em);
   }
 
   .app {
