@@ -10,19 +10,20 @@
   interface Props {
     history: TemperaturePoint[];
     options?: ChartOptions;
-    width?: number;
-    height?: number;
   }
 
-  let {
-    history,
-    options = DEFAULT_CHART_OPTIONS,
-    width = 800,
-    height = 350,
-  }: Props = $props();
+  let { history, options = DEFAULT_CHART_OPTIONS }: Props = $props();
 
-  // Chart configuration
-  const PADDING = { top: 34, right: 60, bottom: 40, left: 50 };
+  let containerWidth = $state(0);
+  let width = $derived(containerWidth > 0 ? containerWidth : 800);
+  let height = $derived(Math.round(width * 0.44));
+
+  // Chart configuration — reduce padding on small screens
+  let PADDING = $derived(
+    width < 500
+      ? { top: 28, right: 36, bottom: 32, left: 36 }
+      : { top: 34, right: 60, bottom: 40, left: 50 },
+  );
   const ET_COLOR = "#ff7043";
   const BT_COLOR = "#42a5f5";
   const ET_DELTA_COLOR = "#ffab91";
@@ -181,7 +182,7 @@
   });
 </script>
 
-<div class="chart-container">
+<div class="chart-container" bind:clientWidth={containerWidth}>
   <svg {width} {height} viewBox="0 0 {width} {height}">
     <!-- Background -->
     <rect x="0" y="0" {width} {height} fill="#0d0d1a" rx="8" />

@@ -140,6 +140,7 @@ class ControlAckMessage(BaseModel):
     channel: str
     value: float
     applied: bool
+    enabled: bool = True
     message: str = ""
 
 
@@ -184,6 +185,7 @@ class ControlCommand(BaseModel):
     type: Literal["control"] = "control"
     channel: str
     value: float = Field(ge=0.0, le=1.0)
+    enabled: bool = True
 
 
 class SessionCommand(BaseModel):

@@ -31,10 +31,30 @@
     font-family:
       -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Prevent iOS zoom on text input focus (16px minimum prevents auto-zoom).
+     Only target text-entry elements — not range sliders or styled inputs. */
+  :global(
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    input:not([type]),
+    select,
+    textarea
+  ) {
+    font-size: max(16px, 1em);
   }
 
   .app {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
   }
@@ -58,5 +78,15 @@
   .app-main {
     flex: 1;
     padding: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 8px 12px;
+    }
+
+    .app-main {
+      padding: 8px;
+    }
   }
 </style>

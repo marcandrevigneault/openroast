@@ -167,4 +167,58 @@ describe("ControlSlider", () => {
     await fireEvent.keyDown(input, { key: "Enter" });
     expect(onchange).not.toHaveBeenCalled();
   });
+
+  // --- ON/OFF toggle ---
+
+  it("shows toggle button when ontoggle provided", () => {
+    const ontoggle = vi.fn();
+    render(ControlSlider, {
+      props: { label: "Burner", value: 50, ontoggle },
+    });
+    expect(screen.getByTitle("Turn off")).toBeInTheDocument();
+    expect(screen.getByText("ON")).toBeInTheDocument();
+  });
+
+  it("hides toggle button when ontoggle not provided", () => {
+    render(ControlSlider, {
+      props: { label: "Burner", value: 50 },
+    });
+    expect(screen.queryByText("ON")).not.toBeInTheDocument();
+    expect(screen.queryByText("OFF")).not.toBeInTheDocument();
+  });
+
+  it("calls ontoggle with false when ON clicked", async () => {
+    const ontoggle = vi.fn();
+    render(ControlSlider, {
+      props: { label: "Burner", value: 50, enabled: true, ontoggle },
+    });
+    await fireEvent.click(screen.getByText("ON"));
+    expect(ontoggle).toHaveBeenCalledWith(false);
+  });
+
+  it("calls ontoggle with true when OFF clicked", async () => {
+    const ontoggle = vi.fn();
+    render(ControlSlider, {
+      props: { label: "Burner", value: 50, enabled: false, ontoggle },
+    });
+    await fireEvent.click(screen.getByText("OFF"));
+    expect(ontoggle).toHaveBeenCalledWith(true);
+  });
+
+  it("dims slider when enabled is false", () => {
+    const { container } = render(ControlSlider, {
+      props: { label: "Burner", value: 50, enabled: false, ontoggle: vi.fn() },
+    });
+    const slider = container.querySelector('input[type="range"]');
+    expect(slider).toBeDisabled();
+  });
+
+  it("does not enter edit mode when enabled is false", async () => {
+    render(ControlSlider, {
+      props: { label: "Burner", value: 50, enabled: false, ontoggle: vi.fn() },
+    });
+    const btn = screen.getByTitle("Click to edit");
+    await fireEvent.click(btn);
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
+  });
 });

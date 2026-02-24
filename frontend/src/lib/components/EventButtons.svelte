@@ -105,4 +105,24 @@
     margin-top: 2px;
     opacity: 0.7;
   }
+
+  @media (max-width: 480px) {
+    .event-buttons {
+      gap: 4px;
+    }
+
+    .event-btn {
+      padding: 6px 8px;
+      min-width: 48px;
+      font-size: 0.7rem;
+    }
+
+    .btn-label {
+      font-size: 0.65rem;
+    }
+
+    .btn-time {
+      font-size: 0.6rem;
+    }
+  }
 </style>

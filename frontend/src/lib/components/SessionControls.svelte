@@ -119,4 +119,11 @@
       opacity: 0.3;
     }
   }
+
+  @media (max-width: 480px) {
+    .btn {
+      padding: 10px 14px;
+      font-size: 0.8rem;
+    }
+  }
 </style>

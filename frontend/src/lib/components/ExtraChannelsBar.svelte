@@ -52,4 +52,14 @@
     font-weight: 600;
     color: #a5d6a7;
   }
+
+  @media (max-width: 480px) {
+    .channel-badge {
+      padding: 4px 8px;
+    }
+
+    .channel-name {
+      font-size: 0.6rem;
+    }
+  }
 </style>

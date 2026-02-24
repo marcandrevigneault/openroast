@@ -276,7 +276,7 @@ describe("processMessage", () => {
 
     it("keeps last 5s of history rebased to negative timestamps when recording starts", () => {
       let state: MachineState = { ...baseState(), sessionState: "monitoring" };
-      // Add data at 1s, 3s, 8s (only 3s and 8s are within last 5s of t=8)
+      // Add data during monitoring
       for (const ts of [1000, 3000, 8000]) {
         state = processMessage(state, {
           type: "temperature",
@@ -408,6 +408,7 @@ describe("processMessage", () => {
         channel: "burner",
         value: 50,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       expect(result.currentControls).toBeTruthy();
@@ -421,6 +422,7 @@ describe("processMessage", () => {
         channel: "burner",
         value: 80,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       state = processMessage(state, {
@@ -428,6 +430,7 @@ describe("processMessage", () => {
         channel: "airflow",
         value: 60,
         applied: true,
+        enabled: true,
         message: "ok",
       });
       expect(state.currentControls!.values.burner).toBe(80);

@@ -83,6 +83,7 @@ export interface ControlAckMessage {
   channel: string;
   value: number;
   applied: boolean;
+  enabled: boolean;
   message: string;
 }
 
@@ -118,6 +119,7 @@ export interface ControlCommand {
   type: "control";
   channel: string;
   value: number; // 0.0 – 1.0
+  enabled?: boolean;
 }
 
 export type CommandAction =

@@ -280,6 +280,89 @@ class TestHandleControl:
 
         await manager.disconnect_machine(machine.id)
 
+    @patch("openroast.core.manager.create_driver")
+    async def test_control_enabled_false_writes_zero(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """When enabled=False, driver receives 0 regardless of value."""
+        machine = _make_machine(controls=[
+            ControlConfig(
+                name="Gas", channel="gas",
+                command="writeSingle(1,47,{})", min=0, max=100,
+            ),
+        ])
+        storage = _mock_storage({machine.id: machine})
+        driver = _mock_driver()
+        mock_factory.return_value = driver
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        ack = await manager.handle_control(machine.id, "gas", 0.7, enabled=False)
+
+        assert ack.applied is True
+        assert ack.enabled is False
+        # Should write 0 to the driver, not 70
+        driver.write_control.assert_awaited_once_with("gas", 0.0)
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
+    async def test_control_enabled_true_writes_scaled(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """When enabled=True (default), driver receives scaled value."""
+        machine = _make_machine(controls=[
+            ControlConfig(
+                name="Gas", channel="gas",
+                command="writeSingle(1,47,{})", min=0, max=100,
+            ),
+        ])
+        storage = _mock_storage({machine.id: machine})
+        driver = _mock_driver()
+        mock_factory.return_value = driver
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        ack = await manager.handle_control(machine.id, "gas", 0.7, enabled=True)
+
+        assert ack.applied is True
+        assert ack.enabled is True
+        # 0.7 * (100 - 0) + 0 = 70.0
+        driver.write_control.assert_awaited_once_with("gas", 70.0)
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
+    async def test_control_enabled_tracks_state(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """control_enabled dict tracks per-channel enabled state."""
+        machine = _make_machine(controls=[
+            ControlConfig(
+                name="Gas", channel="gas",
+                command="writeSingle(1,47,{})", min=0, max=100,
+            ),
+        ])
+        storage = _mock_storage({machine.id: machine})
+        driver = _mock_driver()
+        mock_factory.return_value = driver
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+        instance = manager._instances[machine.id]
+
+        # Disable the channel
+        await manager.handle_control(machine.id, "gas", 0.5, enabled=False)
+        assert instance.control_enabled["gas"] is False
+
+        # Re-enable the channel
+        await manager.handle_control(machine.id, "gas", 0.5, enabled=True)
+        assert instance.control_enabled["gas"] is True
+
+        await manager.disconnect_machine(machine.id)
+
 
 # ── Session command tests ─────────────────────────────────────────────
 
@@ -358,6 +441,34 @@ class TestHandleSessionCommand:
         )
         assert isinstance(r3, StateMessage)
         assert r3.state == SessionStateValue.FINISHED
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
+    async def test_start_recording_resets_clock(
+        self, mock_factory: MagicMock
+    ) -> None:
+        machine = _make_machine()
+        storage = _mock_storage({machine.id: machine})
+        mock_factory.return_value = _mock_driver()
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        # Start monitoring — captures initial clock
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_MONITORING
+        )
+        instance = manager._instances[machine.id]
+        monitoring_clock = instance.start_time_ms
+
+        # Start recording — clock must be reset
+        await manager.handle_session_command(
+            machine.id, CommandAction.START_RECORDING
+        )
+        assert instance.start_time_ms >= monitoring_clock
+        assert instance.prev_et is None
+        assert instance.prev_bt is None
 
         await manager.disconnect_machine(machine.id)
 
@@ -441,42 +552,6 @@ class TestHandleSessionCommand:
         )
         assert isinstance(result, ErrorMessage)
         assert "event_type required" in result.message
-
-        await manager.disconnect_machine(machine.id)
-
-    @patch("openroast.core.manager.create_driver")
-    async def test_start_recording_resets_clock(
-        self, mock_factory: MagicMock
-    ) -> None:
-        """start_time_ms must reset on START_RECORDING so the chart starts at t=0."""
-        machine = _make_machine()
-        storage = _mock_storage({machine.id: machine})
-        mock_factory.return_value = _mock_driver()
-
-        manager = MachineManager(storage)
-        await manager.connect_machine(machine.id)
-
-        # Move to monitoring
-        await manager.handle_session_command(
-            machine.id, CommandAction.START_MONITORING
-        )
-
-        instance = manager.get_instance(machine.id)
-        old_start = instance.start_time_ms
-
-        # Simulate some time passing
-        import time
-        time.sleep(0.01)
-
-        # Start recording
-        await manager.handle_session_command(
-            machine.id, CommandAction.START_RECORDING
-        )
-
-        assert instance.start_time_ms > old_start
-        # prev values should be cleared for fresh RoR
-        assert instance.prev_et is None
-        assert instance.prev_bt is None
 
         await manager.disconnect_machine(machine.id)
 

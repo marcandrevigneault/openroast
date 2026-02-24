@@ -607,4 +607,37 @@
     color: #ff8a80;
     font-size: 0.8rem;
   }
+
+  @media (max-width: 480px) {
+    .dialog {
+      min-width: 0;
+      width: 95vw;
+      max-width: none;
+      max-height: 90vh;
+      padding: 16px;
+    }
+
+    .btn-back {
+      padding: 6px 10px;
+    }
+
+    .list-scroll {
+      max-height: 50vh;
+    }
+
+    .actions {
+      flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-submit {
+      padding: 10px 16px;
+      text-align: center;
+    }
+
+    input,
+    select {
+      padding: 10px 12px;
+    }
+  }
 </style>

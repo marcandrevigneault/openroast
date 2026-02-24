@@ -122,4 +122,16 @@
   .toast-dismiss:hover {
     opacity: 1;
   }
+
+  @media (max-width: 480px) {
+    .toast-container {
+      left: 8px;
+      right: 8px;
+      max-width: none;
+    }
+
+    .toast-dismiss {
+      padding: 4px 8px;
+    }
+  }
 </style>

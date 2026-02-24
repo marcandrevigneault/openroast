@@ -30,7 +30,7 @@
     onrecord?: () => void;
     onstoprecord?: () => void;
     onmark?: (eventType: RoastEventType) => void;
-    oncontrol?: (channel: string, value: number) => void;
+    oncontrol?: (channel: string, value: number, enabled?: boolean) => void;
     onchartoptionschange?: (options: ChartOptions) => void;
     onreset?: () => void;
     onremove?: () => void;
@@ -76,6 +76,8 @@
   let sliderValues = $state<Record<string, number>>({});
   let draggingChannels = $state<Record<string, boolean>>({});
   let cooldownUntil = $state<Record<string, number>>({});
+  let controlsEnabled = $state<Record<string, boolean>>({});
+  let lastControlValues = $state<Record<string, number>>({});
   const READBACK_COOLDOWN_MS = 1500;
 
   // Sync slider values from extra channel read-backs, but skip channels
@@ -183,49 +185,49 @@
 <div class="machine-panel">
   <!-- Compact header: name, temps, status, remove -->
   <div class="panel-header">
-    <div class="header-left">
+    <div class="header-row-top">
       <h2 class="machine-name">{machine.machineName}</h2>
-      <div class="header-temps">
-        <TemperatureDisplay
-          label="ET"
-          value={machine.currentTemp?.et ?? null}
-          ror={smoothedHeaderEtRor()}
-          color="#ff7043"
-          compact
+      <div class="header-actions">
+        <ConnectionStatus
+          driverState={machine.driverState}
+          sessionState={machine.sessionState}
         />
-        <TemperatureDisplay
-          label="BT"
-          value={machine.currentTemp?.bt ?? null}
-          ror={smoothedHeaderBtRor()}
-          color="#42a5f5"
-          compact
-        />
+        {#if showRetryButton && onretry}
+          <button
+            class="btn-retry-header"
+            onclick={onretry}
+            title="Retry connection">&#8635;</button
+          >
+        {/if}
+        <button
+          class="btn-settings"
+          onclick={() => (settingsOpen = true)}
+          title="Machine settings"
+        >
+          &#9881;
+        </button>
+        {#if onremove}
+          <button class="btn-remove" onclick={onremove} title="Remove machine"
+            >✕</button
+          >
+        {/if}
       </div>
     </div>
-    <div class="header-right">
-      <ConnectionStatus
-        driverState={machine.driverState}
-        sessionState={machine.sessionState}
+    <div class="header-temps">
+      <TemperatureDisplay
+        label="ET"
+        value={machine.currentTemp?.et ?? null}
+        ror={smoothedHeaderEtRor()}
+        color="#ff7043"
+        compact
       />
-      {#if showRetryButton && onretry}
-        <button
-          class="btn-retry-header"
-          onclick={onretry}
-          title="Retry connection">&#8635;</button
-        >
-      {/if}
-      <button
-        class="btn-settings"
-        onclick={() => (settingsOpen = true)}
-        title="Machine settings"
-      >
-        &#9881;
-      </button>
-      {#if onremove}
-        <button class="btn-remove" onclick={onremove} title="Remove machine"
-          >✕</button
-        >
-      {/if}
+      <TemperatureDisplay
+        label="BT"
+        value={machine.currentTemp?.bt ?? null}
+        ror={smoothedHeaderBtRor()}
+        color="#42a5f5"
+        compact
+      />
     </div>
   </div>
 
@@ -306,6 +308,7 @@
               machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
             ]}
             disabled={!isConnected}
+            enabled={controlsEnabled[ctrl.channel] ?? true}
             ondragstart={() => {
               draggingChannels[ctrl.channel] = true;
             }}
@@ -317,6 +320,25 @@
               sliderValues[ctrl.channel] = v;
               cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
               oncontrol?.(ctrl.channel, v);
+            }}
+            ontoggle={(on) => {
+              controlsEnabled[ctrl.channel] = on;
+              if (on) {
+                const restored =
+                  lastControlValues[ctrl.channel] ??
+                  sliderValues[ctrl.channel] ??
+                  ctrl.min;
+                sliderValues[ctrl.channel] = restored;
+                oncontrol?.(ctrl.channel, restored, true);
+              } else {
+                lastControlValues[ctrl.channel] =
+                  sliderValues[ctrl.channel] ?? ctrl.min;
+                oncontrol?.(
+                  ctrl.channel,
+                  sliderValues[ctrl.channel] ?? ctrl.min,
+                  false,
+                );
+              }
             }}
           />
         {/each}
@@ -361,16 +383,15 @@
   /* --- Header --- */
   .panel-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 6px;
   }
 
-  .header-left {
+  .header-row-top {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    min-width: 0;
+    gap: 8px;
   }
 
   .machine-name {
@@ -379,18 +400,21 @@
     color: #e0e0e0;
     margin: 0;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
   .header-temps {
     display: flex;
     gap: 16px;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
   }
 
   .btn-retry-header {
@@ -525,5 +549,30 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 0 16px;
+  }
+
+  @media (max-width: 480px) {
+    .header-temps {
+      gap: 10px;
+    }
+
+    .header-actions {
+      gap: 4px;
+    }
+
+    .btn-settings,
+    .btn-remove,
+    .btn-retry-header {
+      padding: 6px 8px;
+    }
+
+    .actions-row {
+      gap: 6px;
+    }
+
+    .controls-grid {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
   }
 </style>

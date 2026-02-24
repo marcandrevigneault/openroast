@@ -63,13 +63,14 @@ describe("RoastChart", () => {
     expect(textContent).toContain("BT");
   });
 
-  it("respects custom width and height", () => {
+  it("uses fallback dimensions when container has no measured width", () => {
     const { container } = render(RoastChart, {
-      props: { history: [], width: 600, height: 250 },
+      props: { history: [] },
     });
     const svg = container.querySelector("svg");
-    expect(svg?.getAttribute("width")).toBe("600");
-    expect(svg?.getAttribute("height")).toBe("250");
+    // In jsdom, clientWidth is 0, so falls back to 800 with proportional height
+    expect(svg?.getAttribute("width")).toBe("800");
+    expect(svg?.getAttribute("height")).toBe("352");
   });
 
   it("hides ET path when showET is false", () => {

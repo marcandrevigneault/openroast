@@ -1165,4 +1165,99 @@
     padding: 5px 10px;
     font-size: 0.75rem;
   }
+
+  @media (max-width: 480px) {
+    .dialog {
+      width: 95vw;
+      max-height: 90vh;
+      padding: 14px;
+    }
+
+    .toolbar {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .step-list {
+      max-height: 200px;
+    }
+
+    .step-item {
+      font-size: 0.75rem;
+      gap: 4px;
+      padding: 8px 6px;
+    }
+
+    .step-trigger {
+      font-size: 0.7rem;
+    }
+
+    .step-actions {
+      font-size: 0.7rem;
+    }
+
+    .form-group {
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group-label {
+      min-width: 0;
+      padding-top: 0;
+    }
+
+    .form-fields {
+      gap: 6px;
+    }
+
+    .input-narrow {
+      width: 52px;
+    }
+
+    .trigger-select {
+      width: auto;
+      flex: 1;
+    }
+
+    .direction-select {
+      width: auto;
+      flex: 1;
+    }
+
+    .channel-select {
+      width: auto;
+      flex: 1;
+    }
+
+    .action-row {
+      flex-wrap: wrap;
+    }
+
+    .dialog-footer {
+      flex-direction: column;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .footer-buttons {
+      justify-content: stretch;
+    }
+
+    .footer-buttons .btn-primary,
+    .footer-buttons .btn-secondary,
+    .footer-buttons .btn-danger {
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+      padding: 10px 14px;
+    }
+
+    .save-form {
+      flex-direction: column;
+    }
+  }
 </style>
