@@ -160,6 +160,16 @@
     machine.sessionState === "finished" && machine.history.length > 0 && !saved,
   );
 
+  // Reset saved flag when a new session begins
+  $effect(() => {
+    if (
+      machine.sessionState === "monitoring" ||
+      machine.sessionState === "idle"
+    ) {
+      saved = false;
+    }
+  });
+
   // Dispatch machine errors as toast notifications
   $effect(() => {
     if (machine.error && machine.error !== lastToastedError) {
