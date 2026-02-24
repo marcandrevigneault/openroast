@@ -59,15 +59,19 @@
   let plotH = $derived(height - PADDING.top - PADDING.bottom);
 
   // Share the same time range as the temperature chart
+  let minTimeMs = $derived(
+    history.length > 0 ? Math.min(0, history[0].timestamp_ms) : 0,
+  );
   let maxTimeMs = $derived(
     history.length > 0
       ? Math.max(history[history.length - 1].timestamp_ms, 60000)
       : 60000,
   );
   let timeRangeMs = $derived(Math.ceil(maxTimeMs / 60000) * 60000);
+  let timeSpanMs = $derived(timeRangeMs - minTimeMs);
 
   function xScale(timestamp_ms: number): number {
-    return PADDING.left + (timestamp_ms / timeRangeMs) * plotW;
+    return PADDING.left + ((timestamp_ms - minTimeMs) / timeSpanMs) * plotW;
   }
 
   function yScale(val: number): number {
@@ -116,7 +120,8 @@
   let timeGridLines = $derived(() => {
     const interval = timeRangeMs <= 120000 ? 30000 : 60000;
     const lines: number[] = [];
-    for (let t = 0; t <= timeRangeMs; t += interval) {
+    const start = Math.floor(minTimeMs / interval) * interval;
+    for (let t = start; t <= timeRangeMs; t += interval) {
       lines.push(t);
     }
     return lines;

@@ -347,11 +347,14 @@
     const state = machineStates.get(id);
     if (!state) return;
 
-    const controls: Record<string, [number, number][]> = {};
+    // Filter out negative-timestamp data (pre-record monitoring tail)
+    const recordedHistory = state.history.filter((p) => p.timestamp_ms >= 0);
+    const recordedControls: Record<string, [number, number][]> = {};
     for (const cp of state.controlHistory) {
+      if (cp.timestamp_ms < 0) continue;
       for (const [ch, val] of Object.entries(cp.values)) {
-        if (!controls[ch]) controls[ch] = [];
-        controls[ch].push([cp.timestamp_ms, val]);
+        if (!recordedControls[ch]) recordedControls[ch] = [];
+        recordedControls[ch].push([cp.timestamp_ms, val]);
       }
     }
 
@@ -359,13 +362,13 @@
       profile: {
         name: data.name,
         machine: state.machineName,
-        temperatures: state.history,
+        temperatures: recordedHistory,
         events: state.events.map((e) => ({
           event_type: e.event_type,
           timestamp_ms: e.timestamp_ms,
           auto_detected: e.auto_detected,
         })),
-        controls,
+        controls: recordedControls,
       },
       name: data.name,
       bean_name: data.beanName,
