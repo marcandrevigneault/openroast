@@ -1,2 +1,14 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 90%
+
+flags:
+  backend:
+    paths:
+      - backend/
+    carryforward: false
+
 fixes:
   - "::backend/"
