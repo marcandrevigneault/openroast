@@ -10,6 +10,7 @@ import {
   getSchedule,
   updateSchedule,
   deleteSchedule,
+  fetchVersion,
 } from "./api";
 
 const mockFetch = vi.fn();
@@ -271,5 +272,32 @@ describe("deleteSchedule", () => {
     await expect(deleteSchedule("nope")).rejects.toThrow(
       "Delete schedule failed: 404",
     );
+  });
+});
+
+// --- Version ---
+
+describe("fetchVersion", () => {
+  it("returns version from /health endpoint", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ status: "ok", version: "1.0.0" }),
+    });
+
+    const version = await fetchVersion();
+    expect(version).toBe("1.0.0");
+    expect(mockFetch).toHaveBeenCalledWith("/health");
+  });
+
+  it('returns "unknown" on network error', async () => {
+    mockFetch.mockRejectedValue(new Error("Network error"));
+    const version = await fetchVersion();
+    expect(version).toBe("unknown");
+  });
+
+  it('returns "unknown" on non-ok response', async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 500 });
+    const version = await fetchVersion();
+    expect(version).toBe("unknown");
   });
 });

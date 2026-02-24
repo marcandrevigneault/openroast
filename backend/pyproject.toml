@@ -1,6 +1,6 @@
 [project]
 name = "openroast"
-version = "0.1.0"
+version = "1.0.0"
 description = "Browser-based coffee roasting software — backend"
 requires-python = ">=3.12"
 dependencies = [
@@ -21,6 +21,12 @@ dev = [
 hardware = [
     "pyserial>=3.5",
     "pymodbus>=3.7",
+]
+desktop = [
+    "pyinstaller>=6.0",
+    "rumps>=0.4.0; sys_platform=='darwin'",
+    "pystray>=0.19; sys_platform=='win32'",
+    "pillow>=10.0; sys_platform=='win32'",
 ]
 
 [build-system]
@@ -59,7 +65,10 @@ known-first-party = ["openroast"]
 
 [tool.coverage.run]
 source = ["openroast"]
-omit = ["*/tests/*"]
+omit = [
+    "*/tests/*",
+    "*/desktop/*",
+]
 relative_files = true
 
 [tool.coverage.report]
