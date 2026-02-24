@@ -38,13 +38,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-and-release:
-    name: Build macOS app and create release
+  build:
+    name: Build (${{ matrix.os }})
     needs: [check-version]
     if: needs.check-version.outputs.should_release == 'true'
-    runs-on: macos-latest
-    permissions:
-      contents: write
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            spec: openroast.spec
+            artifact_name: OpenRoast-macos
+          - os: windows-latest
+            spec: openroast-windows.spec
+            artifact_name: OpenRoast-windows
     steps:
       - uses: actions/checkout@v4
 
@@ -86,19 +93,54 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[hardware,desktop]"
 
-      - name: Build macOS .app
-        run: pyinstaller packaging/openroast.spec --clean --noconfirm
+      - name: Build with PyInstaller
+        run: pyinstaller packaging/${{ matrix.spec }} --clean --noconfirm
 
-      - name: Create .zip artifact
+      - name: Zip macOS app
+        if: runner.os == 'macOS'
         run: |
           cd dist
-          zip -r "OpenRoast-${{ needs.check-version.outputs.tag }}-macos.zip" OpenRoast.app
+          zip -r "../${{ matrix.artifact_name }}.zip" OpenRoast.app
+
+      - name: Zip Windows app
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/OpenRoast -DestinationPath "${{ matrix.artifact_name }}.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}.zip
+
+  release:
+    name: Create GitHub Release
+    needs: [check-version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
       - name: Create GitHub Release
         run: |
-          gh release create "${{ needs.check-version.outputs.tag }}" \
-            "dist/OpenRoast-${{ needs.check-version.outputs.tag }}-macos.zip" \
-            --title "OpenRoast ${{ needs.check-version.outputs.version }}" \
+          TAG="${{ needs.check-version.outputs.tag }}"
+          VERSION="${{ needs.check-version.outputs.version }}"
+
+          # Rename artifacts with version tag
+          mv artifacts/OpenRoast-macos/OpenRoast-macos.zip "artifacts/OpenRoast-${TAG}-macos.zip"
+          mv artifacts/OpenRoast-windows/OpenRoast-windows.zip "artifacts/OpenRoast-${TAG}-windows.zip"
+
+          gh release create "${TAG}" \
+            "artifacts/OpenRoast-${TAG}-macos.zip" \
+            "artifacts/OpenRoast-${TAG}-windows.zip" \
+            --title "OpenRoast ${VERSION}" \
             --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

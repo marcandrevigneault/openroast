@@ -23,8 +23,10 @@ hardware = [
     "pymodbus>=3.7",
 ]
 desktop = [
-    "rumps>=0.4.0",
     "pyinstaller>=6.0",
+    "rumps>=0.4.0; sys_platform=='darwin'",
+    "pystray>=0.19; sys_platform=='win32'",
+    "pillow>=10.0; sys_platform=='win32'",
 ]
 
 [build-system]

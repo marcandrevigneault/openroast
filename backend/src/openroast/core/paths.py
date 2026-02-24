@@ -2,11 +2,14 @@
 
 Resolves the data root directory based on the runtime environment:
 - Development: ``backend/data/`` (relative to source tree)
-- Packaged app: ``~/Library/Application Support/OpenRoast/``
+- Packaged app (macOS): ``~/Library/Application Support/OpenRoast/``
+- Packaged app (Windows): ``%LOCALAPPDATA%/OpenRoast/``
+- Packaged app (Linux): ``~/.local/share/openroast/``
 """
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -20,10 +23,15 @@ def get_data_root() -> Path:
     """Return the root directory for user data.
 
     In development, this is the ``data/`` directory in the backend source tree.
-    In a packaged app, this is ``~/Library/Application Support/OpenRoast/``.
+    In a packaged app, the platform-appropriate user data directory is used.
     """
     if is_bundled():
-        return Path.home() / "Library" / "Application Support" / "OpenRoast"
+        if sys.platform == "win32":
+            base = os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData" / "Local"))
+            return Path(base) / "OpenRoast"
+        if sys.platform == "darwin":
+            return Path.home() / "Library" / "Application Support" / "OpenRoast"
+        return Path.home() / ".local" / "share" / "openroast"
     return Path(__file__).resolve().parent.parent.parent / "data"
 
 

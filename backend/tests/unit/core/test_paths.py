@@ -36,13 +36,43 @@ class TestGetDataRoot:
         assert root.name == "data"
         assert "openroast" in str(root)
 
-    def test_bundled_returns_app_support_dir(self) -> None:
+    def test_bundled_macos_returns_app_support_dir(self) -> None:
         with (
             patch.object(sys, "frozen", True, create=True),
             patch.object(sys, "_MEIPASS", "/tmp/bundle", create=True),
+            patch.object(sys, "platform", "darwin"),
         ):
             root = get_data_root()
             assert root == Path.home() / "Library" / "Application Support" / "OpenRoast"
+
+    def test_bundled_windows_returns_local_appdata(self) -> None:
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "_MEIPASS", "C:\\tmp\\bundle", create=True),
+            patch.object(sys, "platform", "win32"),
+            patch.dict("os.environ", {"LOCALAPPDATA": "C:\\Users\\test\\AppData\\Local"}),
+        ):
+            root = get_data_root()
+            assert root == Path("C:\\Users\\test\\AppData\\Local") / "OpenRoast"
+
+    def test_bundled_windows_fallback_without_env(self) -> None:
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "_MEIPASS", "C:\\tmp\\bundle", create=True),
+            patch.object(sys, "platform", "win32"),
+            patch.dict("os.environ", {}, clear=True),
+        ):
+            root = get_data_root()
+            assert root == Path.home() / "AppData" / "Local" / "OpenRoast"
+
+    def test_bundled_linux_returns_xdg_data(self) -> None:
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "_MEIPASS", "/tmp/bundle", create=True),
+            patch.object(sys, "platform", "linux"),
+        ):
+            root = get_data_root()
+            assert root == Path.home() / ".local" / "share" / "openroast"
 
 
 class TestGetBundleRoot:
