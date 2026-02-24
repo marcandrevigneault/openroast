@@ -523,8 +523,8 @@
 
   .chart-toolbar {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
+    top: 6px;
+    right: 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -532,13 +532,13 @@
   }
 
   .btn-chart-tool {
-    background: rgba(13, 13, 26, 0.7);
+    background: transparent;
     border: 1px solid #2a2a4a;
     border-radius: 4px;
-    color: #666;
-    font-size: 0.85rem;
+    color: #888;
+    font-size: 0.8rem;
     cursor: pointer;
-    padding: 2px 6px;
+    padding: 2px 5px;
     line-height: 1;
   }
 

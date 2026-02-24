@@ -179,8 +179,8 @@
     border: 1px solid #2a2a4a;
     border-radius: 4px;
     color: #888;
-    font-size: 1rem;
-    padding: 2px 6px;
+    font-size: 0.8rem;
+    padding: 2px 5px;
     cursor: pointer;
     line-height: 1;
   }
@@ -264,7 +264,7 @@
 
   @media (max-width: 480px) {
     .gear-btn {
-      padding: 6px 8px;
+      padding: 2px 5px;
     }
 
     .popover {
