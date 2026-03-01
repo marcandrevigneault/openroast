@@ -76,7 +76,7 @@ class TestStartSimulator:
         })
         assert resp.status_code == 404
 
-    async def test_start_duplicate_returns_409(self, client: AsyncClient) -> None:
+    async def test_start_duplicate_allowed(self, client: AsyncClient) -> None:
         resp1 = await client.post("/api/simulator/start", json={
             "manufacturer_id": "carmomaq",
             "model_id": "carmomaq-stratto-2.0",
@@ -87,9 +87,22 @@ class TestStartSimulator:
             "manufacturer_id": "carmomaq",
             "model_id": "carmomaq-stratto-2.0",
         })
-        assert resp2.status_code == 409
+        assert resp2.status_code == 201
+        assert resp1.json()["machine_id"] != resp2.json()["machine_id"]
 
         await client.post(f"/api/simulator/{resp1.json()['machine_id']}/stop")
+        await client.post(f"/api/simulator/{resp2.json()['machine_id']}/stop")
+
+    async def test_start_with_custom_name(self, client: AsyncClient) -> None:
+        resp = await client.post("/api/simulator/start", json={
+            "manufacturer_id": "carmomaq",
+            "model_id": "carmomaq-stratto-2.0",
+            "name": "My Roaster #1",
+        })
+        assert resp.status_code == 201
+        assert resp.json()["name"] == "My Roaster #1"
+
+        await client.post(f"/api/simulator/{resp.json()['machine_id']}/stop")
 
 
 class TestStopSimulator:

@@ -19,12 +19,13 @@
   });
 
   const links: {
-    href: "/" | "/profiles" | "/control-profiles";
+    href: "/" | "/profiles" | "/control-profiles" | "/simulator";
     label: string;
   }[] = [
     { href: "/", label: "Dashboard" },
     { href: "/profiles", label: "Profiles" },
     { href: "/control-profiles", label: "Control Profiles" },
+    { href: "/simulator", label: "Simulator" },
   ];
 
   function handleNav() {
