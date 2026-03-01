@@ -36,6 +36,7 @@ class StartSimulatorRequest(BaseModel):
     manufacturer_id: str
     model_id: str
     port: int = 0
+    name: str | None = None
 
 
 class SimulatorResponse(BaseModel):
@@ -62,10 +63,9 @@ async def start_simulator(req: StartSimulatorRequest) -> SimulatorResponse:
     if model is None:
         raise HTTPException(status_code=404, detail="Catalog model not found")
 
-    try:
-        info = await manager.start(model, req.manufacturer_id, port=req.port)
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e)) from e
+    info = await manager.start(
+        model, req.manufacturer_id, port=req.port, name=req.name,
+    )
 
     return SimulatorResponse(
         machine_id=info.machine_id,

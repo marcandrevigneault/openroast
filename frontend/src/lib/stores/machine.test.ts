@@ -498,6 +498,42 @@ describe("processMessage", () => {
       expect(state.extraChannelHistory[0].timestamp_ms).toBe(-5000);
     });
 
+    it("rebases currentTemp timestamp when recording starts", () => {
+      let state: MachineState = { ...baseState(), sessionState: "monitoring" };
+      // Simulate monitoring for 60 seconds
+      for (const ts of [55000, 58000, 60000]) {
+        state = processMessage(state, {
+          type: "temperature",
+          timestamp_ms: ts,
+          et: 200,
+          bt: 180,
+          et_ror: 0,
+          bt_ror: 0,
+          extra_channels: {},
+        });
+      }
+      expect(state.currentTemp!.timestamp_ms).toBe(60000);
+
+      state = processMessage(state, {
+        type: "state",
+        state: "recording",
+        previous_state: "monitoring",
+      });
+      // currentTemp should be rebased: 60000 - 60000 = 0
+      expect(state.currentTemp).not.toBeNull();
+      expect(state.currentTemp!.timestamp_ms).toBe(0);
+    });
+
+    it("sets currentTemp to null when recording starts with no data", () => {
+      let state = baseState();
+      state = processMessage(state, {
+        type: "state",
+        state: "recording",
+        previous_state: "monitoring",
+      });
+      expect(state.currentTemp).toBeNull();
+    });
+
     it("clears all history when recording starts with no data", () => {
       let state = baseState();
       state = processMessage(state, {

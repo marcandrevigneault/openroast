@@ -58,41 +58,39 @@ class SimulatorManager:
         manufacturer_id: str,
         port: int = 0,
         host: str = "127.0.0.1",
+        name: str | None = None,
     ) -> SimulatorInfo:
         """Start a simulator for a catalog machine.
+
+        Multiple instances of the same catalog model are allowed.
 
         Args:
             model: Catalog machine definition.
             manufacturer_id: Manufacturer ID for storage reference.
             port: TCP port (0 = auto-assign).
             host: TCP host to bind to.
+            name: Display name override (defaults to model name).
 
         Returns:
             SimulatorInfo with machine_id and connection details.
-
-        Raises:
-            ValueError: If a simulator for this catalog model is already running.
         """
-        # Check for duplicate
-        for info in self._info.values():
-            if info.catalog_id == model.id:
-                msg = f"Simulator already running for {model.id} on port {info.port}"
-                raise ValueError(msg)
-
         if port == 0:
             port = _find_free_port()
+
+        display_name = name if name else model.name
 
         server = SimulatorServer(model, port=port, host=host)
         await server.start()
 
         # Create a SavedMachine pointing to the simulator
-        machine_id = self._create_saved_machine(model, manufacturer_id, host, port)
-
+        machine_id = self._create_saved_machine(
+            model, manufacturer_id, host, port, display_name,
+        )
         info = SimulatorInfo(
             machine_id=machine_id,
             catalog_id=model.id,
             manufacturer_id=manufacturer_id,
-            name=model.name,
+            name=display_name,
             port=port,
             host=host,
         )
@@ -101,7 +99,7 @@ class SimulatorManager:
         self._info[machine_id] = info
 
         logger.info("Started simulator %s on %s:%d (machine_id=%s)",
-                     model.name, host, port, machine_id)
+                     display_name, host, port, machine_id)
         return info
 
     async def stop(self, machine_id: str) -> None:
@@ -149,6 +147,7 @@ class SimulatorManager:
         manufacturer_id: str,
         host: str,
         port: int,
+        name: str,
     ) -> str:
         """Create a SavedMachine pointing to the simulator."""
         from openroast.models.catalog import ModbusConnectionConfig
@@ -170,7 +169,7 @@ class SimulatorManager:
             )
 
         machine = SavedMachine(
-            name=model.name,
+            name=name,
             catalog_manufacturer_id=manufacturer_id,
             catalog_model_id=model.id,
             protocol=model.protocol,

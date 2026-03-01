@@ -206,6 +206,12 @@ export function processMessage(
         return {
           ...state,
           sessionState: msg.state,
+          currentTemp: state.currentTemp
+            ? {
+                ...state.currentTemp,
+                timestamp_ms: state.currentTemp.timestamp_ms - offset,
+              }
+            : null,
           history: state.history
             .filter((p) => p.timestamp_ms >= cutoff)
             .map((p) => ({ ...p, timestamp_ms: p.timestamp_ms - offset })),

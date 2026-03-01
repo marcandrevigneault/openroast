@@ -84,14 +84,56 @@ class TestSimulatorManager:
             await manager.stop("nonexistent")
 
     @pytest.mark.asyncio
-    async def test_duplicate_catalog_raises(self) -> None:
+    async def test_multiple_same_model_allowed(self) -> None:
         manager = SimulatorManager()
         model = _make_model()
 
-        await manager.start(model, "test-mfr", port=_find_free_port())
+        info1 = await manager.start(model, "test-mfr", port=_find_free_port())
         try:
-            with pytest.raises(ValueError, match="already running"):
-                await manager.start(model, "test-mfr", port=_find_free_port())
+            info2 = await manager.start(model, "test-mfr", port=_find_free_port())
+            assert info1.machine_id != info2.machine_id
+            assert info1.port != info2.port
+            assert len(manager.list_running()) == 2
+        finally:
+            await manager.stop_all()
+
+    @pytest.mark.asyncio
+    async def test_custom_name(self) -> None:
+        manager = SimulatorManager()
+        model = _make_model()
+
+        info = await manager.start(
+            model, "test-mfr", port=_find_free_port(), name="My Custom Sim",
+        )
+        try:
+            assert info.name == "My Custom Sim"
+        finally:
+            await manager.stop_all()
+
+    @pytest.mark.asyncio
+    async def test_default_name_from_model(self) -> None:
+        manager = SimulatorManager()
+        model = _make_model()
+
+        info = await manager.start(model, "test-mfr", port=_find_free_port())
+        try:
+            assert info.name == "Test Simulator"
+        finally:
+            await manager.stop_all()
+
+    @pytest.mark.asyncio
+    async def test_custom_name_saved_machine(self, tmp_path: Path) -> None:
+        storage = MachineStorage(tmp_path / "machines")
+        manager = SimulatorManager(machine_storage=storage)
+        model = _make_model()
+
+        info = await manager.start(
+            model, "test-mfr", port=_find_free_port(), name="Renamed Sim",
+        )
+        try:
+            saved = storage.get(info.machine_id)
+            assert saved is not None
+            assert saved.name == "Renamed Sim"
         finally:
             await manager.stop_all()
 

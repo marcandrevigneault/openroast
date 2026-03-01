@@ -27,7 +27,7 @@
     </button>
   {:else if sessionState === "recording"}
     <button class="btn btn-stop-record" onclick={onstoprecord}>
-      <span class="icon">&#9632;</span> Stop Recording
+      <span class="icon recording-dot">&#9679;</span> Stop Recording
     </button>
   {:else}
     <button class="btn btn-monitor" onclick={onstart}>
@@ -79,17 +79,17 @@
   }
 
   .btn-record {
-    background: #c62828;
-    color: white;
+    background: rgba(79, 195, 247, 0.15);
+    border: 1px solid #4fc3f7;
+    color: #4fc3f7;
   }
 
   .btn-record:hover {
-    background: #d32f2f;
+    background: rgba(79, 195, 247, 0.25);
   }
 
   .record-dot {
-    color: #ff5252;
-    animation: pulse 1.5s infinite;
+    color: #4fc3f7;
   }
 
   .btn-stop {
@@ -104,10 +104,26 @@
   .btn-stop-record {
     background: #c62828;
     color: white;
+    animation: rec-glow 3s ease-in-out infinite;
   }
 
   .btn-stop-record:hover {
     background: #d32f2f;
+    animation: none;
+  }
+
+  .recording-dot {
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes rec-glow {
+    0%,
+    100% {
+      background: #c62828;
+    }
+    50% {
+      background: #8e1c1c;
+    }
   }
 
   @keyframes pulse {
@@ -116,7 +132,7 @@
       opacity: 1;
     }
     50% {
-      opacity: 0.3;
+      opacity: 0.4;
     }
   }
 

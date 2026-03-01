@@ -304,6 +304,30 @@ describe("evaluateSchedule", () => {
     expect(result.schedule.steps[0].fired).toBe(false);
   });
 
+  it("does not fire future steps when elapsedMs is 0 (rebased recording start)", () => {
+    const s = makeRunningSchedule([
+      {
+        id: "a",
+        trigger: { type: "time", timestamp_ms: 30000 },
+        actions: [{ channel: "burner", value: 80 }],
+        fired: false,
+        enabled: true,
+      },
+      {
+        id: "b",
+        trigger: { type: "time", timestamp_ms: 120000 },
+        actions: [{ channel: "airflow", value: 60 }],
+        fired: false,
+        enabled: true,
+      },
+    ]);
+    // At recording start, currentTemp.timestamp_ms should be ~0
+    const result = evaluateSchedule(s, 0, 25, 30, 25, 30);
+    expect(result.firedActions).toHaveLength(0);
+    expect(result.schedule.steps[0].fired).toBe(false);
+    expect(result.schedule.steps[1].fired).toBe(false);
+  });
+
   it("fires BT threshold on rising crossing", () => {
     const s = makeRunningSchedule([
       {
