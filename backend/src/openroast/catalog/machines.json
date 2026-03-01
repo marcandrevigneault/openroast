@@ -395,8 +395,8 @@
             "modbus": {"address": 52, "code": 3, "device_id": 4, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": [
-            {"name": "Slider 1", "channel": "slider1", "command": "writeSingle([1,1,{}])", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Slider 4", "channel": "slider4", "command": "writeSingle([2,53,{}])", "min": 0, "max": 100, "step": 1, "unit": ""}
+            {"name": "Air", "channel": "slider1", "command": "writeSingle([1,1,{}])", "min": 0, "max": 100, "step": 1, "unit": "", "factor": 21, "offset": 2700},
+            {"name": "Burner", "channel": "slider4", "command": "writeSingle([2,53,{}])", "min": 0, "max": 100, "step": 1, "unit": "", "factor": 100, "offset": 0}
           ]
         },
         {
@@ -630,7 +630,7 @@
             {"name": "Drum", "modbus": {"address": 12391, "code": 3, "device_id": 1, "divisor": 1, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,12290,{});mwrite(1,12318,65531,4)", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,12290,{});mwrite(1,12318,65531,4)", "min": 0, "max": 100, "step": 1, "unit": "%", "factor": 100, "offset": 0}
           ]
         }
       ]
@@ -844,7 +844,16 @@
             "name": "BT",
             "modbus": {"address": 6, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
-          "controls": []
+          "controls": [
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,1003,{})", "min": 0, "max": 100, "step": 1, "unit": "", "factor": 2.57, "offset": 100},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,1001,{})", "min": 0, "max": 100, "step": 1, "unit": "", "factor": 4, "offset": 100},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,3904,{})", "min": 0, "max": 100, "step": 1, "unit": "", "factor": 45, "offset": 0},
+            {"name": "Drum ON/OFF", "channel": "drum_onoff", "type": "toggle", "on_command": "writeSingle([1,1000,2],[1,1002,2])", "off_command": "wcoil(1,2003,0);writeSingle([1,1000,5],[1,1002,5])", "on_value": 1, "off_value": 0},
+            {"name": "Burner ON/OFF", "channel": "burner_onoff", "type": "toggle", "command": "wcoil(1,2003,{})", "on_value": 1, "off_value": 0},
+            {"name": "Cooler ON/OFF", "channel": "cooler_onoff", "type": "toggle", "command": "wcoil(1,2005,{})", "on_value": 1, "off_value": 0},
+            {"name": "Mixer ON/OFF", "channel": "mixer_onoff", "type": "toggle", "command": "wcoil(1,2006,{})", "on_value": 1, "off_value": 0},
+            {"name": "RESET Burner", "channel": "reset_burner", "type": "button", "command": "wcoil(1,2004,1);sleep(2);wcoil(1,2004,0)"}
+          ]
         }
       ]
     },
@@ -886,9 +895,9 @@
             {"name": "GasSV", "modbus": {"address": 4201, "code": 3, "device_id": 1, "divisor": 1, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Gas1", "channel": "gas1", "command": "writeSingle([1,4638,{}])", "min": 0, "max": 60, "step": 1, "unit": "Hz"},
-            {"name": "Gas2", "channel": "gas2", "command": "writeSingle([1,4636,{}])", "min": 0, "max": 60, "step": 1, "unit": "Hz"},
-            {"name": "Pressure", "channel": "pressure", "command": "writeSingle([1,4608,{}])", "min": 0, "max": 350, "step": 1, "unit": "daPa"}
+            {"name": "Gas1", "channel": "gas1", "command": "writeSingle([1,4638,{}])", "min": 0, "max": 60, "step": 1, "unit": "Hz", "factor": 100, "offset": 0},
+            {"name": "Gas2", "channel": "gas2", "command": "writeSingle([1,4636,{}])", "min": 0, "max": 60, "step": 1, "unit": "Hz", "factor": 100, "offset": 0},
+            {"name": "Pressure", "channel": "pressure", "command": "writeSingle([1,4608,{}])", "min": 0, "max": 350, "step": 1, "unit": "daPa", "factor": 10, "offset": 0}
           ]
         }
       ]

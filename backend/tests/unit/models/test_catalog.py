@@ -124,6 +124,10 @@ class TestControlConfig:
         assert c.unit == ""
         assert c.on_value == 1
         assert c.off_value == 0
+        assert c.factor == 1.0
+        assert c.offset == 0.0
+        assert c.on_command == ""
+        assert c.off_command == ""
 
     def test_custom_range(self) -> None:
         c = ControlConfig(name="Gas", channel="gas", min=80, max=350, unit="Pa")
@@ -159,6 +163,65 @@ class TestControlConfig:
         assert c2.type == "toggle"
         assert c2.on_value == 1
         assert c2.off_value == 2
+
+    def test_slider_with_factor_offset(self) -> None:
+        c = ControlConfig(
+            name="Air",
+            channel="slider1",
+            command="writeSingle([1,1,{}])",
+            factor=21,
+            offset=2700,
+        )
+        assert c.factor == 21.0
+        assert c.offset == 2700.0
+        assert c.type == "slider"
+
+    def test_factor_offset_roundtrip(self) -> None:
+        c = ControlConfig(
+            name="Air",
+            channel="air",
+            command="writeSingle(1,1003,{})",
+            factor=2.57,
+            offset=100,
+        )
+        data = c.model_dump()
+        c2 = ControlConfig.model_validate(data)
+        assert c2.factor == 2.57
+        assert c2.offset == 100.0
+
+    def test_toggle_with_on_off_commands(self) -> None:
+        c = ControlConfig(
+            name="Drum ON/OFF",
+            channel="drum_onoff",
+            type="toggle",
+            on_command="writeSingle([1,1000,2],[1,1002,2])",
+            off_command="wcoil(1,2003,0);writeSingle([1,1000,5],[1,1002,5])",
+        )
+        assert c.on_command == "writeSingle([1,1000,2],[1,1002,2])"
+        assert c.off_command == "wcoil(1,2003,0);writeSingle([1,1000,5],[1,1002,5])"
+        assert c.command == ""  # Not used when on_command/off_command set
+
+    def test_button_type(self) -> None:
+        c = ControlConfig(
+            name="RESET Burner",
+            channel="reset_burner",
+            type="button",
+            command="wcoil(1,2004,1);sleep(2);wcoil(1,2004,0)",
+        )
+        assert c.type == "button"
+        assert c.command == "wcoil(1,2004,1);sleep(2);wcoil(1,2004,0)"
+
+    def test_button_roundtrip(self) -> None:
+        c = ControlConfig(
+            name="RESET",
+            channel="reset",
+            type="button",
+            command="wcoil(1,2004,1);sleep(2);wcoil(1,2004,0)",
+        )
+        data = c.model_dump()
+        c2 = ControlConfig.model_validate(data)
+        assert c2.type == "button"
+        assert c2.command == c.command
 
 
 class TestCatalogModel:

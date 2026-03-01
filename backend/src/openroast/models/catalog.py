@@ -59,22 +59,32 @@ class ChannelConfig(BaseModel):
 
 
 class ControlConfig(BaseModel):
-    """Configuration for a control (slider or toggle).
+    """Configuration for a control (slider, toggle, or button).
 
-    Sliders have a continuous min/max range. Toggles send discrete
-    on_value / off_value to the register (e.g. 1=ON, 2=OFF for Carmomaq).
+    Sliders have a continuous min/max range with optional factor/offset scaling.
+    Toggles send discrete on_value/off_value via command template, or use
+    separate on_command/off_command for complex state changes.
+    Buttons are one-shot actions (e.g. reset) that execute command once.
     """
 
     name: str = Field(description="Display name")
     channel: str = Field(description="Control channel ID (e.g. 'burner')")
     command: str = Field(default="", description="Command template with {} placeholder")
-    type: Literal["slider", "toggle"] = Field(default="slider", description="slider or toggle")
+    type: Literal["slider", "toggle", "button"] = Field(default="slider")
     min: float = Field(default=0)
     max: float = Field(default=100)
     step: float = Field(default=1)
     unit: str = Field(default="")
     on_value: int = Field(default=1, description="Value to write when toggle is ON")
     off_value: int = Field(default=0, description="Value to write when toggle is OFF")
+    on_command: str = Field(default="", description="Full ON command (overrides command+on_value)")
+    off_command: str = Field(
+        default="", description="Full OFF command (overrides command+off_value)",
+    )
+    factor: float = Field(
+        default=1.0, description="Multiplier: register = slider * factor + offset",
+    )
+    offset: float = Field(default=0.0, description="Offset added after factor scaling")
 
 
 # ── Protocol-specific connection configs ─────────────────────────────

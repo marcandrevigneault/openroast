@@ -475,3 +475,82 @@ class TestRealCatalogModels:
 
         ctx = build_server_context(model, initial_bt=200.0, initial_et=220.0)
         assert read_register_raw(ctx, device_id=1, address=59, code=3) == 0
+
+    def test_coffed_sr5_factor_offset(self) -> None:
+        """Coffed SR5 sliders have factor/offset scaling."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("coffed", "coffed-sr5")
+        assert model is not None
+
+        air = next(c for c in model.controls if c.channel == "slider1")
+        assert air.factor == 21.0
+        assert air.offset == 2700.0
+
+        burner = next(c for c in model.controls if c.channel == "slider4")
+        assert burner.factor == 100.0
+        assert burner.offset == 0.0
+
+    def test_probat_burner_factor(self) -> None:
+        """Probat Probatone burner has factor=100 scaling."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("probat", "probat-probatone")
+        assert model is not None
+
+        burner = next(c for c in model.controls if c.channel == "burner")
+        assert burner.factor == 100.0
+        assert burner.offset == 0.0
+        assert burner.unit == "%"
+
+    def test_mill_city_factor_offset(self) -> None:
+        """Mill City Digital has different factors per slider."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("mill-city", "mill-city-digital")
+        assert model is not None
+
+        gas1 = next(c for c in model.controls if c.channel == "gas1")
+        assert gas1.factor == 100.0
+        assert gas1.unit == "Hz"
+
+        pressure = next(c for c in model.controls if c.channel == "pressure")
+        assert pressure.factor == 10.0
+        assert pressure.unit == "daPa"
+
+    def test_besca_bsc_auto_controls(self) -> None:
+        """Besca BSC Auto has sliders with factor/offset and toggles."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("besca", "besca-bsc-auto")
+        assert model is not None
+        assert len(model.controls) == 8
+
+        # Sliders with factor/offset
+        air = next(c for c in model.controls if c.channel == "air")
+        assert air.type == "slider"
+        assert air.factor == 2.57
+        assert air.offset == 100.0
+
+        drum = next(c for c in model.controls if c.channel == "drum")
+        assert drum.factor == 4.0
+        assert drum.offset == 100.0
+
+        burner = next(c for c in model.controls if c.channel == "burner")
+        assert burner.factor == 45.0
+        assert burner.offset == 0.0
+
+        # Toggle with on_command/off_command
+        drum_toggle = next(c for c in model.controls if c.channel == "drum_onoff")
+        assert drum_toggle.type == "toggle"
+        assert drum_toggle.on_command != ""
+        assert drum_toggle.off_command != ""
+
+        # Simple toggles
+        cooler = next(c for c in model.controls if c.channel == "cooler_onoff")
+        assert cooler.type == "toggle"
+        assert cooler.command == "wcoil(1,2005,{})"
+
+        # Button type
+        reset = next(c for c in model.controls if c.channel == "reset_burner")
+        assert reset.type == "button"
