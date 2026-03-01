@@ -117,16 +117,48 @@ class TestChannelConfig:
 class TestControlConfig:
     def test_defaults(self) -> None:
         c = ControlConfig(name="Burner", channel="burner")
+        assert c.type == "slider"
         assert c.min == 0
         assert c.max == 100
         assert c.step == 1
         assert c.unit == ""
+        assert c.on_value == 1
+        assert c.off_value == 0
 
     def test_custom_range(self) -> None:
         c = ControlConfig(name="Gas", channel="gas", min=80, max=350, unit="Pa")
         assert c.min == 80
         assert c.max == 350
         assert c.unit == "Pa"
+
+    def test_toggle_type(self) -> None:
+        c = ControlConfig(
+            name="Machine ON/OFF",
+            channel="machine_onoff",
+            type="toggle",
+            command="writeSingle(1,50,{})",
+            on_value=1,
+            off_value=2,
+        )
+        assert c.type == "toggle"
+        assert c.on_value == 1
+        assert c.off_value == 2
+        assert c.command == "writeSingle(1,50,{})"
+
+    def test_toggle_roundtrip(self) -> None:
+        c = ControlConfig(
+            name="Cooling",
+            channel="cooling",
+            type="toggle",
+            command="writeSingle(1,58,{})",
+            on_value=1,
+            off_value=2,
+        )
+        data = c.model_dump()
+        c2 = ControlConfig.model_validate(data)
+        assert c2.type == "toggle"
+        assert c2.on_value == 1
+        assert c2.off_value == 2
 
 
 class TestCatalogModel:

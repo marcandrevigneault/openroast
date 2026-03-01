@@ -266,6 +266,50 @@ class TestBuildServerContext:
         raw = read_register_raw(ctx, device_id=1, address=1, code=3)
         assert raw == 0
 
+    def test_toggle_control_address(self) -> None:
+        """Toggle controls allocate registers like sliders."""
+        model = _make_model(
+            controls=[
+                ControlConfig(
+                    name="Machine ON/OFF", channel="machine_onoff",
+                    type="toggle",
+                    command="writeSingle(1,50,{})",
+                    on_value=1, off_value=2,
+                ),
+            ],
+        )
+        ctx = build_server_context(model)
+        raw = read_register_raw(ctx, device_id=1, address=50, code=3)
+        assert raw == 0
+
+    def test_mixed_slider_and_toggle_controls(self) -> None:
+        """Both slider and toggle controls create registers."""
+        model = _make_model(
+            controls=[
+                ControlConfig(
+                    name="Burner", channel="burner",
+                    command="writeSingle(1,45,{})",
+                    min=0, max=100, step=1,
+                ),
+                ControlConfig(
+                    name="Machine ON/OFF", channel="machine_onoff",
+                    type="toggle",
+                    command="writeSingle(1,50,{})",
+                    on_value=1, off_value=2,
+                ),
+                ControlConfig(
+                    name="Cooling", channel="cooling",
+                    type="toggle",
+                    command="writeSingle(1,58,{})",
+                    on_value=1, off_value=2,
+                ),
+            ],
+        )
+        ctx = build_server_context(model)
+        assert read_register_raw(ctx, device_id=1, address=45, code=3) == 0
+        assert read_register_raw(ctx, device_id=1, address=50, code=3) == 0
+        assert read_register_raw(ctx, device_id=1, address=58, code=3) == 0
+
 
 # ── write_channel / read_register_raw ────────────────────────────────
 
@@ -363,3 +407,71 @@ class TestRealCatalogModels:
         et = read_register_raw(ctx, device_id=1, address=290, code=4)
         assert bt == 3920  # 200C → 392F → *10
         assert et == 4280  # 220C → 428F → *10
+
+    def test_stratto_toggle_controls(self) -> None:
+        """Stratto 2.0 toggle controls create registers."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("carmomaq", "carmomaq-stratto-2.0")
+        assert model is not None
+        ctx = build_server_context(model, initial_bt=200.0, initial_et=220.0)
+
+        # Slider registers
+        assert read_register_raw(ctx, device_id=1, address=45, code=3) == 0  # Burner
+        assert read_register_raw(ctx, device_id=1, address=46, code=3) == 0  # Drum
+        assert read_register_raw(ctx, device_id=1, address=47, code=3) == 0  # Air
+
+        # Toggle registers
+        assert read_register_raw(ctx, device_id=1, address=50, code=3) == 0  # Machine
+        assert read_register_raw(ctx, device_id=1, address=52, code=3) == 0  # Ignition
+        assert read_register_raw(ctx, device_id=1, address=55, code=3) == 0  # Burner ON/OFF
+        assert read_register_raw(ctx, device_id=1, address=58, code=3) == 0  # Cooling
+
+        # Extra channel register
+        assert read_register_raw(ctx, device_id=1, address=49, code=3) == 0
+
+    def test_stratto_lab(self) -> None:
+        """Stratto Lab loads and builds context correctly."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("carmomaq", "carmomaq-stratto-lab")
+        assert model is not None
+        assert model.sampling_interval_ms == 2000
+        ctx = build_server_context(model, initial_bt=200.0, initial_et=220.0)
+
+        bt = read_register_raw(ctx, device_id=1, address=43, code=3)
+        et = read_register_raw(ctx, device_id=1, address=44, code=3)
+        assert bt == 2000
+        assert et == 2200
+
+    def test_caloratto_materatto_legacy(self) -> None:
+        """Caloratto/Materatto Legacy with registers 8000/8001."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("carmomaq", "carmomaq-caloratto-materatto-legacy")
+        assert model is not None
+        ctx = build_server_context(model, initial_bt=200.0, initial_et=220.0)
+
+        bt = read_register_raw(ctx, device_id=0, address=8000, code=3)
+        et = read_register_raw(ctx, device_id=0, address=8001, code=3)
+        assert bt == 2000
+        assert et == 2200
+
+    def test_masteratto_slider3(self) -> None:
+        """Masteratto 2.0 has slider 3 (reg 59) visible."""
+        from openroast.catalog.loader import get_model
+
+        model = get_model("carmomaq", "carmomaq-masteratto-2.0")
+        assert model is not None
+
+        # Find the slider3 control
+        slider3 = next(
+            (c for c in model.controls if c.channel == "slider3"),
+            None,
+        )
+        assert slider3 is not None
+        assert slider3.type == "slider"
+        assert slider3.max == 100
+
+        ctx = build_server_context(model, initial_bt=200.0, initial_et=220.0)
+        assert read_register_raw(ctx, device_id=1, address=59, code=3) == 0

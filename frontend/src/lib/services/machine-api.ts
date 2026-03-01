@@ -29,10 +29,13 @@ export interface CatalogControl {
   name: string;
   channel: string;
   command: string;
+  type: "slider" | "toggle";
   min: number;
   max: number;
   step: number;
   unit: string;
+  on_value: number;
+  off_value: number;
 }
 
 // ── Machine types ────────────────────────────────────────────────────

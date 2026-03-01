@@ -59,15 +59,22 @@ class ChannelConfig(BaseModel):
 
 
 class ControlConfig(BaseModel):
-    """Configuration for a control slider (burner, airflow, etc.)."""
+    """Configuration for a control (slider or toggle).
+
+    Sliders have a continuous min/max range. Toggles send discrete
+    on_value / off_value to the register (e.g. 1=ON, 2=OFF for Carmomaq).
+    """
 
     name: str = Field(description="Display name")
     channel: str = Field(description="Control channel ID (e.g. 'burner')")
     command: str = Field(default="", description="Command template with {} placeholder")
+    type: Literal["slider", "toggle"] = Field(default="slider", description="slider or toggle")
     min: float = Field(default=0)
     max: float = Field(default=100)
     step: float = Field(default=1)
     unit: str = Field(default="")
+    on_value: int = Field(default=1, description="Value to write when toggle is ON")
+    off_value: int = Field(default=0, description="Value to write when toggle is OFF")
 
 
 # ── Protocol-specific connection configs ─────────────────────────────

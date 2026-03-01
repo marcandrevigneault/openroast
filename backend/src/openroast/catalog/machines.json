@@ -33,12 +33,20 @@
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Ignition", "channel": "ignition", "type": "toggle", "command": "writeSingle(1,52,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Burner ON/OFF", "channel": "burner_onoff", "type": "toggle", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Drum ON/OFF", "channel": "drum_onoff", "type": "toggle", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Air ON/OFF", "channel": "air_onoff", "type": "toggle", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Cooling", "channel": "cooling", "type": "toggle", "command": "writeSingle(1,58,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Pressure Vent", "channel": "pressure_vent", "type": "toggle", "command": "writeSingle(1,60,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""}
           ]
         },
         {
@@ -68,12 +76,21 @@
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Slider 3", "channel": "slider3", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Ignition", "channel": "ignition", "type": "toggle", "command": "writeSingle(1,52,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Burner ON/OFF", "channel": "burner_onoff", "type": "toggle", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Drum ON/OFF", "channel": "drum_onoff", "type": "toggle", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Air ON/OFF", "channel": "air_onoff", "type": "toggle", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Cooling", "channel": "cooling", "type": "toggle", "command": "writeSingle(1,58,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Pressure Vent", "channel": "pressure_vent", "type": "toggle", "command": "writeSingle(1,60,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""}
           ]
         },
         {
@@ -103,12 +120,20 @@
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Ignition", "channel": "ignition", "type": "toggle", "command": "writeSingle(1,52,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Burner ON/OFF", "channel": "burner_onoff", "type": "toggle", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Drum ON/OFF", "channel": "drum_onoff", "type": "toggle", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Air ON/OFF", "channel": "air_onoff", "type": "toggle", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Cooling", "channel": "cooling", "type": "toggle", "command": "writeSingle(1,58,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Pressure Vent", "channel": "pressure_vent", "type": "toggle", "command": "writeSingle(1,60,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""}
           ]
         },
         {
@@ -138,13 +163,89 @@
           "extra_channels": [
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 100, "step": 1, "unit": ""},
-            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Ignition", "channel": "ignition", "type": "toggle", "command": "writeSingle(1,52,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Burner ON/OFF", "channel": "burner_onoff", "type": "toggle", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Drum ON/OFF", "channel": "drum_onoff", "type": "toggle", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Air ON/OFF", "channel": "air_onoff", "type": "toggle", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Cooling", "channel": "cooling", "type": "toggle", "command": "writeSingle(1,58,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Pressure Vent", "channel": "pressure_vent", "type": "toggle", "command": "writeSingle(1,60,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""}
           ]
+        },
+        {
+          "id": "carmomaq-stratto-lab",
+          "name": "Stratto Lab",
+          "protocol": "modbus_tcp",
+          "sampling_interval_ms": 2000,
+          "connection": {
+            "type": "modbus_tcp",
+            "host": "192.168.5.11",
+            "port": 502,
+            "baudrate": 19200,
+            "bytesize": 8,
+            "parity": "N",
+            "stopbits": 1,
+            "timeout": 1.0,
+            "word_order_little": true
+          },
+          "et": {
+            "name": "ET",
+            "modbus": {"address": 44, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+          },
+          "bt": {
+            "name": "BT",
+            "modbus": {"address": 43, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+          },
+          "extra_channels": [
+            {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+          ],
+          "controls": [
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": ""},
+            {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Burner ON/OFF", "channel": "burner_onoff", "type": "toggle", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Drum ON/OFF", "channel": "drum_onoff", "type": "toggle", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Air ON/OFF", "channel": "air_onoff", "type": "toggle", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Cooling", "channel": "cooling", "type": "toggle", "command": "writeSingle(1,58,{})", "on_value": 1, "off_value": 2, "min": 0, "max": 1, "step": 1, "unit": ""}
+          ]
+        },
+        {
+          "id": "carmomaq-caloratto-materatto-legacy",
+          "name": "Caloratto/Materatto Legacy",
+          "protocol": "modbus_tcp",
+          "sampling_interval_ms": 3000,
+          "connection": {
+            "type": "modbus_tcp",
+            "host": "192.168.0.10",
+            "port": 502,
+            "baudrate": 115200,
+            "bytesize": 8,
+            "parity": "N",
+            "stopbits": 1,
+            "timeout": 1.0,
+            "word_order_little": true
+          },
+          "et": {
+            "name": "ET",
+            "modbus": {"address": 8001, "code": 3, "device_id": 0, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+          },
+          "bt": {
+            "name": "BT",
+            "modbus": {"address": 8000, "code": 3, "device_id": 0, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+          },
+          "extra_channels": [],
+          "controls": []
         }
       ]
     },
@@ -256,8 +357,8 @@
             "modbus": {"address": 768, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}
           },
           "extra_channels": [
-            {"name": "Inlet", "modbus": {"address": 770, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
-            {"name": "Stack", "modbus": {"address": 772, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
+            {"name": "Stack", "modbus": {"address": 770, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
+            {"name": "Inlet", "modbus": {"address": 772, "code": 3, "device_id": 1, "divisor": 1, "mode": "F", "is_float": false, "is_bcd": true}},
             {"name": "Status", "modbus": {"address": 778, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": []
@@ -491,7 +592,10 @@
           ],
           "controls": [
             {"name": "Heater", "channel": "heater", "min": 0, "max": 100, "step": 1, "unit": "%"},
-            {"name": "Fan", "channel": "fan", "min": 0, "max": 100, "step": 1, "unit": "%"}
+            {"name": "Fan", "channel": "fan", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Motor", "channel": "motor", "type": "toggle", "on_value": 1, "off_value": 0, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Door", "channel": "door", "type": "toggle", "on_value": 1, "off_value": 0, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Stirrer", "channel": "stirrer", "type": "toggle", "on_value": 1, "off_value": 0, "min": 0, "max": 1, "step": 1, "unit": ""}
           ]
         }
       ]
@@ -515,12 +619,9 @@
             "parity": "N",
             "stopbits": 1,
             "timeout": 0.5,
-            "word_order_little": true
+            "word_order_little": false
           },
-          "et": {
-            "name": "ET",
-            "modbus": {"address": 12393, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
-          },
+          "et": null,
           "bt": {
             "name": "BT",
             "modbus": {"address": 12392, "code": 3, "device_id": 1, "divisor": 2, "mode": "C", "is_float": false, "is_bcd": false}
@@ -598,7 +699,7 @@
             {"name": "Fan RPM"}
           ],
           "controls": [
-            {"name": "Power", "channel": "power", "min": 0, "max": 9, "step": 1, "unit": ""},
+            {"name": "Power", "channel": "power", "min": 0, "max": 14, "step": 1, "unit": ""},
             {"name": "Fan", "channel": "fan", "min": 1, "max": 12, "step": 1, "unit": ""},
             {"name": "Drum", "channel": "drum", "min": 1, "max": 9, "step": 1, "unit": ""}
           ]
@@ -711,11 +812,11 @@
           },
           "et": {
             "name": "ET",
-            "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 0, "code": 4, "device_id": 2, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "bt": {
             "name": "BT",
-            "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
+            "modbus": {"address": 0, "code": 4, "device_id": 1, "divisor": 1, "mode": "C", "is_float": false, "is_bcd": false}
           },
           "controls": []
         },
@@ -911,7 +1012,7 @@
             "stopbits": 1,
             "timeout": 0.6
           },
-          "et": {"name": "CT"},
+          "et": {"name": "ET"},
           "bt": {"name": "BT"},
           "extra_channels": [
             {"name": "Drum"},
@@ -943,7 +1044,13 @@
           },
           "et": {"name": "CT"},
           "bt": {"name": "BT"},
-          "controls": []
+          "controls": [
+            {"name": "Air", "channel": "air", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Heater", "channel": "heater", "min": 0, "max": 100, "step": 1, "unit": "%"},
+            {"name": "Drum", "channel": "drum_onoff", "type": "toggle", "on_value": 1, "off_value": 0, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Door", "channel": "door", "type": "toggle", "on_value": 1, "off_value": 0, "min": 0, "max": 1, "step": 1, "unit": ""},
+            {"name": "Cooling", "channel": "cooling", "type": "toggle", "on_value": 1, "off_value": 0, "min": 0, "max": 1, "step": 1, "unit": ""}
+          ]
         }
       ]
     }
