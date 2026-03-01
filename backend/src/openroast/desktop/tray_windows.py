@@ -6,12 +6,16 @@ and open the web UI in the default browser.
 
 from __future__ import annotations
 
+import asyncio
 import atexit
 import logging
+import os
 import signal
 import socket
 import sys
 import threading
+import time
+import urllib.request
 import webbrowser
 from pathlib import Path
 
@@ -23,6 +27,23 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8080
+
+_SERVER_READY_TIMEOUT = 30  # seconds
+_POLL_INTERVAL = 0.5  # seconds
+
+
+def _setup_logging() -> None:
+    """Configure file logging so startup errors are diagnosable."""
+    log_dir = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "OpenRoast"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / "openroast.log"
+
+    logging.basicConfig(
+        filename=str(log_path),
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    logger.info("Logging initialised → %s", log_path)
 
 
 def _port_in_use(port: int) -> bool:
@@ -81,16 +102,46 @@ class OpenRoastTray:
 
     def _run_server(self) -> None:
         """Run the uvicorn server (blocking, called in background thread)."""
-        from openroast.main import app as fastapi_app
+        try:
+            # Windows needs the selector event-loop policy for uvicorn.
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-        config = uvicorn.Config(
-            fastapi_app,
-            host=self._host,
-            port=self._port,
-            log_level="info",
-        )
-        self._server = uvicorn.Server(config)
-        self._server.run()
+            from openroast.main import app as fastapi_app
+
+            config = uvicorn.Config(
+                fastapi_app,
+                host=self._host,
+                port=self._port,
+                log_level="info",
+            )
+            self._server = uvicorn.Server(config)
+            self._server.run()
+        except Exception:
+            logger.exception("Server failed to start")
+            self._status = "Error (see logs)"
+            if self._icon:
+                self._icon.update_menu()
+
+    def _wait_and_open_browser(self) -> None:
+        """Poll /health until the server is ready, then open the browser."""
+        url = f"http://127.0.0.1:{self._port}/health"
+        attempts = int(_SERVER_READY_TIMEOUT / _POLL_INTERVAL)
+        for _ in range(attempts):
+            time.sleep(_POLL_INTERVAL)
+            try:
+                with urllib.request.urlopen(url, timeout=1) as resp:
+                    if resp.status == 200:
+                        self._status = f"Running ({self._port})"
+                        if self._icon:
+                            self._icon.update_menu()
+                        webbrowser.open(f"http://127.0.0.1:{self._port}")
+                        return
+            except Exception:
+                continue
+        logger.error("Server did not become ready within %ds", _SERVER_READY_TIMEOUT)
+        self._status = "Failed to start"
+        if self._icon:
+            self._icon.update_menu()
 
     def start_server(self) -> None:
         """Start the server in a background thread and open the browser."""
@@ -102,13 +153,7 @@ class OpenRoastTray:
         self._server_thread = threading.Thread(target=self._run_server, daemon=True)
         self._server_thread.start()
 
-        def _open_after_delay() -> None:
-            self._status = f"Running ({self._port})"
-            if self._icon:
-                self._icon.update_menu()
-            webbrowser.open(f"http://127.0.0.1:{self._port}")
-
-        threading.Timer(1.5, _open_after_delay).start()
+        threading.Thread(target=self._wait_and_open_browser, daemon=True).start()
 
     def stop_server(self) -> None:
         """Signal the server to shut down."""
@@ -132,6 +177,8 @@ class OpenRoastTray:
 
 def main() -> None:
     """Entry point for the Windows tray application."""
+    _setup_logging()
+
     app = OpenRoastTray()
 
     atexit.register(app.stop_server)
