@@ -99,6 +99,29 @@
     }
   });
 
+  // Sync toggle ON/OFF state from extra channel read-backs.
+  // Standalone toggles match by control name (e.g. "Cooling").
+  // Embedded slider toggles match by "{name} ON/OFF" (e.g. "Air ON/OFF").
+  $effect(() => {
+    const now = Date.now();
+    for (const ctrl of machine.controls) {
+      const inCooldown = (cooldownUntil[ctrl.channel] ?? 0) > now;
+      if (inCooldown) continue;
+
+      if (ctrl.type === "toggle") {
+        const readback = machine.currentExtraChannels[ctrl.name];
+        if (readback !== undefined) {
+          controlsEnabled[ctrl.channel] = readback === (ctrl.on_value ?? 1);
+        }
+      } else if (ctrl.toggle) {
+        const readback = machine.currentExtraChannels[ctrl.name + " ON/OFF"];
+        if (readback !== undefined) {
+          controlsEnabled[ctrl.channel] = readback === ctrl.toggle.on_value;
+        }
+      }
+    }
+  });
+
   let roastChartEl = $state<HTMLElement | null>(null);
   let controlChartEl = $state<HTMLElement | null>(null);
   let saving = $state(false);
@@ -363,6 +386,8 @@
               ontoggle={ctrl.toggle
                 ? (on) => {
                     controlsEnabled[ctrl.channel] = on;
+                    cooldownUntil[ctrl.channel] =
+                      Date.now() + READBACK_COOLDOWN_MS;
                     const tgl = ctrl.toggle!;
                     oncontrol?.(tgl.channel, on ? tgl.on_value : tgl.off_value);
                     if (on) {
@@ -388,6 +413,8 @@
                 onclick={() => {
                   const on = !(controlsEnabled[ctrl.channel] ?? false);
                   controlsEnabled[ctrl.channel] = on;
+                  cooldownUntil[ctrl.channel] =
+                    Date.now() + READBACK_COOLDOWN_MS;
                   oncontrol?.(
                     ctrl.channel,
                     on ? (ctrl.on_value ?? 1) : (ctrl.off_value ?? 0),
