@@ -209,6 +209,10 @@ class MachineManager:
         native_value = self._scale_to_native(control, write_value)
 
         try:
+            logger.info(
+                "[%s] control SET %s = %.2f (native=%.2f, enabled=%s)",
+                machine_id, channel, value_normalized, native_value, enabled,
+            )
             await instance.driver.write_control(channel, native_value)
 
             # Record the control change in the session
@@ -220,6 +224,9 @@ class MachineManager:
                 applied=True, enabled=enabled,
             )
         except (ConnectionError, NotImplementedError) as e:
+            logger.warning(
+                "[%s] control FAILED %s: %s", machine_id, channel, e,
+            )
             return ControlAckMessage(
                 channel=channel, value=value_normalized,
                 applied=False, enabled=enabled, message=str(e),
@@ -355,6 +362,18 @@ class MachineManager:
                 )
                 instance.prev_et = reading.et
                 instance.prev_bt = reading.bt
+
+                # Log readback values
+                extra_str = (
+                    " extras={" + ", ".join(
+                        f"{k}={v}" for k, v in extra.items()
+                    ) + "}"
+                    if extra else ""
+                )
+                logger.debug(
+                    "[%s] readback ET=%.1f BT=%.1f%s",
+                    machine_id, reading.et, reading.bt, extra_str,
+                )
 
                 # Create temperature message
                 temp_msg = TemperatureMessage(
