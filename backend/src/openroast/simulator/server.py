@@ -146,14 +146,26 @@ class SimulatorServer:
             await asyncio.sleep(interval_s)
 
     def _build_control_map(self) -> dict[str, tuple[int, int]]:
-        """Build channel → (device_id, address) map for controls."""
-        from openroast.simulator.register_map import _parse_control_address
+        """Build channel → (device_id, address) map for controls.
+
+        Includes both slider commands and embedded toggle commands so
+        the simulator can capture writes to ON/OFF registers.
+        """
+        from openroast.simulator.register_map import (
+            _parse_command_address,
+            _parse_control_address,
+        )
 
         result: dict[str, tuple[int, int]] = {}
         for ctrl in self.model.controls:
             parsed = _parse_control_address(ctrl)
             if parsed:
                 result[ctrl.channel] = parsed
+            # Also map embedded toggle commands
+            if ctrl.toggle and ctrl.toggle.command:
+                tgl_parsed = _parse_command_address(ctrl.toggle.command)
+                if tgl_parsed:
+                    result[ctrl.toggle.channel] = tgl_parsed
         return result
 
     def _capture_controls(
@@ -170,10 +182,37 @@ class SimulatorServer:
             except Exception:
                 pass
 
+    def _build_control_addresses(self) -> set[tuple[int, int]]:
+        """Build set of (device_id, address) for all control registers.
+
+        These registers are written by the driver and must not be
+        overwritten by the thermal loop.
+        """
+        from openroast.simulator.register_map import (
+            _parse_command_address,
+            _parse_control_address,
+        )
+
+        addrs: set[tuple[int, int]] = set()
+        for ctrl in self.model.controls:
+            parsed = _parse_control_address(ctrl)
+            if parsed:
+                addrs.add(parsed)
+            if ctrl.toggle and ctrl.toggle.command:
+                tgl_parsed = _parse_command_address(ctrl.toggle.command)
+                if tgl_parsed:
+                    addrs.add(tgl_parsed)
+        return addrs
+
     def _update_extra_channels(
         self, state: ThermalEngine | None = None, word_order_little: bool = True,
     ) -> None:
-        """Write extra channel values based on thermal state."""
+        """Write extra channel values based on thermal state.
+
+        Skips extra channels whose register address matches a control
+        or toggle register — those are written by the driver and should
+        preserve whatever value was last written.
+        """
         if not self._context:
             return
 
@@ -194,8 +233,14 @@ class SimulatorServer:
             "drum": ts.drum,
         }
 
+        # Don't overwrite registers managed by controls/toggles
+        control_addrs = self._build_control_addresses()
+
         for ch in self.model.extra_channels:
             if ch.modbus:
+                addr_key = (ch.modbus.device_id, ch.modbus.address)
+                if addr_key in control_addrs:
+                    continue  # Preserve driver-written value
                 val = channel_values.get(ch.name.lower(), 0.0)
                 write_channel(
                     self._context, ch.modbus, val, word_order_little,

@@ -320,9 +320,11 @@
     />
   </div>
 
-  <!-- Extra channels bar -->
+  <!-- Extra channels bar (only show channels visible in chart options) -->
   <ExtraChannelsBar
-    channels={machine.extraChannels}
+    channels={machine.extraChannels.filter(
+      (ch) => effectiveOptions.showExtraChannels[ch.name] ?? true,
+    )}
     values={machine.currentExtraChannels}
   />
 
