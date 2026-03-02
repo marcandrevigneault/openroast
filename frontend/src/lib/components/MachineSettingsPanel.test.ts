@@ -274,13 +274,11 @@ describe("MachineSettingsPanel", () => {
     expect(await screen.findByText("Validation failed")).toBeInTheDocument();
   });
 
-  it("adds a new control when + Add clicked in Controls", async () => {
+  it("adds a new control when + Slider clicked in Controls", async () => {
     renderOpen();
     await screen.findByDisplayValue("Test Roaster");
 
-    const addButtons = screen.getAllByText("+ Add");
-    // First "+ Add" is for Controls section
-    await fireEvent.click(addButtons[0]);
+    await fireEvent.click(screen.getByText("+ Slider"));
 
     // Should now have 2 control cards — check for 2 "Channel" labels
     const channelLabels = screen.getAllByText("Channel");
@@ -291,9 +289,7 @@ describe("MachineSettingsPanel", () => {
     renderOpen();
     await screen.findByDisplayValue("Test Roaster");
 
-    const addButtons = screen.getAllByText("+ Add");
-    // Second "+ Add" is for Extra Channels
-    await fireEvent.click(addButtons[1]);
+    await fireEvent.click(screen.getByText("+ Add"));
 
     // New modbus channel gets register config fields — now 4 Address labels (BT, ET, Inlet, new)
     const addressLabels = screen.getAllByText("Address");

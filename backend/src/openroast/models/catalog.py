@@ -58,12 +58,24 @@ class ChannelConfig(BaseModel):
     s7: S7RegisterConfig | None = Field(default=None)
 
 
+class ToggleConfig(BaseModel):
+    """ON/OFF toggle associated with a slider control."""
+
+    channel: str = Field(description="Toggle channel ID")
+    command: str = Field(default="", description="Command template with {} placeholder")
+    on_value: int = Field(default=1)
+    off_value: int = Field(default=0)
+    on_command: str = Field(default="", description="Full ON command")
+    off_command: str = Field(default="", description="Full OFF command")
+
+
 class ControlConfig(BaseModel):
     """Configuration for a control (slider, toggle, or button).
 
-    Sliders have a continuous min/max range with optional factor/offset scaling.
-    Toggles send discrete on_value/off_value via command template, or use
-    separate on_command/off_command for complex state changes.
+    Sliders have a continuous min/max range with optional factor/offset scaling
+    and an optional embedded toggle for ON/OFF control of the associated signal.
+    Standalone toggles send discrete on_value/off_value via command template,
+    or use on_command/off_command for complex state changes.
     Buttons are one-shot actions (e.g. reset) that execute command once.
     """
 
@@ -85,6 +97,10 @@ class ControlConfig(BaseModel):
         default=1.0, description="Multiplier: register = slider * factor + offset",
     )
     offset: float = Field(default=0.0, description="Offset added after factor scaling")
+    toggle: ToggleConfig | None = Field(
+        default=None, description="Embedded ON/OFF toggle for slider controls",
+    )
+    hidden: bool = Field(default=False, description="Hide this control in the UI")
 
 
 # ── Protocol-specific connection configs ─────────────────────────────

@@ -136,23 +136,70 @@
     }
   }
 
-  function addControl() {
+  function addSliderControl() {
     controls = [
       ...controls,
       {
         name: "",
         channel: "",
         command: "",
+        type: "slider" as const,
         min: 0,
         max: 100,
         step: 1,
         unit: "",
+        on_value: 1,
+        off_value: 0,
+        on_command: "",
+        off_command: "",
+        factor: 1,
+        offset: 0,
+        toggle: null,
+        hidden: false,
+      },
+    ];
+  }
+
+  function addToggleControl() {
+    controls = [
+      ...controls,
+      {
+        name: "",
+        channel: "",
+        command: "",
+        type: "toggle" as const,
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: "",
+        on_value: 1,
+        off_value: 0,
+        toggle: null,
+        hidden: false,
       },
     ];
   }
 
   function removeControl(index: number) {
     controls = controls.filter((_, i) => i !== index);
+  }
+
+  function addToggleToControl(index: number) {
+    controls[index] = {
+      ...controls[index],
+      toggle: {
+        channel: "",
+        command: "",
+        on_value: 1,
+        off_value: 0,
+        on_command: "",
+        off_command: "",
+      },
+    };
+  }
+
+  function removeToggleFromControl(index: number) {
+    controls[index] = { ...controls[index], toggle: null };
   }
 
   function addExtraChannel() {
@@ -368,11 +415,21 @@
           <section class="form-section">
             <div class="section-header">
               <h4>Controls</h4>
-              <button class="btn-add" onclick={addControl}>+ Add</button>
+              <div class="section-actions">
+                <button class="btn-add" onclick={addSliderControl}
+                  >+ Slider</button
+                >
+                <button class="btn-add" onclick={addToggleControl}
+                  >+ Toggle</button
+                >
+              </div>
             </div>
             {#each controls as ctrl, i (i)}
-              <div class="list-item-card">
+              <div class="list-item-card" class:hidden-ctrl={ctrl.hidden}>
                 <div class="item-row">
+                  <span class="control-type-badge"
+                    >{ctrl.type === "toggle" ? "ON/OFF" : "Slider"}</span
+                  >
                   <label class="field field-sm">
                     <span class="label">Name</span>
                     <input type="text" bind:value={ctrl.name} />
@@ -381,29 +438,24 @@
                     <span class="label">Channel</span>
                     <input type="text" bind:value={ctrl.channel} />
                   </label>
+                  <label
+                    class="visibility-toggle"
+                    title={ctrl.hidden ? "Hidden in UI" : "Visible in UI"}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!ctrl.hidden}
+                      onchange={() => {
+                        ctrl.hidden = !ctrl.hidden;
+                      }}
+                    />
+                    <span class="visibility-label">Show</span>
+                  </label>
                   <button
                     class="btn-remove-item"
                     onclick={() => removeControl(i)}
                     title="Remove control">&times;</button
                   >
-                </div>
-                <div class="item-row">
-                  <label class="field field-sm">
-                    <span class="label">Min</span>
-                    <input type="number" bind:value={ctrl.min} />
-                  </label>
-                  <label class="field field-sm">
-                    <span class="label">Max</span>
-                    <input type="number" bind:value={ctrl.max} />
-                  </label>
-                  <label class="field field-sm">
-                    <span class="label">Step</span>
-                    <input type="number" bind:value={ctrl.step} min="0.1" />
-                  </label>
-                  <label class="field field-sm">
-                    <span class="label">Unit</span>
-                    <input type="text" bind:value={ctrl.unit} />
-                  </label>
                 </div>
                 <label class="field">
                   <span class="label">Command</span>
@@ -413,6 +465,97 @@
                     placeholder={"writeSingle(1,47,{})"}
                   />
                 </label>
+                {#if ctrl.type !== "toggle"}
+                  <!-- Slider range settings -->
+                  <div class="item-row">
+                    <label class="field field-sm">
+                      <span class="label">Min</span>
+                      <input type="number" bind:value={ctrl.min} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Max</span>
+                      <input type="number" bind:value={ctrl.max} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Step</span>
+                      <input
+                        type="number"
+                        bind:value={ctrl.step}
+                        min="0.1"
+                      />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">Unit</span>
+                      <input type="text" bind:value={ctrl.unit} />
+                    </label>
+                  </div>
+                {/if}
+                {#if ctrl.type === "toggle"}
+                  <!-- Standalone toggle ON/OFF values -->
+                  <div class="item-row">
+                    <label class="field field-sm">
+                      <span class="label">ON Value</span>
+                      <input type="number" bind:value={ctrl.on_value} />
+                    </label>
+                    <label class="field field-sm">
+                      <span class="label">OFF Value</span>
+                      <input type="number" bind:value={ctrl.off_value} />
+                    </label>
+                  </div>
+                {/if}
+                {#if ctrl.type !== "toggle"}
+                  <!-- ON/OFF Toggle sub-config for slider -->
+                  {#if ctrl.toggle}
+                    <div class="toggle-subconfig">
+                      <div class="toggle-subheader">
+                        <span class="toggle-sublabel">ON/OFF Toggle</span>
+                        <button
+                          class="btn-remove-toggle"
+                          onclick={() => removeToggleFromControl(i)}
+                          title="Remove ON/OFF toggle">&times;</button
+                        >
+                      </div>
+                      <div class="item-row">
+                        <label class="field field-sm">
+                          <span class="label">Channel</span>
+                          <input
+                            type="text"
+                            bind:value={ctrl.toggle.channel}
+                          />
+                        </label>
+                        <label class="field field-sm">
+                          <span class="label">ON Value</span>
+                          <input
+                            type="number"
+                            bind:value={ctrl.toggle.on_value}
+                          />
+                        </label>
+                        <label class="field field-sm">
+                          <span class="label">OFF Value</span>
+                          <input
+                            type="number"
+                            bind:value={ctrl.toggle.off_value}
+                          />
+                        </label>
+                      </div>
+                      <label class="field">
+                        <span class="label">Command</span>
+                        <input
+                          type="text"
+                          bind:value={ctrl.toggle.command}
+                          placeholder={"writeSingle(1,55,{})"}
+                        />
+                      </label>
+                    </div>
+                  {:else}
+                    <button
+                      class="btn-add-toggle"
+                      onclick={() => addToggleToControl(i)}
+                    >
+                      + Add ON/OFF Toggle
+                    </button>
+                  {/if}
+                {/if}
               </div>
             {/each}
             {#if controls.length === 0}
@@ -684,6 +827,100 @@
   .btn-remove-item:hover {
     color: #f44336;
     border-color: #f44336;
+  }
+
+  .visibility-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .visibility-toggle input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .visibility-label {
+    font-size: 0.7rem;
+    color: #888;
+    text-transform: uppercase;
+  }
+
+  .hidden-ctrl {
+    opacity: 0.5;
+  }
+
+  .section-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .control-type-badge {
+    font-size: 0.65rem;
+    color: #4fc3f7;
+    background: rgba(79, 195, 247, 0.1);
+    border: 1px solid rgba(79, 195, 247, 0.3);
+    border-radius: 3px;
+    padding: 2px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .toggle-subconfig {
+    background: rgba(79, 195, 247, 0.05);
+    border: 1px solid rgba(79, 195, 247, 0.15);
+    border-radius: 5px;
+    padding: 6px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .toggle-subheader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .toggle-sublabel {
+    font-size: 0.7rem;
+    color: #4fc3f7;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-remove-toggle {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+
+  .btn-remove-toggle:hover {
+    color: #f44336;
+  }
+
+  .btn-add-toggle {
+    background: transparent;
+    border: 1px dashed rgba(79, 195, 247, 0.3);
+    color: #4fc3f7;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .btn-add-toggle:hover {
+    border-color: #4fc3f7;
+    background: rgba(79, 195, 247, 0.05);
   }
 
   .empty-hint {

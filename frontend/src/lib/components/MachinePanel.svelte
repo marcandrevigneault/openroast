@@ -163,6 +163,7 @@
   let showSaveForm = $derived(
     machine.sessionState === "finished" && machine.history.length > 0 && !saved,
   );
+  let visibleControls = $derived(machine.controls.filter((c) => !c.hidden));
 
   // Reset saved flag when a new session begins
   $effect(() => {
@@ -332,54 +333,93 @@
   <EventButtons disabled={true} events={machine.events} {onmark} />
 
   <!-- Controls -->
-  {#if machine.controls.length > 0}
+  {#if visibleControls.length > 0}
     <div class="controls-section">
       <div class="controls-grid">
-        {#each machine.controls as ctrl (ctrl.channel)}
-          <ControlSlider
-            label={ctrl.name}
-            value={sliderValues[ctrl.channel] ?? ctrl.min}
-            min={ctrl.min}
-            max={ctrl.max}
-            step={ctrl.step}
-            unit={ctrl.unit}
-            color={CONTROL_COLORS[
-              machine.controls.indexOf(ctrl) % CONTROL_COLORS.length
-            ]}
-            disabled={!isConnected}
-            enabled={controlsEnabled[ctrl.channel] ?? true}
-            ondragstart={() => {
-              draggingChannels[ctrl.channel] = true;
-            }}
-            ondragend={() => {
-              draggingChannels[ctrl.channel] = false;
-              cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
-            }}
-            onchange={(v) => {
-              sliderValues[ctrl.channel] = v;
-              cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
-              oncontrol?.(ctrl.channel, v);
-            }}
-            ontoggle={(on) => {
-              controlsEnabled[ctrl.channel] = on;
-              if (on) {
-                const restored =
-                  lastControlValues[ctrl.channel] ??
-                  sliderValues[ctrl.channel] ??
-                  ctrl.min;
-                sliderValues[ctrl.channel] = restored;
-                oncontrol?.(ctrl.channel, restored, true);
-              } else {
-                lastControlValues[ctrl.channel] =
-                  sliderValues[ctrl.channel] ?? ctrl.min;
-                oncontrol?.(
-                  ctrl.channel,
-                  sliderValues[ctrl.channel] ?? ctrl.min,
-                  false,
-                );
-              }
-            }}
-          />
+        {#each visibleControls as ctrl, idx (ctrl.channel)}
+          {#if ctrl.type === "slider" || !ctrl.type}
+            <ControlSlider
+              label={ctrl.name}
+              value={sliderValues[ctrl.channel] ?? ctrl.min}
+              min={ctrl.min}
+              max={ctrl.max}
+              step={ctrl.step}
+              unit={ctrl.unit}
+              color={CONTROL_COLORS[idx % CONTROL_COLORS.length]}
+              disabled={!isConnected}
+              enabled={controlsEnabled[ctrl.channel] ?? true}
+              ondragstart={() => {
+                draggingChannels[ctrl.channel] = true;
+              }}
+              ondragend={() => {
+                draggingChannels[ctrl.channel] = false;
+                cooldownUntil[ctrl.channel] =
+                  Date.now() + READBACK_COOLDOWN_MS;
+              }}
+              onchange={(v) => {
+                sliderValues[ctrl.channel] = v;
+                cooldownUntil[ctrl.channel] =
+                  Date.now() + READBACK_COOLDOWN_MS;
+                oncontrol?.(ctrl.channel, v);
+              }}
+              ontoggle={ctrl.toggle
+                ? (on) => {
+                    controlsEnabled[ctrl.channel] = on;
+                    const tgl = ctrl.toggle!;
+                    oncontrol?.(
+                      tgl.channel,
+                      on ? tgl.on_value : tgl.off_value,
+                    );
+                    if (on) {
+                      const restored =
+                        lastControlValues[ctrl.channel] ??
+                        sliderValues[ctrl.channel] ??
+                        ctrl.min;
+                      sliderValues[ctrl.channel] = restored;
+                      oncontrol?.(ctrl.channel, restored);
+                    } else {
+                      lastControlValues[ctrl.channel] =
+                        sliderValues[ctrl.channel] ?? ctrl.min;
+                    }
+                  }
+                : undefined}
+            />
+          {:else if ctrl.type === "toggle"}
+            <div class="toggle-control">
+              <button
+                class="standalone-toggle"
+                class:on={controlsEnabled[ctrl.channel] ?? false}
+                disabled={!isConnected}
+                onclick={() => {
+                  const on = !(controlsEnabled[ctrl.channel] ?? false);
+                  controlsEnabled[ctrl.channel] = on;
+                  oncontrol?.(
+                    ctrl.channel,
+                    on ? (ctrl.on_value ?? 1) : (ctrl.off_value ?? 0),
+                  );
+                }}
+                type="button"
+              >
+                <span class="toggle-indicator"
+                  >{controlsEnabled[ctrl.channel] ? "ON" : "OFF"}</span
+                >
+                <span class="toggle-label">{ctrl.name}</span>
+              </button>
+            </div>
+          {:else if ctrl.type === "button"}
+            <div class="toggle-control">
+              <button
+                class="standalone-toggle action-btn"
+                disabled={!isConnected}
+                onclick={() => {
+                  oncontrol?.(ctrl.channel, 1);
+                }}
+                type="button"
+              >
+                <span class="toggle-label">{ctrl.name}</span>
+              </button>
+            </div>
+          {/if}
         {/each}
       </div>
     </div>
@@ -606,6 +646,69 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 0 16px;
+  }
+
+  .toggle-control {
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .standalone-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background: #2a2a4a;
+    color: #999;
+    cursor: pointer;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    width: 100%;
+  }
+
+  .standalone-toggle.on {
+    background: rgba(102, 187, 106, 0.15);
+    border-color: #66bb6a;
+    color: #ccc;
+  }
+
+  .standalone-toggle:hover:not(:disabled) {
+    border-color: #4fc3f7;
+  }
+
+  .standalone-toggle:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .toggle-indicator {
+    font-weight: 700;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #1a1a2e;
+    color: #888;
+  }
+
+  .standalone-toggle.on .toggle-indicator {
+    background: rgba(102, 187, 106, 0.3);
+    color: #66bb6a;
+  }
+
+  .toggle-label {
+    flex: 1;
+  }
+
+  .action-btn {
+    justify-content: center;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    background: rgba(79, 195, 247, 0.1);
   }
 
   @media (max-width: 480px) {

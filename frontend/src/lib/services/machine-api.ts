@@ -25,21 +25,32 @@ export interface CatalogModel {
   controls: CatalogControl[];
 }
 
-export interface CatalogControl {
-  name: string;
+export interface ToggleConfig {
   channel: string;
   command: string;
-  type: "slider" | "toggle" | "button";
-  min: number;
-  max: number;
-  step: number;
-  unit: string;
   on_value: number;
   off_value: number;
   on_command: string;
   off_command: string;
-  factor: number;
-  offset: number;
+}
+
+export interface CatalogControl {
+  name: string;
+  channel: string;
+  command?: string;
+  type?: "slider" | "toggle" | "button";
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  on_value?: number;
+  off_value?: number;
+  on_command?: string;
+  off_command?: string;
+  factor?: number;
+  offset?: number;
+  toggle?: ToggleConfig | null;
+  hidden?: boolean;
 }
 
 // ── Machine types ────────────────────────────────────────────────────

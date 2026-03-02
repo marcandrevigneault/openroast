@@ -409,11 +409,22 @@ class TestRealCatalogModels:
         assert et == 4280  # 220C → 428F → *10
 
     def test_stratto_toggle_controls(self) -> None:
-        """Stratto 2.0 toggle controls create registers."""
+        """Stratto 2.0 has 7 controls: 3 sliders with embedded toggles + 4 standalone toggles."""
         from openroast.catalog.loader import get_model
 
         model = get_model("carmomaq", "carmomaq-stratto-2.0")
         assert model is not None
+        assert len(model.controls) == 7
+
+        # Sliders have embedded toggle sub-configs
+        air = next(c for c in model.controls if c.channel == "air")
+        assert air.toggle is not None
+        assert air.toggle.channel == "air_onoff"
+
+        burner = next(c for c in model.controls if c.channel == "burner")
+        assert burner.toggle is not None
+        assert burner.toggle.channel == "burner_onoff"
+
         ctx = build_server_context(model, initial_bt=200.0, initial_et=220.0)
 
         # Slider registers
@@ -421,10 +432,14 @@ class TestRealCatalogModels:
         assert read_register_raw(ctx, device_id=1, address=46, code=3) == 0  # Drum
         assert read_register_raw(ctx, device_id=1, address=47, code=3) == 0  # Air
 
-        # Toggle registers
+        # Embedded toggle registers (via toggle sub-config)
+        assert read_register_raw(ctx, device_id=1, address=55, code=3) == 0  # Burner ON/OFF
+        assert read_register_raw(ctx, device_id=1, address=56, code=3) == 0  # Drum ON/OFF
+        assert read_register_raw(ctx, device_id=1, address=57, code=3) == 0  # Air ON/OFF
+
+        # Standalone toggle registers
         assert read_register_raw(ctx, device_id=1, address=50, code=3) == 0  # Machine
         assert read_register_raw(ctx, device_id=1, address=52, code=3) == 0  # Ignition
-        assert read_register_raw(ctx, device_id=1, address=55, code=3) == 0  # Burner ON/OFF
         assert read_register_raw(ctx, device_id=1, address=58, code=3) == 0  # Cooling
 
         # Extra channel register
@@ -519,34 +534,36 @@ class TestRealCatalogModels:
         assert pressure.unit == "daPa"
 
     def test_besca_bsc_auto_controls(self) -> None:
-        """Besca BSC Auto has sliders with factor/offset and toggles."""
+        """Besca BSC Auto has sliders with factor/offset and embedded toggles."""
         from openroast.catalog.loader import get_model
 
         model = get_model("besca", "besca-bsc-auto")
         assert model is not None
-        assert len(model.controls) == 8
+        assert len(model.controls) == 6
 
         # Sliders with factor/offset
         air = next(c for c in model.controls if c.channel == "air")
         assert air.type == "slider"
         assert air.factor == 2.57
         assert air.offset == 100.0
+        assert air.toggle is None  # No ON/OFF for air
 
+        # Drum has embedded toggle with on_command/off_command
         drum = next(c for c in model.controls if c.channel == "drum")
         assert drum.factor == 4.0
         assert drum.offset == 100.0
+        assert drum.toggle is not None
+        assert drum.toggle.channel == "drum_onoff"
+        assert drum.toggle.on_command != ""
+        assert drum.toggle.off_command != ""
 
+        # Burner has embedded toggle
         burner = next(c for c in model.controls if c.channel == "burner")
         assert burner.factor == 45.0
-        assert burner.offset == 0.0
+        assert burner.toggle is not None
+        assert burner.toggle.channel == "burner_onoff"
 
-        # Toggle with on_command/off_command
-        drum_toggle = next(c for c in model.controls if c.channel == "drum_onoff")
-        assert drum_toggle.type == "toggle"
-        assert drum_toggle.on_command != ""
-        assert drum_toggle.off_command != ""
-
-        # Simple toggles
+        # Simple standalone toggles
         cooler = next(c for c in model.controls if c.channel == "cooler_onoff")
         assert cooler.type == "toggle"
         assert cooler.command == "wcoil(1,2005,{})"

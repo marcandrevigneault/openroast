@@ -31,13 +31,28 @@ export interface ControlPoint {
   values: Record<string, number>;
 }
 
+export interface ToggleConfig {
+  channel: string;
+  command: string;
+  on_value: number;
+  off_value: number;
+  on_command: string;
+  off_command: string;
+}
+
 export interface ControlConfig {
   name: string;
   channel: string;
+  type?: "slider" | "toggle" | "button";
+  command?: string;
   min: number;
   max: number;
   step: number;
   unit: string;
+  on_value?: number;
+  off_value?: number;
+  toggle?: ToggleConfig | null;
+  hidden?: boolean;
 }
 
 export interface ExtraChannelConfig {

@@ -128,13 +128,12 @@ def _collect_channel_registers(
         target[config.address + _ADDR_OFFSET + i] = val
 
 
-def _parse_control_address(control: ControlConfig) -> tuple[int, int] | None:
-    """Extract (device_id, address) from a writeSingle command template.
+def _parse_command_address(cmd: str) -> tuple[int, int] | None:
+    """Extract (device_id, address) from a writeSingle command string.
 
     Returns:
         Tuple of (device_id, address) or None if unparseable.
     """
-    cmd = control.command
     if not cmd:
         return None
 
@@ -144,6 +143,11 @@ def _parse_control_address(control: ControlConfig) -> tuple[int, int] | None:
     if match:
         return int(match.group(1)), int(match.group(2))
     return None
+
+
+def _parse_control_address(control: ControlConfig) -> tuple[int, int] | None:
+    """Extract (device_id, address) from a control's command template."""
+    return _parse_command_address(control.command)
 
 
 def build_server_context(
@@ -199,6 +203,13 @@ def build_server_context(
             device_id, address = parsed
             dev = devices.setdefault(device_id, _DeviceRegisters())
             dev.holding.setdefault(address + _ADDR_OFFSET, 0)
+        # Also allocate registers for embedded toggle sub-config
+        if ctrl.toggle and ctrl.toggle.command:
+            parsed_toggle = _parse_command_address(ctrl.toggle.command)
+            if parsed_toggle:
+                dev_id, addr = parsed_toggle
+                dev = devices.setdefault(dev_id, _DeviceRegisters())
+                dev.holding.setdefault(addr + _ADDR_OFFSET, 0)
 
     # Build pymodbus context
     device_contexts: dict[int, ModbusDeviceContext] = {}

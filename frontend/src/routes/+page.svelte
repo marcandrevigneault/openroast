@@ -91,7 +91,7 @@
     return client;
   }
 
-  function toControlConfigs(machine: SavedMachine) {
+  function toControlConfigs(machine: SavedMachine): ControlConfig[] {
     return (machine.controls ?? []).map((c) => ({
       name: c.name,
       channel: c.channel,
@@ -99,6 +99,12 @@
       max: c.max,
       step: c.step,
       unit: c.unit,
+      type: c.type as ControlConfig["type"],
+      command: c.command,
+      on_value: c.on_value,
+      off_value: c.off_value,
+      toggle: c.toggle ?? null,
+      hidden: c.hidden ?? false,
     }));
   }
 

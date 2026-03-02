@@ -17,6 +17,7 @@ from openroast.models.catalog import (
     S7ConnectionConfig,
     S7RegisterConfig,
     SerialConnectionConfig,
+    ToggleConfig,
 )
 
 
@@ -128,6 +129,8 @@ class TestControlConfig:
         assert c.offset == 0.0
         assert c.on_command == ""
         assert c.off_command == ""
+        assert c.toggle is None
+        assert c.hidden is False
 
     def test_custom_range(self) -> None:
         c = ControlConfig(name="Gas", channel="gas", min=80, max=350, unit="Pa")
@@ -222,6 +225,75 @@ class TestControlConfig:
         c2 = ControlConfig.model_validate(data)
         assert c2.type == "button"
         assert c2.command == c.command
+
+    def test_slider_with_embedded_toggle(self) -> None:
+        c = ControlConfig(
+            name="Burner",
+            channel="burner",
+            command="writeSingle(1,45,{})",
+            min=0,
+            max=100,
+            unit="%",
+            toggle=ToggleConfig(
+                channel="burner_onoff",
+                command="writeSingle(1,55,{})",
+                on_value=1,
+                off_value=2,
+            ),
+        )
+        assert c.toggle is not None
+        assert c.toggle.channel == "burner_onoff"
+        assert c.toggle.on_value == 1
+        assert c.toggle.off_value == 2
+
+    def test_slider_with_toggle_roundtrip(self) -> None:
+        c = ControlConfig(
+            name="Air",
+            channel="air",
+            command="writeSingle(1,47,{})",
+            toggle=ToggleConfig(
+                channel="air_onoff",
+                command="writeSingle(1,57,{})",
+                on_value=1,
+                off_value=2,
+            ),
+        )
+        data = c.model_dump()
+        c2 = ControlConfig.model_validate(data)
+        assert c2.toggle is not None
+        assert c2.toggle.channel == "air_onoff"
+        assert c2.toggle.command == "writeSingle(1,57,{})"
+
+    def test_hidden_field(self) -> None:
+        c = ControlConfig(
+            name="Ignition",
+            channel="ignition",
+            type="toggle",
+            hidden=True,
+        )
+        assert c.hidden is True
+        data = c.model_dump()
+        c2 = ControlConfig.model_validate(data)
+        assert c2.hidden is True
+
+
+class TestToggleConfig:
+    def test_defaults(self) -> None:
+        t = ToggleConfig(channel="burner_onoff")
+        assert t.command == ""
+        assert t.on_value == 1
+        assert t.off_value == 0
+        assert t.on_command == ""
+        assert t.off_command == ""
+
+    def test_with_on_off_commands(self) -> None:
+        t = ToggleConfig(
+            channel="drum_onoff",
+            on_command="writeSingle([1,1000,2])",
+            off_command="wcoil(1,2003,0)",
+        )
+        assert t.on_command == "writeSingle([1,1000,2])"
+        assert t.off_command == "wcoil(1,2003,0)"
 
 
 class TestCatalogModel:
