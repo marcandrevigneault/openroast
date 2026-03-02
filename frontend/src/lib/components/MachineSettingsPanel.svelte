@@ -478,11 +478,7 @@
                     </label>
                     <label class="field field-sm">
                       <span class="label">Step</span>
-                      <input
-                        type="number"
-                        bind:value={ctrl.step}
-                        min="0.1"
-                      />
+                      <input type="number" bind:value={ctrl.step} min="0.1" />
                     </label>
                     <label class="field field-sm">
                       <span class="label">Unit</span>
@@ -518,10 +514,7 @@
                       <div class="item-row">
                         <label class="field field-sm">
                           <span class="label">Channel</span>
-                          <input
-                            type="text"
-                            bind:value={ctrl.toggle.channel}
-                          />
+                          <input type="text" bind:value={ctrl.toggle.channel} />
                         </label>
                         <label class="field field-sm">
                           <span class="label">ON Value</span>

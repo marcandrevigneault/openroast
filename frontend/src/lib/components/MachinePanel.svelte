@@ -353,23 +353,18 @@
               }}
               ondragend={() => {
                 draggingChannels[ctrl.channel] = false;
-                cooldownUntil[ctrl.channel] =
-                  Date.now() + READBACK_COOLDOWN_MS;
+                cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
               }}
               onchange={(v) => {
                 sliderValues[ctrl.channel] = v;
-                cooldownUntil[ctrl.channel] =
-                  Date.now() + READBACK_COOLDOWN_MS;
+                cooldownUntil[ctrl.channel] = Date.now() + READBACK_COOLDOWN_MS;
                 oncontrol?.(ctrl.channel, v);
               }}
               ontoggle={ctrl.toggle
                 ? (on) => {
                     controlsEnabled[ctrl.channel] = on;
                     const tgl = ctrl.toggle!;
-                    oncontrol?.(
-                      tgl.channel,
-                      on ? tgl.on_value : tgl.off_value,
-                    );
+                    oncontrol?.(tgl.channel, on ? tgl.on_value : tgl.off_value);
                     if (on) {
                       const restored =
                         lastControlValues[ctrl.channel] ??
