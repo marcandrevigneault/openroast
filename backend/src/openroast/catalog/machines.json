@@ -34,14 +34,7 @@
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Machine ON/OFF", "modbus": {"address": 50, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Ignition", "modbus": {"address": 52, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner ON/OFF", "modbus": {"address": 55, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Drum ON/OFF", "modbus": {"address": 56, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air ON/OFF", "modbus": {"address": 57, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Cooling", "modbus": {"address": 58, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Pressure Vent", "modbus": {"address": 60, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
@@ -81,14 +74,7 @@
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Machine ON/OFF", "modbus": {"address": 50, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Ignition", "modbus": {"address": 52, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner ON/OFF", "modbus": {"address": 55, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Drum ON/OFF", "modbus": {"address": 56, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air ON/OFF", "modbus": {"address": 57, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Cooling", "modbus": {"address": 58, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Pressure Vent", "modbus": {"address": 60, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
@@ -129,14 +115,7 @@
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Machine ON/OFF", "modbus": {"address": 50, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Ignition", "modbus": {"address": 52, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner ON/OFF", "modbus": {"address": 55, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Drum ON/OFF", "modbus": {"address": 56, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air ON/OFF", "modbus": {"address": 57, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Cooling", "modbus": {"address": 58, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Pressure Vent", "modbus": {"address": 60, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
@@ -176,14 +155,7 @@
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Machine ON/OFF", "modbus": {"address": 50, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Ignition", "modbus": {"address": 52, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner ON/OFF", "modbus": {"address": 55, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Drum ON/OFF", "modbus": {"address": 56, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air ON/OFF", "modbus": {"address": 57, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Cooling", "modbus": {"address": 58, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Pressure Vent", "modbus": {"address": 60, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
@@ -223,12 +195,7 @@
             {"name": "Burner", "modbus": {"address": 45, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Drum", "modbus": {"address": 46, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
             {"name": "Air", "modbus": {"address": 47, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Machine ON/OFF", "modbus": {"address": 50, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Burner ON/OFF", "modbus": {"address": 55, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Drum ON/OFF", "modbus": {"address": 56, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Air ON/OFF", "modbus": {"address": 57, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}},
-            {"name": "Cooling", "modbus": {"address": 58, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
+            {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
             {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
