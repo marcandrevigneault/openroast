@@ -58,6 +58,25 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def _read_call(
+    client: ModbusTcpClient,
+    start: int,
+    count: int,
+    device_id: int,
+    code: int,
+) -> object:
+    """Try multiple kwarg conventions across pymodbus versions."""
+    fn = client.read_input_registers if code == 4 else client.read_holding_registers
+    # pymodbus 3.7+: device_id=  ;  pymodbus <3.7: slave=  ;  some: unit=
+    for kw in ("slave", "device_id", "unit"):
+        try:
+            return fn(start, count=count, **{kw: device_id})
+        except TypeError:
+            continue
+    # Last resort — positional only
+    return fn(start, count)
+
+
 def read_registers(
     client: ModbusTcpClient,
     start: int,
@@ -67,15 +86,11 @@ def read_registers(
 ) -> list[int] | None:
     """Read a block of registers. Returns list of values or None on error."""
     try:
-        if code == 4:
-            resp = client.read_input_registers(start, count, slave=device_id)
-        else:
-            resp = client.read_holding_registers(start, count, slave=device_id)
-
+        resp = _read_call(client, start, count, device_id, code)
         if resp.isError():
             return None
         return resp.registers
-    except ModbusException:
+    except (ModbusException, AttributeError):
         return None
 
 
