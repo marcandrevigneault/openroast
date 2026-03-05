@@ -11,7 +11,7 @@ Usage examples:
     python tools/modbus_prober.py
 
     # Custom range
-    python tools/modbus_prober.py --host 192.168.5.11 --start 0 --count 100
+    python tools/modbus_prober.py --range 0-99
 
     # Faster polling
     python tools/modbus_prober.py --interval 0.5
@@ -48,6 +48,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--host", default="192.168.5.11", help="Modbus TCP host (default: 192.168.5.11)")
     p.add_argument("--port", type=int, default=502, help="Modbus TCP port (default: 502)")
     p.add_argument("--device-id", type=int, default=1, help="Modbus device/unit ID (default: 1)")
+    p.add_argument("--range", metavar="START-END", default=None,
+                   help="Register range, e.g. 40-69 or 0-99 (overrides --start/--count)")
     p.add_argument("--start", type=int, default=40, help="First register address (default: 40)")
     p.add_argument("--count", type=int, default=30, help="Number of registers to read (default: 30)")
     p.add_argument("--interval", type=float, default=1.0, help="Poll interval in seconds (default: 1.0)")
@@ -55,7 +57,18 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--code", type=int, default=3, choices=[3, 4],
                    help="Function code: 3=holding, 4=input (default: 3)")
     p.add_argument("--log", action="store_true", help="Log all changes to modbus_probe.log")
-    return p.parse_args()
+    args = p.parse_args()
+
+    if args.range:
+        parts = args.range.split("-")
+        if len(parts) != 2 or not parts[0].isdigit() or not parts[1].isdigit():
+            p.error("--range must be START-END, e.g. 40-69")
+        args.start = int(parts[0])
+        args.count = int(parts[1]) - args.start + 1
+        if args.count < 1:
+            p.error("--range END must be >= START")
+
+    return args
 
 
 def _read_call(
