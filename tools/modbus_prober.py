@@ -90,21 +90,40 @@ def _read_call(
     return fn(start, count)
 
 
+_CHUNK_SIZE = 50  # Max registers per read (well under Modbus 125 limit)
+
+# Sentinel value for registers that failed to read
+_READ_ERROR = -1
+
+
 def read_registers(
     client: ModbusTcpClient,
     start: int,
     count: int,
     device_id: int,
     code: int,
-) -> list[int] | None:
-    """Read a block of registers. Returns list of values or None on error."""
-    try:
-        resp = _read_call(client, start, count, device_id, code)
-        if resp.isError():
-            return None
-        return resp.registers
-    except (ModbusException, AttributeError):
-        return None
+) -> list[int | None]:
+    """Read registers in chunks, tolerating per-chunk failures.
+
+    Returns a list of length *count*.  Successful reads contain the
+    register value; failed reads contain None.
+    """
+    result: list[int | None] = [None] * count
+
+    for offset in range(0, count, _CHUNK_SIZE):
+        chunk_start = start + offset
+        chunk_count = min(_CHUNK_SIZE, count - offset)
+
+        try:
+            resp = _read_call(client, chunk_start, chunk_count, device_id, code)
+            if resp.isError():
+                continue  # Leave this chunk as None
+            for i, val in enumerate(resp.registers):
+                result[offset + i] = val
+        except (ModbusException, AttributeError):
+            continue  # Leave this chunk as None
+
+    return result
 
 
 def print_header(args: argparse.Namespace) -> None:
@@ -119,8 +138,8 @@ def print_header(args: argparse.Namespace) -> None:
 
 def format_table(
     start: int,
-    values: list[int],
-    prev: list[int] | None,
+    values: list[int | None],
+    prev: list[int | None] | None,
     changed_ever: set[int],
 ) -> str:
     """Format register values as a table, highlighting changes."""
@@ -130,7 +149,13 @@ def format_table(
 
     for i, val in enumerate(values):
         addr = start + i
-        just_changed = prev is not None and prev[i] != val
+
+        if val is None:
+            lines.append(f"  {DIM}{addr:>5}  {'---':>6}  {'---':>6}  {'---':>18}{RESET}")
+            continue
+
+        prev_val = prev[i] if prev is not None else None
+        just_changed = prev_val is not None and prev_val != val
         ever_changed = addr in changed_ever
 
         if just_changed:
@@ -170,38 +195,44 @@ def main() -> None:
 
     print(f"{GREEN}Connected.{RESET}\n")
 
-    prev_values: list[int] | None = None
+    prev_values: list[int | None] | None = None
     changed_ever: set[int] = set()
     poll_count = 0
+    readable_count = 0
 
     try:
         while True:
             values = read_registers(client, args.start, args.count, args.device_id, args.code)
             poll_count += 1
 
-            if values is None:
-                print(f"{RED}Read error (poll #{poll_count}){RESET}")
-                time.sleep(args.interval)
-                continue
+            # Count how many registers were actually readable
+            if poll_count == 1:
+                readable_count = sum(1 for v in values if v is not None)
+                if readable_count == 0:
+                    print(f"{RED}No readable registers in range "
+                          f"{args.start}-{args.start + args.count - 1}{RESET}")
+                    break
+                print(f"  {DIM}{readable_count}/{args.count} registers readable{RESET}\n")
 
             # Track which registers changed
             if prev_values is not None:
                 for i, (old, new) in enumerate(zip(prev_values, values)):
-                    if old != new:
-                        addr = args.start + i
-                        changed_ever.add(addr)
-                        ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-                        change_msg = (
-                            f"  {CYAN}[{ts}]{RESET} "
-                            f"Reg {RED}{BOLD}{addr}{RESET}: "
-                            f"{old} → {GREEN}{BOLD}{new}{RESET}"
-                        )
-                        print(change_msg)
-                        if log_file:
-                            log_file.write(f"[{ts}] reg {addr}: {old} -> {new}\n")
-                            log_file.flush()
+                    if old is None or new is None or old == new:
+                        continue
+                    addr = args.start + i
+                    changed_ever.add(addr)
+                    ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+                    change_msg = (
+                        f"  {CYAN}[{ts}]{RESET} "
+                        f"Reg {RED}{BOLD}{addr}{RESET}: "
+                        f"{old} → {GREEN}{BOLD}{new}{RESET}"
+                    )
+                    print(change_msg)
+                    if log_file:
+                        log_file.write(f"[{ts}] reg {addr}: {old} -> {new}\n")
+                        log_file.flush()
 
-            # Clear screen and print table (only on first read or if --once)
+            # Print table on first read or if --once
             if poll_count == 1 or args.once:
                 print(format_table(args.start, values, prev_values, changed_ever))
 
