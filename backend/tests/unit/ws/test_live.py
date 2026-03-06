@@ -151,8 +151,8 @@ class TestWebSocketControl:
 
         manager.handle_control.assert_called_once_with("m1", "burner", 0.8, enabled=True)
 
-    def test_control_value_out_of_range(self) -> None:
-        """Control value > 1.0 returns error."""
+    def test_control_toggle_value_above_one(self) -> None:
+        """Toggle values > 1.0 (e.g. 2 for OFF) are forwarded to manager."""
         manager = _make_mock_manager()
         instance = _make_mock_instance()
         manager.get_instance.return_value = instance
@@ -164,11 +164,11 @@ class TestWebSocketControl:
             ws.receive_json()
             ws.receive_json()
 
-            ws.send_json({"type": "control", "channel": "burner", "value": 1.5})
-            err = ws.receive_json()
+            ws.send_json({"type": "control", "channel": "burner", "value": 2})
+            ack = ws.receive_json()
 
-            assert err["type"] == "error"
-            assert err["code"] == "INVALID_MESSAGE"
+            assert ack["type"] == "control_ack"
+        manager.handle_control.assert_called_once_with("m1", "burner", 2.0, enabled=True)
 
     def test_control_invalid_value_type(self) -> None:
         """Non-numeric control value returns error."""

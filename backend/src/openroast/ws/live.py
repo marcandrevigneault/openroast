@@ -136,14 +136,6 @@ async def _handle_control(
         await ws.send_json(error.model_dump())
         return
 
-    if not 0.0 <= value <= 1.0:
-        error = ErrorMessage(
-            code="INVALID_MESSAGE",
-            message=f"Control value must be 0.0-1.0, got {value}",
-        )
-        await ws.send_json(error.model_dump())
-        return
-
     enabled = data.get("enabled", True)
     ack = await manager.handle_control(
         machine_id, channel, value, enabled=bool(enabled),
