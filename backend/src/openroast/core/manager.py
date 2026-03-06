@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
     from openroast.core.machine_storage import MachineStorage
     from openroast.drivers.base import BaseDriver
-    from openroast.models.catalog import ControlConfig
+    from openroast.models.catalog import ControlConfig, ToggleConfig
     from openroast.models.machine import SavedMachine
     from openroast.models.ws_messages import ServerMessage
 
@@ -196,8 +196,10 @@ class MachineManager:
                 message="Machine not connected",
             )
 
+        # Check if this is a toggle sub-channel (e.g. "burner_onoff")
+        toggle = self._find_toggle(instance.machine, channel)
         control = self._find_control(instance.machine, channel)
-        if control is None:
+        if control is None and toggle is None:
             return ControlAckMessage(
                 channel=channel, value=value_normalized,
                 applied=False, enabled=enabled,
@@ -205,8 +207,14 @@ class MachineManager:
             )
 
         instance.control_enabled[channel] = enabled
-        write_value = value_normalized if enabled else 0.0
-        native_value = self._scale_to_native(control, write_value)
+
+        is_toggle = toggle is not None or (control is not None and control.type == "toggle")
+        if is_toggle:
+            # Toggle values are raw integers (0, 1, 2) — no normalization
+            native_value = value_normalized if enabled else 0.0
+        else:
+            write_value = value_normalized if enabled else 0.0
+            native_value = self._scale_to_native(control, write_value)  # type: ignore[arg-type]
 
         try:
             logger.info(
@@ -474,6 +482,16 @@ class MachineManager:
         for c in machine.controls:
             if c.channel == channel:
                 return c
+        return None
+
+    @staticmethod
+    def _find_toggle(
+        machine: SavedMachine, channel: str
+    ) -> ToggleConfig | None:
+        """Find a ToggleConfig by toggle sub-channel name."""
+        for c in machine.controls:
+            if c.toggle and c.toggle.channel == channel:
+                return c.toggle
         return None
 
     @staticmethod
