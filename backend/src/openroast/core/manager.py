@@ -208,8 +208,9 @@ class MachineManager:
 
         instance.control_enabled[channel] = enabled
 
-        if toggle is not None:
-            # Toggle sub-channels: value is already the raw on/off value
+        is_toggle = toggle is not None or (control is not None and control.type == "toggle")
+        if is_toggle:
+            # Toggle values are raw integers (0, 1, 2) — no normalization
             native_value = value_normalized if enabled else 0.0
         else:
             write_value = value_normalized if enabled else 0.0
