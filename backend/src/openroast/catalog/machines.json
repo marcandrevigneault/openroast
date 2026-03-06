@@ -37,8 +37,8 @@
             {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%", "toggle": {"channel": "burner_onoff", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2}},
             {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2},
             {"name": "Ignition", "channel": "ignition", "type": "toggle", "command": "writeSingle(1,52,{})", "on_value": 1, "off_value": 2},
@@ -77,8 +77,8 @@
             {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%", "toggle": {"channel": "burner_onoff", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2}},
             {"name": "Slider 3", "channel": "slider3", "command": "writeSingle(1,59,{})", "min": 0, "max": 100, "step": 1, "unit": "%"},
             {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2},
@@ -118,8 +118,8 @@
             {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%", "toggle": {"channel": "burner_onoff", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2}},
             {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2},
             {"name": "Ignition", "channel": "ignition", "type": "toggle", "command": "writeSingle(1,52,{})", "on_value": 1, "off_value": 2},
@@ -158,8 +158,8 @@
             {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%", "toggle": {"channel": "burner_onoff", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2}},
             {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2},
             {"name": "Ignition", "channel": "ignition", "type": "toggle", "command": "writeSingle(1,52,{})", "on_value": 1, "off_value": 2},
@@ -198,8 +198,8 @@
             {"name": "Extra", "modbus": {"address": 49, "code": 3, "device_id": 1, "divisor": 0, "mode": "", "is_float": false, "is_bcd": false}}
           ],
           "controls": [
-            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
-            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Air", "channel": "air", "command": "writeSingle(1,47,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "air_onoff", "command": "writeSingle(1,56,{})", "on_value": 1, "off_value": 2}},
+            {"name": "Drum", "channel": "drum", "command": "writeSingle(1,46,{})", "min": 0, "max": 120, "step": 1, "unit": "", "toggle": {"channel": "drum_onoff", "command": "writeSingle(1,57,{})", "on_value": 1, "off_value": 2}},
             {"name": "Burner", "channel": "burner", "command": "writeSingle(1,45,{})", "min": 0, "max": 100, "step": 1, "unit": "%", "toggle": {"channel": "burner_onoff", "command": "writeSingle(1,55,{})", "on_value": 1, "off_value": 2}},
             {"name": "Machine ON/OFF", "channel": "machine_onoff", "type": "toggle", "command": "writeSingle(1,50,{})", "on_value": 1, "off_value": 2},
             {"name": "Cooling", "channel": "cooling", "type": "toggle", "command": "writeSingle(1,58,{})", "on_value": 1, "off_value": 2}
