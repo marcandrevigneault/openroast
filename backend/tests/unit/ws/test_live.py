@@ -156,6 +156,9 @@ class TestWebSocketControl:
         manager = _make_mock_manager()
         instance = _make_mock_instance()
         manager.get_instance.return_value = instance
+        manager.handle_control.return_value = ControlAckMessage(
+            channel="burner", value=2.0, applied=True,
+        )
 
         app = _create_test_app(manager)
         client = TestClient(app)
