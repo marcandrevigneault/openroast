@@ -353,16 +353,26 @@
       machineStates.set(id, processControlInput(state, channel, value));
     }
 
-    // Normalize native slider value to 0.0-1.0 using control config
+    // Check if this is a toggle channel (standalone or embedded sub-toggle)
     const ctrl = state?.controls.find((c) => c.channel === channel);
-    const min = ctrl?.min ?? 0;
-    const max = ctrl?.max ?? 100;
-    const normalized = max !== min ? (value - min) / (max - min) : 0;
+    const isToggle =
+      ctrl?.type === "toggle" ||
+      state?.controls.some((c) => c.toggle?.channel === channel);
+
+    // Toggle channels send raw on/off values; sliders normalize to 0.0-1.0
+    let sendValue: number;
+    if (isToggle) {
+      sendValue = value;
+    } else {
+      const min = ctrl?.min ?? 0;
+      const max = ctrl?.max ?? 100;
+      sendValue = max !== min ? (value - min) / (max - min) : 0;
+    }
 
     client.send({
       type: "control",
       channel,
-      value: normalized,
+      value: sendValue,
       ...(enabled !== undefined && { enabled }),
     });
   }

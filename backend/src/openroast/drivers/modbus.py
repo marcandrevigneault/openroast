@@ -75,6 +75,12 @@ class ModbusDriver(BaseDriver):
         # Build control lookup: channel name → ControlConfig
         self._controls: dict[str, ControlConfig] = {c.channel: c for c in machine.controls}
 
+        # Build toggle sub-channel lookup: toggle channel → command template
+        self._toggle_commands: dict[str, str] = {}
+        for c in machine.controls:
+            if c.toggle and c.toggle.command:
+                self._toggle_commands[c.toggle.channel] = c.toggle.command
+
     async def connect(self) -> None:
         """Establish connection to the Modbus device."""
         if self._state == ConnectionState.CONNECTED:
@@ -166,6 +172,12 @@ class ModbusDriver(BaseDriver):
             ConnectionError: If not connected.
         """
         self._ensure_connected()
+
+        # Check toggle sub-channels first (e.g. "burner_onoff")
+        toggle_cmd = self._toggle_commands.get(channel)
+        if toggle_cmd:
+            await self._execute_command(toggle_cmd, int(value))
+            return
 
         control = self._controls.get(channel)
         if control is None:
