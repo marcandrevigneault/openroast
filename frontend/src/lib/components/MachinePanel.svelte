@@ -99,6 +99,28 @@
     }
   });
 
+  // Sync toggle ON/OFF state from server read-backs, skipping channels
+  // still inside their cooldown window so a fresh user click is not
+  // overwritten by a stale poll. For embedded toggles, the server keys
+  // by toggle.channel (e.g. "air_onoff"); mirror it onto the slider's
+  // own channel ("air") since that is what controlsEnabled is keyed by.
+  $effect(() => {
+    const now = Date.now();
+    const remote = machine.currentControlsEnabled;
+    for (const ctrl of machine.controls) {
+      const inCooldown = (cooldownUntil[ctrl.channel] ?? 0) > now;
+      if (inCooldown) continue;
+      const remoteKey = ctrl.toggle ? ctrl.toggle.channel : ctrl.channel;
+      const remoteVal = remote[remoteKey];
+      if (
+        remoteVal !== undefined &&
+        controlsEnabled[ctrl.channel] !== remoteVal
+      ) {
+        controlsEnabled[ctrl.channel] = remoteVal;
+      }
+    }
+  });
+
   let roastChartEl = $state<HTMLElement | null>(null);
   let controlChartEl = $state<HTMLElement | null>(null);
   let saving = $state(false);

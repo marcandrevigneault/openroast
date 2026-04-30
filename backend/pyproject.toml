@@ -20,7 +20,7 @@ dev = [
 ]
 hardware = [
     "pyserial>=3.5",
-    "pymodbus>=3.7",
+    "pymodbus>=3.7,<3.13",
 ]
 desktop = [
     "pyinstaller>=6.0",

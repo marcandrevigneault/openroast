@@ -14,6 +14,7 @@ from openroast.models.catalog import (
     ModbusConnectionConfig,
     ModbusRegisterConfig,
     ProtocolType,
+    ToggleConfig,
 )
 from openroast.models.machine import SavedMachine
 
@@ -616,6 +617,142 @@ class TestReadExtraChannels:
 
         result = await driver.read_extra_channels()
         assert result == {}
+
+
+# ── Toggle state read tests ───────────────────────────────────────────
+
+
+class TestReadToggleStates:
+    @patch("openroast.drivers.modbus.AsyncModbusTcpClient")
+    async def test_reads_embedded_and_standalone_toggles(
+        self, mock_cls: MagicMock,
+    ) -> None:
+        """Embedded slider toggles and standalone toggles are both read."""
+        mock_client = AsyncMock()
+        mock_client.connected = True
+        # Order matches insertion: air_onoff (reg 56)=1 ON, drum_onoff (57)=2 OFF,
+        # machine_onoff (50)=1 ON.
+        mock_client.read_holding_registers = AsyncMock(
+            side_effect=[
+                _mock_response([1]),
+                _mock_response([2]),
+                _mock_response([1]),
+            ]
+        )
+        mock_cls.return_value = mock_client
+
+        machine = _make_machine(controls=[
+            ControlConfig(
+                name="Air", channel="air", command="writeSingle(1,47,{})",
+                min=0, max=120,
+                toggle=ToggleConfig(
+                    channel="air_onoff",
+                    command="writeSingle(1,56,{})",
+                    on_value=1, off_value=2,
+                ),
+            ),
+            ControlConfig(
+                name="Drum", channel="drum", command="writeSingle(1,46,{})",
+                min=0, max=120,
+                toggle=ToggleConfig(
+                    channel="drum_onoff",
+                    command="writeSingle(1,57,{})",
+                    on_value=1, off_value=2,
+                ),
+            ),
+            ControlConfig(
+                name="Machine ON/OFF", channel="machine_onoff", type="toggle",
+                command="writeSingle(1,50,{})", on_value=1, off_value=2,
+            ),
+        ])
+        driver = ModbusDriver(machine)
+        await driver.connect()
+
+        result = await driver.read_toggle_states()
+        assert result == {
+            "air_onoff": True,
+            "drum_onoff": False,
+            "machine_onoff": True,
+        }
+
+        calls = mock_client.read_holding_registers.call_args_list
+        assert calls[0].args[0] == 56
+        assert calls[1].args[0] == 57
+        assert calls[2].args[0] == 50
+
+    @patch("openroast.drivers.modbus.AsyncModbusTcpClient")
+    async def test_no_toggles_returns_empty(self, mock_cls: MagicMock) -> None:
+        mock_client = AsyncMock()
+        mock_client.connected = True
+        mock_cls.return_value = mock_client
+
+        machine = _make_machine(controls=[])
+        driver = ModbusDriver(machine)
+        await driver.connect()
+
+        assert await driver.read_toggle_states() == {}
+        mock_client.read_holding_registers.assert_not_called()
+
+    @patch("openroast.drivers.modbus.AsyncModbusTcpClient")
+    async def test_individual_read_failure_skipped(
+        self, mock_cls: MagicMock,
+    ) -> None:
+        """A single bad register doesn't break the whole readback."""
+        from pymodbus.exceptions import ModbusIOException
+
+        mock_client = AsyncMock()
+        mock_client.connected = True
+        mock_client.read_holding_registers = AsyncMock(
+            side_effect=[ModbusIOException("fail"), _mock_response([1])]
+        )
+        mock_cls.return_value = mock_client
+
+        machine = _make_machine(controls=[
+            ControlConfig(
+                name="Bad", channel="bad", type="toggle",
+                command="writeSingle(1,99,{})", on_value=1, off_value=2,
+            ),
+            ControlConfig(
+                name="Good", channel="good", type="toggle",
+                command="writeSingle(1,100,{})", on_value=1, off_value=2,
+            ),
+        ])
+        driver = ModbusDriver(machine)
+        await driver.connect()
+
+        result = await driver.read_toggle_states()
+        assert "bad" not in result
+        assert result["good"] is True
+
+    @patch("openroast.drivers.modbus.AsyncModbusTcpClient")
+    async def test_off_when_register_holds_off_value(
+        self, mock_cls: MagicMock,
+    ) -> None:
+        """Anything other than on_value reads as OFF (False)."""
+        mock_client = AsyncMock()
+        mock_client.connected = True
+        mock_client.read_holding_registers = AsyncMock(
+            return_value=_mock_response([0])
+        )
+        mock_cls.return_value = mock_client
+
+        machine = _make_machine(controls=[
+            ControlConfig(
+                name="Burner", channel="burner",
+                command="writeSingle(1,45,{})",
+                min=0, max=100,
+                toggle=ToggleConfig(
+                    channel="burner_onoff",
+                    command="writeSingle(1,55,{})",
+                    on_value=1, off_value=0,
+                ),
+            ),
+        ])
+        driver = ModbusDriver(machine)
+        await driver.connect()
+
+        result = await driver.read_toggle_states()
+        assert result == {"burner_onoff": False}
 
 
 # ── Command parsing and execution tests ───────────────────────────────

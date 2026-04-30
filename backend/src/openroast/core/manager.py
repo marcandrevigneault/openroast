@@ -358,6 +358,13 @@ class MachineManager:
             try:
                 reading = await instance.driver.read_temperatures()
                 extra = await instance.driver.read_extra_channels()
+                try:
+                    toggles = await instance.driver.read_toggle_states()
+                except (ConnectionError, NotImplementedError) as e:
+                    logger.warning(
+                        "[%s] toggle readback failed: %s", machine_id, e,
+                    )
+                    toggles = {}
 
                 elapsed_ms = time.monotonic() * 1000 - instance.start_time_ms
 
@@ -391,6 +398,7 @@ class MachineManager:
                     et_ror=et_ror,
                     bt_ror=bt_ror,
                     extra_channels=extra,
+                    controls_enabled=toggles,
                 )
 
                 # Feed session

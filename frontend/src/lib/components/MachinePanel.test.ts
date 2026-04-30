@@ -239,4 +239,66 @@ describe("MachinePanel", () => {
     expect(editBtns[0].textContent).toContain("42");
     expect(editBtns[1].textContent).toContain("60");
   });
+
+  it("mirrors server toggle state into embedded slider toggle", async () => {
+    const controls: ControlConfig[] = [
+      {
+        name: "Air",
+        channel: "air",
+        command: "writeSingle(1,47,{})",
+        min: 0,
+        max: 120,
+        step: 1,
+        unit: "",
+        toggle: {
+          channel: "air_onoff",
+          command: "writeSingle(1,56,{})",
+          on_value: 1,
+          off_value: 2,
+          on_command: "",
+          off_command: "",
+        },
+      },
+    ];
+    const machine: MachineState = {
+      ...createInitialState("m1", "Test", controls),
+      driverState: "connected",
+      sessionState: "monitoring",
+      currentControlsEnabled: { air_onoff: true },
+    };
+    const { container } = render(MachinePanel, { props: { machine } });
+    await vi.advanceTimersByTimeAsync(0);
+    const toggleBtn = container.querySelector(".toggle-btn");
+    expect(toggleBtn).not.toBeNull();
+    expect(toggleBtn?.classList.contains("on")).toBe(true);
+    expect(toggleBtn?.textContent).toContain("ON");
+  });
+
+  it("mirrors server toggle state into standalone toggle", async () => {
+    const controls: ControlConfig[] = [
+      {
+        name: "Machine ON/OFF",
+        channel: "machine_onoff",
+        type: "toggle",
+        command: "writeSingle(1,50,{})",
+        min: 0,
+        max: 1,
+        step: 1,
+        unit: "",
+        on_value: 1,
+        off_value: 2,
+      },
+    ];
+    const machine: MachineState = {
+      ...createInitialState("m1", "Test", controls),
+      driverState: "connected",
+      sessionState: "monitoring",
+      currentControlsEnabled: { machine_onoff: true },
+    };
+    const { container } = render(MachinePanel, { props: { machine } });
+    await vi.advanceTimersByTimeAsync(0);
+    const toggleBtn = container.querySelector(".standalone-toggle");
+    expect(toggleBtn).not.toBeNull();
+    expect(toggleBtn?.classList.contains("on")).toBe(true);
+  });
 });

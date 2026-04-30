@@ -31,6 +31,15 @@ class TestTemperatureMessage:
         assert m.type == "temperature"
         assert m.et_ror == 0.0
         assert m.extra_channels == {}
+        assert m.controls_enabled == {}
+
+    def test_with_controls_enabled(self) -> None:
+        m = TemperatureMessage(
+            timestamp_ms=3000, et=210.5, bt=185.3,
+            controls_enabled={"air_onoff": True, "drum_onoff": False},
+        )
+        assert m.controls_enabled["air_onoff"] is True
+        assert m.controls_enabled["drum_onoff"] is False
 
     def test_full(self) -> None:
         m = TemperatureMessage(
