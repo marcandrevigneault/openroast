@@ -32,31 +32,48 @@
   const AXIS_COLOR = "var(--text-faint)";
   const TEXT_COLOR = "var(--text-muted)";
 
-  // Delta range (right Y-axis)
+  // Delta range (right Y-axis) — fixed 0..25 °C/min by default.
   const R_MIN = 0;
-  const R_MAX = 100;
+  const R_MAX = 25;
 
   // Derived dimensions
   let plotW = $derived(width - PADDING.left - PADDING.right);
   let plotH = $derived(height - PADDING.top - PADDING.bottom);
 
-  // Dynamic temperature range (left Y-axis) — fits to data
+  // Temperature range (left Y-axis) — fixed 0..250 °C by default so the
+  // chart's vertical scale stays consistent across roasts.  Falls back to
+  // an auto-fit only when the data exceeds the fixed window so a
+  // runaway reading is still visible instead of being clipped.
+  const TEMP_MIN_DEFAULT = 0;
+  const TEMP_MAX_DEFAULT = 250;
+  const TEMP_STEP_DEFAULT = 25;
   let tempRange = $derived(() => {
     const temps: number[] = [];
     for (const p of history) {
       if (options.showET) temps.push(p.et);
       if (options.showBT) temps.push(p.bt);
     }
-    if (temps.length === 0) return { min: 0, max: 300, step: 50 };
-
-    const rawMin = Math.min(...temps);
+    if (temps.length === 0) {
+      return {
+        min: TEMP_MIN_DEFAULT,
+        max: TEMP_MAX_DEFAULT,
+        step: TEMP_STEP_DEFAULT,
+      };
+    }
     const rawMax = Math.max(...temps);
-    const padding = Math.max(25, (rawMax - rawMin) * 0.1);
-    const min = Math.max(0, Math.floor((rawMin - padding) / 25) * 25);
-    const max = Math.max(min + 50, Math.ceil((rawMax + padding) / 25) * 25);
-    const range = max - min;
+    if (rawMax <= TEMP_MAX_DEFAULT) {
+      return {
+        min: TEMP_MIN_DEFAULT,
+        max: TEMP_MAX_DEFAULT,
+        step: TEMP_STEP_DEFAULT,
+      };
+    }
+    // Data exceeds the default ceiling — extend the window upward in
+    // 25 °C increments so the curve does not clip.
+    const max = Math.ceil(rawMax / 25) * 25;
+    const range = max - TEMP_MIN_DEFAULT;
     const step = range <= 150 ? 25 : range <= 300 ? 50 : 100;
-    return { min, max, step };
+    return { min: TEMP_MIN_DEFAULT, max, step };
   });
 
   // Time range: auto-expand, supports negative timestamps from pre-record tail
@@ -279,7 +296,7 @@
         stroke={AXIS_COLOR}
         stroke-width="1"
       />
-      {#each [0, 25, 50, 75, 100] as val (val)}
+      {#each [0, 5, 10, 15, 20, 25] as val (val)}
         {@const y = yScaleRight(val)}
         <text
           x={width - PADDING.right + 8}

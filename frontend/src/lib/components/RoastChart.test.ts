@@ -106,7 +106,7 @@ describe("RoastChart", () => {
     expect(paths.length).toBe(4);
   });
 
-  it("shows right Y-axis when delta enabled", () => {
+  it("shows right Y-axis when delta enabled (0..25 °C/min default)", () => {
     const opts = { ...DEFAULT_CHART_OPTIONS, showETRor: true };
     const { container } = render(RoastChart, {
       props: { history: makePoints(20), options: opts },
@@ -114,7 +114,10 @@ describe("RoastChart", () => {
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent?.trim());
     expect(textContent).toContain("0");
-    expect(textContent).toContain("100");
+    expect(textContent).toContain("25");
+    // 0..25 ticks: 0, 5, 10, 15, 20, 25
+    expect(textContent).toContain("5");
+    expect(textContent).toContain("20");
   });
 
   it("hides right Y-axis when no delta curves enabled", () => {
@@ -123,8 +126,32 @@ describe("RoastChart", () => {
     });
     const texts = container.querySelectorAll("text");
     const textContent = Array.from(texts).map((t) => t.textContent?.trim());
-    // Right axis labels (0, 25, 50, 75, 100) should not be present
-    expect(textContent).not.toContain("75");
+    // Right axis labels (5, 10, 15, 20) should not be present without delta
+    expect(textContent).not.toContain("5");
+    expect(textContent).not.toContain("20");
+  });
+
+  it("uses fixed 0..250 °C left Y-axis by default", () => {
+    const { container } = render(RoastChart, {
+      props: { history: makePoints(5) },
+    });
+    const texts = container.querySelectorAll("text");
+    const textContent = Array.from(texts).map((t) => t.textContent?.trim());
+    // Default fixed range: ticks every 25 from 0 to 250.
+    expect(textContent).toContain("0");
+    expect(textContent).toContain("250");
+    expect(textContent).toContain("125");
+  });
+
+  it("extends the temperature axis upward when data exceeds 250 °C", () => {
+    const points: TemperaturePoint[] = [
+      { timestamp_ms: 0, et: 280, bt: 250, et_ror: 0, bt_ror: 0 },
+    ];
+    const { container } = render(RoastChart, { props: { history: points } });
+    const texts = container.querySelectorAll("text");
+    const textContent = Array.from(texts).map((t) => t.textContent?.trim());
+    // Hottest point is 280 → axis must reach at least 300.
+    expect(textContent).toContain("300");
   });
 
   it("legend shows only visible curves", () => {

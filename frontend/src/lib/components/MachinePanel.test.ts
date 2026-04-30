@@ -240,7 +240,11 @@ describe("MachinePanel", () => {
     expect(editBtns[1].textContent).toContain("60");
   });
 
-  it("mirrors server toggle state into embedded slider toggle", async () => {
+  it("ignores server toggle readback (registers are write-only commands)", async () => {
+    // Carmomaq toggle registers (50, 52, 55-58, 60) accept "1=on / 2=off"
+    // commands but do not echo machine state back. The UI must NOT flip
+    // based on currentControlsEnabled — local click state is the source
+    // of truth.
     const controls: ControlConfig[] = [
       {
         name: "Air",
@@ -260,94 +264,36 @@ describe("MachinePanel", () => {
         },
       },
     ];
-    const machine: MachineState = {
-      ...createInitialState("m1", "Test", controls),
-      driverState: "connected",
-      sessionState: "monitoring",
-      currentControlsEnabled: { air_onoff: true },
-    };
-    const { container } = render(MachinePanel, { props: { machine } });
-    await vi.advanceTimersByTimeAsync(0);
-    const toggleBtn = container.querySelector(".toggle-btn");
-    expect(toggleBtn).not.toBeNull();
-    expect(toggleBtn?.classList.contains("on")).toBe(true);
-    expect(toggleBtn?.textContent).toContain("ON");
-  });
-
-  it("syncs subsequent toggle state changes from server (regression)", async () => {
-    // Regression: user reports the toggle reading does not update after the
-    // initial render. We render with air_onoff: true, then re-render with a
-    // new machine state where air_onoff: false, and assert the UI flips.
-    const controls: ControlConfig[] = [
-      {
-        name: "Air",
-        channel: "air",
-        command: "writeSingle(1,47,{})",
-        min: 0,
-        max: 120,
-        step: 1,
-        unit: "",
-        toggle: {
-          channel: "air_onoff",
-          command: "writeSingle(1,56,{})",
-          on_value: 1,
-          off_value: 2,
-          on_command: "",
-          off_command: "",
-        },
-      },
-    ];
+    // Slider toggles default to enabled=true — user clicks to flip OFF.
     const initial: MachineState = {
       ...createInitialState("m1", "Test", controls),
       driverState: "connected",
       sessionState: "monitoring",
-      currentControlsEnabled: { air_onoff: true },
+      // Server reports air_onoff: false — would previously have
+      // flipped the UI to OFF a few seconds after the user turned it on.
+      currentControlsEnabled: { air_onoff: false },
     };
     const { container, rerender } = render(MachinePanel, {
       props: { machine: initial },
     });
     await vi.advanceTimersByTimeAsync(0);
-    const toggleBtn1 = container.querySelector(".toggle-btn");
-    expect(toggleBtn1?.classList.contains("on")).toBe(true);
 
-    // Server reports the toggle now OFF — emulate a fresh TemperatureMessage
-    // by passing a new machine object with the updated currentControlsEnabled.
-    const updated: MachineState = {
-      ...initial,
-      currentControlsEnabled: { air_onoff: false },
-    };
-    await rerender({ machine: updated });
-    // Allow Svelte's reactivity to flush.
-    await vi.advanceTimersByTimeAsync(50);
-    const toggleBtn2 = container.querySelector(".toggle-btn");
-    expect(toggleBtn2?.classList.contains("on")).toBe(false);
-  });
+    // Initial render: toggle defaults to ON (local default).
+    const before = container.querySelector(".toggle-btn");
+    expect(before?.classList.contains("on")).toBe(true);
 
-  it("mirrors server toggle state into standalone toggle", async () => {
-    const controls: ControlConfig[] = [
-      {
-        name: "Machine ON/OFF",
-        channel: "machine_onoff",
-        type: "toggle",
-        command: "writeSingle(1,50,{})",
-        min: 0,
-        max: 1,
-        step: 1,
-        unit: "",
-        on_value: 1,
-        off_value: 2,
-      },
-    ];
-    const machine: MachineState = {
-      ...createInitialState("m1", "Test", controls),
-      driverState: "connected",
-      sessionState: "monitoring",
-      currentControlsEnabled: { machine_onoff: true },
-    };
-    const { container } = render(MachinePanel, { props: { machine } });
-    await vi.advanceTimersByTimeAsync(0);
-    const toggleBtn = container.querySelector(".standalone-toggle");
-    expect(toggleBtn).not.toBeNull();
-    expect(toggleBtn?.classList.contains("on")).toBe(true);
+    // Server now reports air_onoff: false repeatedly across samples.
+    // The UI must NOT flip — local click state is authoritative.
+    for (let i = 0; i < 3; i++) {
+      await rerender({
+        machine: {
+          ...initial,
+          currentControlsEnabled: { air_onoff: false },
+        },
+      });
+      await vi.advanceTimersByTimeAsync(50);
+    }
+    const after = container.querySelector(".toggle-btn");
+    expect(after?.classList.contains("on")).toBe(true);
   });
 });
