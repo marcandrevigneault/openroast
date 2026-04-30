@@ -274,6 +274,55 @@ describe("MachinePanel", () => {
     expect(toggleBtn?.textContent).toContain("ON");
   });
 
+  it("syncs subsequent toggle state changes from server (regression)", async () => {
+    // Regression: user reports the toggle reading does not update after the
+    // initial render. We render with air_onoff: true, then re-render with a
+    // new machine state where air_onoff: false, and assert the UI flips.
+    const controls: ControlConfig[] = [
+      {
+        name: "Air",
+        channel: "air",
+        command: "writeSingle(1,47,{})",
+        min: 0,
+        max: 120,
+        step: 1,
+        unit: "",
+        toggle: {
+          channel: "air_onoff",
+          command: "writeSingle(1,56,{})",
+          on_value: 1,
+          off_value: 2,
+          on_command: "",
+          off_command: "",
+        },
+      },
+    ];
+    const initial: MachineState = {
+      ...createInitialState("m1", "Test", controls),
+      driverState: "connected",
+      sessionState: "monitoring",
+      currentControlsEnabled: { air_onoff: true },
+    };
+    const { container, rerender } = render(MachinePanel, {
+      props: { machine: initial },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    const toggleBtn1 = container.querySelector(".toggle-btn");
+    expect(toggleBtn1?.classList.contains("on")).toBe(true);
+
+    // Server reports the toggle now OFF — emulate a fresh TemperatureMessage
+    // by passing a new machine object with the updated currentControlsEnabled.
+    const updated: MachineState = {
+      ...initial,
+      currentControlsEnabled: { air_onoff: false },
+    };
+    await rerender({ machine: updated });
+    // Allow Svelte's reactivity to flush.
+    await vi.advanceTimersByTimeAsync(50);
+    const toggleBtn2 = container.querySelector(".toggle-btn");
+    expect(toggleBtn2?.classList.contains("on")).toBe(false);
+  });
+
   it("mirrors server toggle state into standalone toggle", async () => {
     const controls: ControlConfig[] = [
       {
