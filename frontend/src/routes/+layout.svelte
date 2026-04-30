@@ -1,9 +1,16 @@
 <script lang="ts">
   import favicon from "$lib/assets/favicon.png";
   import AppMenu from "$lib/components/AppMenu.svelte";
+  import ThemeToggle from "$lib/components/ThemeToggle.svelte";
+  import { theme } from "$lib/stores/theme.svelte";
 
   let { children } = $props();
   let menuOpen = $state(false);
+
+  // Apply persisted theme on mount so SSR-rendered HTML matches.
+  $effect(() => {
+    theme.init();
+  });
 </script>
 
 <svelte:head>
@@ -24,6 +31,8 @@
     </button>
     <h1 class="logo">OpenRoast</h1>
     <img class="logo-icon" src={favicon} alt="" />
+    <div class="header-spacer"></div>
+    <ThemeToggle />
   </header>
   <main class="app-main">
     {@render children()}
@@ -33,6 +42,40 @@
 <AppMenu open={menuOpen} onclose={() => (menuOpen = false)} />
 
 <style>
+  /* Theme tokens.  The default values here are the dark theme; the
+     [data-theme="light"] block overrides them.  Components that opt in
+     by reading var(--token) get themed automatically; legacy components
+     with hardcoded colors keep the dark palette until refactored. */
+  :global(:root) {
+    --bg: #0a0a1a;
+    --bg-elevated: #12122a;
+    --surface: #1a1a2e;
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --border: #2a2a4a;
+    --text: #e0e0e0;
+    --text-muted: #999;
+    --text-strong: #f5f0e8;
+    --accent: #4fc3f7;
+    --accent-soft: rgba(79, 195, 247, 0.12);
+    --overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+
+  :global(html[data-theme="light"]) {
+    --bg: #f5f5f7;
+    --bg-elevated: #ffffff;
+    --surface: #ffffff;
+    --surface-hover: rgba(0, 0, 0, 0.05);
+    --border: #d8d8e0;
+    --text: #1a1a2e;
+    --text-muted: #5a5a6a;
+    --text-strong: #0a0a1a;
+    --accent: #0277bd;
+    --accent-soft: rgba(2, 119, 189, 0.12);
+    --overlay: rgba(0, 0, 0, 0.4);
+    color-scheme: light;
+  }
+
   :global(*, *::before, *::after) {
     box-sizing: border-box;
   }
@@ -40,13 +83,16 @@
   :global(body) {
     margin: 0;
     padding: 0;
-    background: #0a0a1a;
-    color: #e0e0e0;
+    background: var(--bg);
+    color: var(--text);
     font-family:
       -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
     -webkit-text-size-adjust: 100%;
     overflow-x: hidden;
+    transition:
+      background 0.18s ease,
+      color 0.18s ease;
   }
 
   /* Prevent iOS zoom on text input focus (16px minimum prevents auto-zoom).
@@ -78,8 +124,12 @@
     align-items: center;
     gap: 12px;
     padding: 10px 20px;
-    background: #12122a;
-    border-bottom: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-spacer {
+    flex: 1;
   }
 
   .btn-menu {
@@ -97,19 +147,19 @@
     display: block;
     width: 20px;
     height: 2px;
-    background: #999;
+    background: var(--text-muted);
     border-radius: 1px;
     transition: background 0.15s;
   }
 
   .btn-menu:hover .hamburger-line {
-    background: #4fc3f7;
+    background: var(--accent);
   }
 
   .logo {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #f5f0e8;
+    color: var(--text-strong);
     margin: 0;
     letter-spacing: 0.05em;
   }

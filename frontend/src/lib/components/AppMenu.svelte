@@ -70,7 +70,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--overlay, rgba(0, 0, 0, 0.6));
     z-index: 199;
   }
 
@@ -81,8 +81,8 @@
     bottom: 0;
     width: 260px;
     max-width: 80vw;
-    background: #12122a;
-    border-right: 1px solid #2a2a4a;
+    background: var(--bg-elevated, #12122a);
+    border-right: 1px solid var(--border, #2a2a4a);
     z-index: 200;
     display: flex;
     flex-direction: column;
@@ -103,7 +103,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    border-bottom: 1px solid #2a2a4a;
+    border-bottom: 1px solid var(--border, #2a2a4a);
   }
 
   .drawer-brand {
@@ -115,7 +115,7 @@
   .drawer-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #f5f0e8;
+    color: var(--text-strong, #f5f0e8);
     letter-spacing: 0.05em;
   }
 
@@ -128,7 +128,7 @@
   .btn-close {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-muted, #666);
     font-size: 1.4rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -136,7 +136,7 @@
   }
 
   .btn-close:hover {
-    color: #e0e0e0;
+    color: var(--text, #e0e0e0);
   }
 
   .nav-list {
@@ -148,7 +148,7 @@
   .nav-link {
     display: block;
     padding: 12px 20px;
-    color: #b0b0b0;
+    color: var(--text-muted, #b0b0b0);
     text-decoration: none;
     font-size: 0.95rem;
     font-weight: 500;
@@ -158,25 +158,25 @@
   }
 
   .nav-link:hover {
-    background: rgba(79, 195, 247, 0.08);
-    color: #e0e0e0;
+    background: var(--surface-hover, rgba(79, 195, 247, 0.08));
+    color: var(--text, #e0e0e0);
   }
 
   .nav-link.active {
-    color: #4fc3f7;
-    background: rgba(79, 195, 247, 0.12);
-    border-left: 3px solid #4fc3f7;
+    color: var(--accent, #4fc3f7);
+    background: var(--accent-soft, rgba(79, 195, 247, 0.12));
+    border-left: 3px solid var(--accent, #4fc3f7);
   }
 
   .drawer-footer {
     margin-top: auto;
     padding: 12px 20px;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border, #2a2a4a);
   }
 
   .version-label {
     font-size: 0.75rem;
-    color: #666;
+    color: var(--text-muted, #666);
     letter-spacing: 0.03em;
   }
 </style>
