@@ -8,6 +8,7 @@
   } from "$lib/stores/chart-options";
   import { addToast } from "$lib/stores/toast";
   import TemperatureDisplay from "./TemperatureDisplay.svelte";
+  import RoastTimer from "./RoastTimer.svelte";
   import RoastChart from "./RoastChart.svelte";
   import ControlChart from "./ControlChart.svelte";
   import ChartOptionsMenu from "./ChartOptionsMenu.svelte";
@@ -286,6 +287,7 @@
         color="#42a5f5"
         compact
       />
+      <RoastTimer sessionState={machine.sessionState} />
     </div>
   </div>
 
