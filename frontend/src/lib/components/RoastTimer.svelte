@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { SessionState } from "$lib/types/ws-messages";
+  import { onDestroy } from "svelte";
 
   interface Props {
     sessionState: SessionState;
@@ -7,38 +8,60 @@
 
   let { sessionState }: Props = $props();
 
-  // Wall-clock time the current recording started, or null when not recording.
-  let startedAt = $state<number | null>(null);
   // Seconds shown to the user. Driven by setInterval while recording, or
   // frozen at the last value when recording stops, or 0 when reset.
   let elapsed = $state(0);
 
-  // React to session-state transitions:
-  //   → recording  : reset to 0 and start ticking
-  //   → monitoring : reset to 0 (timer hidden / showing 0:00)
-  //   → idle       : reset to 0
-  //   → finished   : freeze at current value
+  // Plain (non-reactive) lifecycle state. Stored outside `$state` so that
+  // (a) reading them inside the effect does not register a dependency that
+  //     would re-fire the effect, and
+  // (b) the parent re-rendering with the SAME sessionState value does not
+  //     accidentally reset the timer — we explicitly compare to prevState
+  //     and bail out when nothing has changed.
+  //
+  // Earlier implementation reset the timer on every parent re-render
+  // because each new TemperatureMessage caused MachinePanel to re-render
+  // and Svelte 5's $effect re-fired even though sessionState had not
+  // actually transitioned.
+  let prevState: SessionState | null = null;
+  let startedAt: number | null = null;
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+
+  function clearTick(): void {
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+
   $effect(() => {
     const state = sessionState;
+    if (state === prevState) return; // Not a real transition — leave timer alone.
+    prevState = state;
+
+    clearTick();
+
     if (state === "recording") {
       startedAt = Date.now();
       elapsed = 0;
-      const id = window.setInterval(() => {
+      intervalId = setInterval(() => {
         if (startedAt !== null) {
           elapsed = Math.floor((Date.now() - startedAt) / 1000);
         }
       }, 250);
-      return () => {
-        window.clearInterval(id);
-        startedAt = null;
-      };
+      return;
     }
+
     if (state === "monitoring" || state === "idle") {
       startedAt = null;
       elapsed = 0;
+      return;
     }
+
     // For "finished", do nothing — keep the last elapsed value frozen.
   });
+
+  onDestroy(clearTick);
 
   function format(s: number): string {
     const mm = Math.floor(s / 60);

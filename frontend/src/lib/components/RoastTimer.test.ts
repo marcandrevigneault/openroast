@@ -93,6 +93,27 @@ describe("RoastTimer", () => {
     expect(container.textContent).toContain("00:02");
   });
 
+  it("does not reset when re-rendered with the same recording state", async () => {
+    // Regression: previously every TemperatureMessage caused MachinePanel
+    // to re-render, the new `machine` prop reference invalidated
+    // sessionState, and the timer's $effect re-fired and reset elapsed=0
+    // every sampling tick.
+    const { container, rerender } = render(RoastTimer, {
+      props: { sessionState: "recording" },
+    });
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(container.textContent).toContain("00:05");
+
+    // Simulate the parent re-rendering with the same value.
+    await rerender({ sessionState: "recording" });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(container.textContent).toContain("00:05");
+
+    // Subsequent ticks continue counting from where we left off.
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(container.textContent).toContain("00:07");
+  });
+
   it("adds an active class to the value while recording", () => {
     const { container } = render(RoastTimer, {
       props: { sessionState: "recording" },
