@@ -13,7 +13,7 @@
     value,
     ror,
     unit = "°C",
-    color = "#e0e0e0",
+    color = "var(--text)",
     compact = false,
   }: Props = $props();
 
@@ -65,7 +65,7 @@
   .compact-ror {
     font-size: 0.7rem;
     font-family: "JetBrains Mono", "Fira Code", monospace;
-    color: #888;
+    color: var(--text-muted);
   }
 
   /* --- Full (card) mode --- */
@@ -74,9 +74,9 @@
     flex-direction: column;
     align-items: center;
     padding: 12px 20px;
-    background: #1a1a2e;
+    background: var(--surface);
     border-radius: 8px;
-    border: 1px solid #2a2a4a;
+    border: 1px solid var(--border);
     min-width: 140px;
   }
 
@@ -99,14 +99,14 @@
 
   .unit {
     font-size: 0.8rem;
-    color: #888;
+    color: var(--text-muted);
     margin-top: 2px;
   }
 
   .ror {
     font-size: 0.85rem;
     font-family: "JetBrains Mono", "Fira Code", monospace;
-    color: #aaa;
+    color: var(--text-muted);
     margin-top: 6px;
   }
 

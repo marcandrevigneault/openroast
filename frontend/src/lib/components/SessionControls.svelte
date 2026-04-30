@@ -80,8 +80,8 @@
 
   .btn-record {
     background: rgba(79, 195, 247, 0.15);
-    border: 1px solid #4fc3f7;
-    color: #4fc3f7;
+    border: 1px solid var(--accent);
+    color: var(--accent);
   }
 
   .btn-record:hover {
@@ -89,16 +89,16 @@
   }
 
   .record-dot {
-    color: #4fc3f7;
+    color: var(--accent);
   }
 
   .btn-stop {
     background: #424242;
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .btn-stop:hover {
-    background: #555;
+    background: var(--text-faint);
   }
 
   .btn-stop-record {

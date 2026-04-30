@@ -15,7 +15,7 @@
         ? "#ff9800"
         : driverState === "error"
           ? "#f44336"
-          : "#666",
+          : "var(--text-faint)",
   );
 
   let statusLabel = $derived(
@@ -45,7 +45,7 @@
     gap: 8px;
     padding: 4px 12px;
     border-radius: 12px;
-    background: #1a1a2e;
+    background: var(--surface);
     font-size: 0.8rem;
   }
 
@@ -57,7 +57,7 @@
   }
 
   .label {
-    color: #ccc;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-size: 0.75rem;

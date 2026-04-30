@@ -49,7 +49,7 @@
     background: transparent;
     border: 1px solid var(--border, transparent);
     border-radius: 6px;
-    color: var(--text-muted, #999);
+    color: var(--text-muted, var(--text-muted));
     cursor: pointer;
     transition:
       background 0.15s,
@@ -58,12 +58,12 @@
   }
 
   .theme-toggle:hover {
-    color: var(--accent, #4fc3f7);
+    color: var(--accent, var(--accent));
     background: var(--surface-hover, rgba(255, 255, 255, 0.06));
   }
 
   .theme-toggle:focus-visible {
-    outline: 2px solid var(--accent, #4fc3f7);
+    outline: 2px solid var(--accent, var(--accent));
     outline-offset: 2px;
   }
 </style>

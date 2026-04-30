@@ -64,7 +64,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    background: #1a1a2e;
+    background: var(--surface);
     border-radius: 6px;
     padding: 2px;
   }
@@ -72,7 +72,7 @@
   .layout-btn {
     background: transparent;
     border: none;
-    color: #888;
+    color: var(--text-muted);
     font-size: 1rem;
     padding: 4px 8px;
     cursor: pointer;
@@ -80,17 +80,17 @@
   }
 
   .layout-btn:hover {
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .layout-btn.active {
-    background: #2a2a4a;
-    color: #4fc3f7;
+    background: var(--border);
+    color: var(--accent);
   }
 
   .machine-count {
     margin-left: auto;
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.75rem;
   }
 

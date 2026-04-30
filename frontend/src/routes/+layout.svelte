@@ -48,31 +48,45 @@
      with hardcoded colors keep the dark palette until refactored. */
   :global(:root) {
     --bg: #0a0a1a;
+    --bg-deep: #0d0d1a;
     --bg-elevated: #12122a;
     --surface: #1a1a2e;
+    --surface-alt: #1a1a3a;
     --surface-hover: rgba(255, 255, 255, 0.06);
+    --surface-input: #0d0d1a;
     --border: #2a2a4a;
+    --border-strong: #3a3a5a;
     --text: #e0e0e0;
+    --text-secondary: #ccc;
     --text-muted: #999;
+    --text-faint: #666;
     --text-strong: #f5f0e8;
     --accent: #4fc3f7;
     --accent-soft: rgba(79, 195, 247, 0.12);
     --overlay: rgba(0, 0, 0, 0.6);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
   }
 
   :global(html[data-theme="light"]) {
     --bg: #f5f5f7;
+    --bg-deep: #ebebef;
     --bg-elevated: #ffffff;
     --surface: #ffffff;
+    --surface-alt: #fafafc;
     --surface-hover: rgba(0, 0, 0, 0.05);
+    --surface-input: #f5f5f7;
     --border: #d8d8e0;
+    --border-strong: #c0c0c8;
     --text: #1a1a2e;
+    --text-secondary: #3a3a4a;
     --text-muted: #5a5a6a;
+    --text-faint: #7a7a8a;
     --text-strong: #0a0a1a;
     --accent: #0277bd;
     --accent-soft: rgba(2, 119, 189, 0.12);
     --overlay: rgba(0, 0, 0, 0.4);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     color-scheme: light;
   }
 

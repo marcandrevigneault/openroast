@@ -70,15 +70,15 @@
 
 <style>
   .save-form {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 12px;
   }
 
   h4 {
     margin: 0 0 10px 0;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 0.85rem;
   }
 
@@ -96,23 +96,23 @@
 
   .label {
     font-size: 0.7rem;
-    color: #999;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   input {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 4px;
     padding: 6px 8px;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 0.8rem;
   }
 
   input:focus {
     outline: none;
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .button-row {
@@ -139,8 +139,8 @@
 
   .btn-cancel {
     background: transparent;
-    color: #999;
-    border: 1px solid #2a2a4a;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 6px 14px;
     font-size: 0.8rem;
@@ -148,8 +148,8 @@
   }
 
   .btn-cancel:hover {
-    color: #e0e0e0;
-    border-color: #444;
+    color: var(--text);
+    border-color: var(--text-faint);
   }
 
   .saved-msg {

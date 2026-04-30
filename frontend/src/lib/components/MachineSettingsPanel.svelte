@@ -662,8 +662,8 @@
   }
 
   .dialog {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px;
     width: 520px;
@@ -682,21 +682,21 @@
 
   h3 {
     margin: 0;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 1rem;
   }
 
   .btn-close {
     background: transparent;
     border: none;
-    color: #888;
+    color: var(--text-muted);
     font-size: 1.2rem;
     cursor: pointer;
     padding: 0 4px;
   }
 
   .btn-close:hover {
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .form-scroll {
@@ -715,16 +715,16 @@
   }
 
   .section-divider {
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
   }
 
   h4 {
     margin: 0;
-    color: #ccc;
+    color: var(--text-secondary);
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    border-bottom: 1px solid #2a2a4a;
+    border-bottom: 1px solid var(--border);
     padding-bottom: 4px;
   }
 
@@ -732,7 +732,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #2a2a4a;
+    border-bottom: 1px solid var(--border);
     padding-bottom: 4px;
   }
 
@@ -754,31 +754,31 @@
 
   .label {
     font-size: 0.7rem;
-    color: #999;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   input,
   select {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 5px;
     padding: 6px 10px;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 0.85rem;
   }
 
   input:focus,
   select:focus {
     outline: none;
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .btn-add {
     background: transparent;
-    border: 1px solid #2a2a4a;
-    color: #4fc3f7;
+    border: 1px solid var(--border);
+    color: var(--accent);
     border-radius: 4px;
     padding: 2px 10px;
     font-size: 0.75rem;
@@ -786,12 +786,12 @@
   }
 
   .btn-add:hover {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .list-item-card {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 8px;
     display: flex;
@@ -808,7 +808,7 @@
   .btn-remove-item {
     background: transparent;
     border: 1px solid transparent;
-    color: #666;
+    color: var(--text-faint);
     font-size: 1rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -837,7 +837,7 @@
 
   .visibility-label {
     font-size: 0.7rem;
-    color: #888;
+    color: var(--text-muted);
     text-transform: uppercase;
   }
 
@@ -852,7 +852,7 @@
 
   .control-type-badge {
     font-size: 0.65rem;
-    color: #4fc3f7;
+    color: var(--accent);
     background: rgba(79, 195, 247, 0.1);
     border: 1px solid rgba(79, 195, 247, 0.3);
     border-radius: 3px;
@@ -881,7 +881,7 @@
 
   .toggle-sublabel {
     font-size: 0.7rem;
-    color: #4fc3f7;
+    color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -889,7 +889,7 @@
   .btn-remove-toggle {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.9rem;
     cursor: pointer;
     padding: 0 4px;
@@ -903,7 +903,7 @@
   .btn-add-toggle {
     background: transparent;
     border: 1px dashed rgba(79, 195, 247, 0.3);
-    color: #4fc3f7;
+    color: var(--accent);
     border-radius: 4px;
     padding: 4px 10px;
     font-size: 0.7rem;
@@ -912,12 +912,12 @@
   }
 
   .btn-add-toggle:hover {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
     background: rgba(79, 195, 247, 0.05);
   }
 
   .empty-hint {
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.8rem;
     font-style: italic;
     margin: 0;
@@ -925,7 +925,7 @@
 
   .loading {
     text-align: center;
-    color: #888;
+    color: var(--text-muted);
     padding: 24px 0;
   }
 
@@ -936,8 +936,8 @@
   }
 
   .btn-cancel {
-    background: #2a2a4a;
-    color: #ccc;
+    background: var(--border);
+    color: var(--text-secondary);
     border: none;
     border-radius: 6px;
     padding: 6px 14px;

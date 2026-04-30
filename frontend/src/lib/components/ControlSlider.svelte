@@ -21,7 +21,7 @@
     min = 0,
     max = 100,
     step = 1,
-    color = "#4fc3f7",
+    color = "var(--accent)",
     unit = "",
     disabled = false,
     enabled = true,
@@ -201,9 +201,9 @@
     padding: 2px 6px;
     border-radius: 3px;
     cursor: pointer;
-    border: 1px solid #555;
-    background: #2a2a4a;
-    color: #888;
+    border: 1px solid var(--text-faint);
+    background: var(--border);
+    color: var(--text-muted);
     line-height: 1;
   }
 
@@ -214,8 +214,8 @@
   }
 
   .toggle-btn:hover:not(:disabled) {
-    border-color: #4fc3f7;
-    color: #4fc3f7;
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .toggle-btn:disabled {
@@ -227,7 +227,7 @@
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #999;
+    color: var(--text-muted);
   }
 
   .slider-value {
@@ -242,7 +242,7 @@
   }
 
   .slider-value:hover:not(:disabled) {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
     background: rgba(79, 195, 247, 0.05);
   }
 
@@ -254,8 +254,8 @@
     font-family: "JetBrains Mono", "Fira Code", monospace;
     font-size: 0.85rem;
     font-weight: 600;
-    background: #0d0d1a;
-    border: 1px solid #4fc3f7;
+    background: var(--bg-deep);
+    border: 1px solid var(--accent);
     border-radius: 3px;
     padding: 1px 4px;
     width: 60px;
@@ -287,8 +287,8 @@
       to right,
       var(--slider-color) 0%,
       var(--slider-color) var(--fill-pct),
-      #2a2a4a var(--fill-pct),
-      #2a2a4a 100%
+      var(--border) var(--fill-pct),
+      var(--border) 100%
     );
     outline: none;
     cursor: pointer;
@@ -302,7 +302,7 @@
     border-radius: 50%;
     background: var(--slider-color);
     cursor: pointer;
-    border: 2px solid #0d0d1a;
+    border: 2px solid var(--bg-deep);
   }
 
   .slider::-moz-range-thumb {
@@ -311,7 +311,7 @@
     border-radius: 50%;
     background: var(--slider-color);
     cursor: pointer;
-    border: 2px solid #0d0d1a;
+    border: 2px solid var(--bg-deep);
   }
 
   .slider:disabled {
