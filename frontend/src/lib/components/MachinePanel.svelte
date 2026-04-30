@@ -7,7 +7,6 @@
     type ChartOptions,
   } from "$lib/stores/chart-options";
   import { addToast } from "$lib/stores/toast";
-  import { untrack } from "svelte";
   import TemperatureDisplay from "./TemperatureDisplay.svelte";
   import RoastTimer from "./RoastTimer.svelte";
   import RoastChart from "./RoastChart.svelte";
@@ -101,37 +100,18 @@
     }
   });
 
-  // Sync toggle ON/OFF state from server read-backs, skipping channels
-  // still inside their cooldown window so a fresh user click is not
-  // overwritten by a stale poll. For embedded toggles, the server keys
-  // by toggle.channel (e.g. "air_onoff"); mirror it onto the slider's
-  // own channel ("air") since that is what controlsEnabled is keyed by.
-  //
-  // controlsEnabled / cooldownUntil are read inside untrack so they are
-  // not registered as dependencies of this effect — otherwise a user
-  // click (which writes both) would re-fire the effect and we would re-
-  // apply a stale remote value over the user's intent.  The effect only
-  // depends on machine.currentControlsEnabled and machine.controls, both
-  // of which advance per WebSocket sample.
-  $effect(() => {
-    const remote = machine.currentControlsEnabled;
-    const controls = machine.controls;
-    untrack(() => {
-      const now = Date.now();
-      for (const ctrl of controls) {
-        const inCooldown = (cooldownUntil[ctrl.channel] ?? 0) > now;
-        if (inCooldown) continue;
-        const remoteKey = ctrl.toggle ? ctrl.toggle.channel : ctrl.channel;
-        const remoteVal = remote[remoteKey];
-        if (
-          remoteVal !== undefined &&
-          controlsEnabled[ctrl.channel] !== remoteVal
-        ) {
-          controlsEnabled[ctrl.channel] = remoteVal;
-        }
-      }
-    });
-  });
+  // Toggle ON/OFF readback was previously mirrored from
+  // machine.currentControlsEnabled into the local controlsEnabled state,
+  // but on Carmomaq Stratto / Masteratto / Caloratto / Speciatto the
+  // toggle registers (50, 52, 55-58, 60) are write-only command
+  // registers — they accept "1 = turn on" / "2 = turn off" but do not
+  // echo the actual machine state. Polling them always reads back 0
+  // after the next sample, which then incorrectly flipped the UI to
+  // OFF a few seconds after the user turned something on. The backend
+  // still reports controls_enabled in every TemperatureMessage (kept
+  // for future hardware that does report state, and for diagnostics)
+  // but the UI now trusts the user's last click rather than overriding
+  // it with an unreliable readback.
 
   let roastChartEl = $state<HTMLElement | null>(null);
   let controlChartEl = $state<HTMLElement | null>(null);
