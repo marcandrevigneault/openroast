@@ -55,6 +55,21 @@ def _fahrenheit_to_celsius(f: float) -> float:
     return (f - 32.0) * 5.0 / 9.0
 
 
+def _parse_write_command(cmd: str) -> tuple[int, int] | None:
+    """Extract (device_id, address) from a writeSingle command template.
+
+    Handles the first command of compound (";"-separated) commands.
+    Returns None if the template is missing or unparseable.
+    """
+    if not cmd:
+        return None
+    first = cmd.split(";")[0].strip()
+    match = re.match(r"writeSingle\(\[?\s*(\d+)\s*,\s*(\d+)\s*,", first)
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2))
+
+
 class ModbusDriver(BaseDriver):
     """Driver for Modbus RTU and TCP roasting machines.
 
@@ -80,6 +95,25 @@ class ModbusDriver(BaseDriver):
         for c in machine.controls:
             if c.toggle and c.toggle.command:
                 self._toggle_commands[c.toggle.channel] = c.toggle.command
+
+        # Build readback list for toggle states: (channel, device_id, address, on_value)
+        # Covers both embedded toggles (slider + on/off) and standalone toggle controls.
+        self._toggle_readbacks: list[tuple[str, int, int, int]] = []
+        for c in machine.controls:
+            if c.toggle and c.toggle.command:
+                parsed = _parse_write_command(c.toggle.command)
+                if parsed:
+                    dev_id, addr = parsed
+                    self._toggle_readbacks.append(
+                        (c.toggle.channel, dev_id, addr, c.toggle.on_value),
+                    )
+            elif c.type == "toggle" and c.command:
+                parsed = _parse_write_command(c.command)
+                if parsed:
+                    dev_id, addr = parsed
+                    self._toggle_readbacks.append(
+                        (c.channel, dev_id, addr, c.on_value),
+                    )
 
     async def connect(self) -> None:
         """Establish connection to the Modbus device."""
@@ -158,6 +192,38 @@ class ModbusDriver(BaseDriver):
                 except (ConnectionError, ModbusIOException) as e:
                     logger.warning("Failed to read channel %s: %s", ch.name, e)
                     result[ch.name] = 0.0
+        return result
+
+    async def read_toggle_states(self) -> dict[str, bool]:
+        """Read each toggle register and derive its ON/OFF state.
+
+        Returns:
+            Dict mapping toggle channel name to True if the read value
+            equals the configured ``on_value``, else False. Channels whose
+            individual read fails are omitted (no exception raised) so a
+            single bad register cannot break the sampling loop.
+        """
+        if not self._toggle_readbacks:
+            return {}
+
+        self._ensure_connected()
+        assert self._client is not None
+
+        result: dict[str, bool] = {}
+        for channel, device_id, address, on_value in self._toggle_readbacks:
+            try:
+                resp = await self._client.read_holding_registers(
+                    address, count=1, device_id=device_id,
+                )
+                if resp.isError():
+                    continue
+                raw = resp.registers[0]
+                result[channel] = raw == on_value
+            except (ConnectionException, ModbusIOException) as e:
+                logger.warning(
+                    "Failed to read toggle state %s (reg %d): %s",
+                    channel, address, e,
+                )
         return result
 
     async def write_control(self, channel: str, value: float) -> None:

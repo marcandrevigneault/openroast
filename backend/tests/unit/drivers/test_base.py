@@ -88,3 +88,20 @@ class TestBaseDriverProtocol:
         driver = MinimalDriver()
         result = await driver.read_extra_channels()
         assert result == {}
+
+    async def test_read_toggle_states_default_empty(self) -> None:
+        """Default read_toggle_states returns empty dict."""
+
+        class MinimalDriver(BaseDriver):
+            async def connect(self) -> None: pass
+            async def disconnect(self) -> None: pass
+            async def read_temperatures(self) -> TemperatureReading:
+                return TemperatureReading(et=0, bt=0, timestamp_ms=0)
+            def info(self) -> DriverInfo:
+                return DriverInfo("t", "t", "t", "t")
+            @property
+            def state(self) -> ConnectionState:
+                return ConnectionState.DISCONNECTED
+
+        driver = MinimalDriver()
+        assert await driver.read_toggle_states() == {}

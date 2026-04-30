@@ -39,6 +39,7 @@ export interface TemperatureMessage {
   et_ror: number;
   bt_ror: number;
   extra_channels: Record<string, number>;
+  controls_enabled?: Record<string, boolean>;
 }
 
 export interface EventMessage {

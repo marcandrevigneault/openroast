@@ -86,6 +86,10 @@ class TemperatureMessage(BaseModel):
     et_ror: float = Field(default=0.0, description="ET rate of rise (C/min)")
     bt_ror: float = Field(default=0.0, description="BT rate of rise (C/min)")
     extra_channels: dict[str, float] = Field(default_factory=dict)
+    controls_enabled: dict[str, bool] = Field(
+        default_factory=dict,
+        description="Toggle channel ON/OFF state read from the machine",
+    )
 
 
 class EventMessage(BaseModel):

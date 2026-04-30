@@ -78,6 +78,7 @@ export interface MachineState {
   extraChannels: ExtraChannelConfig[];
   extraChannelHistory: ExtraChannelPoint[];
   currentExtraChannels: Record<string, number>;
+  currentControlsEnabled: Record<string, boolean>;
   error: string | null;
 }
 
@@ -101,6 +102,7 @@ export function createInitialState(
     extraChannels,
     extraChannelHistory: [],
     currentExtraChannels: {},
+    currentControlsEnabled: {},
     error: null,
   };
 }
@@ -158,6 +160,10 @@ export function processMessage(
         }
       }
 
+      const togglesIn = msg.controls_enabled;
+      const hasToggles =
+        togglesIn !== undefined && Object.keys(togglesIn).length > 0;
+
       return {
         ...state,
         currentTemp: point,
@@ -165,6 +171,9 @@ export function processMessage(
         currentControls: updatedCurrentControls,
         controlHistory: updatedControlHistory,
         currentExtraChannels: hasExtras ? extras : state.currentExtraChannels,
+        currentControlsEnabled: hasToggles
+          ? { ...state.currentControlsEnabled, ...togglesIn }
+          : state.currentControlsEnabled,
         extraChannelHistory:
           isActive && hasExtras
             ? [

@@ -109,3 +109,12 @@ class BaseDriver(ABC):
             Dict mapping channel names to values.
         """
         return {}
+
+    async def read_toggle_states(self) -> dict[str, bool]:
+        """Read current ON/OFF state for each toggle control (optional).
+
+        Returns:
+            Dict mapping toggle channel name (e.g. "burner_onoff",
+            "machine_onoff") to True if ON, False if OFF.
+        """
+        return {}

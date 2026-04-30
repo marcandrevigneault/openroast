@@ -197,6 +197,62 @@ describe("processMessage", () => {
       expect(result.extraChannelHistory).toHaveLength(0);
     });
 
+    it("captures controls_enabled into currentControlsEnabled", () => {
+      const result = processMessage(monitoringState(), {
+        type: "temperature",
+        timestamp_ms: 1000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+        controls_enabled: { air_onoff: true, drum_onoff: false },
+      });
+      expect(result.currentControlsEnabled).toEqual({
+        air_onoff: true,
+        drum_onoff: false,
+      });
+    });
+
+    it("merges new controls_enabled keys with existing state", () => {
+      const state: MachineState = {
+        ...monitoringState(),
+        currentControlsEnabled: { air_onoff: true, burner_onoff: true },
+      };
+      const result = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 2000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+        controls_enabled: { air_onoff: false, drum_onoff: false },
+      });
+      expect(result.currentControlsEnabled).toEqual({
+        air_onoff: false,
+        burner_onoff: true,
+        drum_onoff: false,
+      });
+    });
+
+    it("preserves currentControlsEnabled when message omits the field", () => {
+      const state: MachineState = {
+        ...monitoringState(),
+        currentControlsEnabled: { air_onoff: true },
+      };
+      const result = processMessage(state, {
+        type: "temperature",
+        timestamp_ms: 2000,
+        et: 210,
+        bt: 185,
+        et_ror: 0,
+        bt_ror: 0,
+        extra_channels: {},
+      });
+      expect(result.currentControlsEnabled).toEqual({ air_onoff: true });
+    });
+
     it("updates currentControls when readback value changes", () => {
       const controls = [
         {

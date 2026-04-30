@@ -47,6 +47,7 @@ def _mock_driver(
     et: float = 210.0,
     bt: float = 155.0,
     extra: dict[str, float] | None = None,
+    toggles: dict[str, bool] | None = None,
 ) -> MagicMock:
     """Create a mock driver that returns predictable readings."""
     driver = MagicMock()
@@ -55,6 +56,7 @@ def _mock_driver(
         return_value=TemperatureReading(et=et, bt=bt, timestamp_ms=0.0)
     )
     driver.read_extra_channels = AsyncMock(return_value=extra or {})
+    driver.read_toggle_states = AsyncMock(return_value=toggles or {})
     driver.write_control = AsyncMock()
     driver.connect = AsyncMock()
     driver.disconnect = AsyncMock()
@@ -690,6 +692,58 @@ class TestSamplingLoop:
         assert sent_data["et"] == pytest.approx(210.0)
         assert sent_data["bt"] == pytest.approx(155.0)
         assert sent_data["extra_channels"] == {"Inlet": 180.0}
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
+    async def test_broadcasts_toggle_states(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """controls_enabled from the driver propagates to subscribers."""
+        machine = _make_machine()
+        storage = _mock_storage({machine.id: machine})
+        driver = _mock_driver(toggles={"air_onoff": True, "drum_onoff": False})
+        mock_factory.return_value = driver
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        ws = AsyncMock()
+        await manager.subscribe(machine.id, ws)
+
+        await asyncio.sleep(0.6)
+
+        sent = ws.send_json.call_args_list[0][0][0]
+        assert sent["type"] == "temperature"
+        assert sent["controls_enabled"] == {"air_onoff": True, "drum_onoff": False}
+
+        await manager.disconnect_machine(machine.id)
+
+    @patch("openroast.core.manager.create_driver")
+    async def test_toggle_read_failure_does_not_stop_sampling(
+        self, mock_factory: MagicMock
+    ) -> None:
+        """A toggle readback failure leaves controls_enabled empty but keeps sampling."""
+        machine = _make_machine()
+        storage = _mock_storage({machine.id: machine})
+        driver = _mock_driver()
+        driver.read_toggle_states = AsyncMock(
+            side_effect=ConnectionError("toggle read failed")
+        )
+        mock_factory.return_value = driver
+
+        manager = MachineManager(storage)
+        await manager.connect_machine(machine.id)
+
+        ws = AsyncMock()
+        await manager.subscribe(machine.id, ws)
+
+        await asyncio.sleep(0.6)
+
+        sent = [c[0][0] for c in ws.send_json.call_args_list]
+        temp_msgs = [m for m in sent if m["type"] == "temperature"]
+        assert len(temp_msgs) >= 1
+        assert temp_msgs[0]["controls_enabled"] == {}
 
         await manager.disconnect_machine(machine.id)
 
