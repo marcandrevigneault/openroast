@@ -33,8 +33,8 @@
     display: flex;
     align-items: baseline;
     gap: 4px;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 4px;
     padding: 3px 8px;
   }
@@ -43,7 +43,7 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #888;
+    color: var(--text-muted);
   }
 
   .channel-value {

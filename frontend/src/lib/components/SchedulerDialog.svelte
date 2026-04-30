@@ -660,8 +660,8 @@
   }
 
   .dialog {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px;
     width: 520px;
@@ -681,21 +681,21 @@
 
   .dialog-header h2 {
     font-size: 1rem;
-    color: #e0e0e0;
+    color: var(--text);
     margin: 0;
     flex: 1;
   }
 
   .source-label {
     font-size: 0.7rem;
-    color: #666;
+    color: var(--text-faint);
     font-style: italic;
   }
 
   .btn-close {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     font-size: 1rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -726,14 +726,14 @@
 
   .section-header h3 {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin: 0;
   }
 
   .step-count {
-    color: #666;
+    color: var(--text-faint);
     font-weight: 400;
   }
 
@@ -750,11 +750,11 @@
     align-items: center;
     gap: 6px;
     padding: 6px 8px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 0.8rem;
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .step-item.fired {
@@ -771,22 +771,22 @@
   }
 
   .step-number {
-    color: #666;
+    color: var(--text-faint);
     min-width: 18px;
   }
 
   .step-trigger {
-    color: #4fc3f7;
+    color: var(--accent);
     white-space: nowrap;
   }
 
   .step-arrow {
-    color: #444;
+    color: var(--text-faint);
   }
 
   .step-actions {
     flex: 1;
-    color: #ccc;
+    color: var(--text-secondary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -800,7 +800,7 @@
   .btn-remove-step {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.75rem;
     cursor: pointer;
     padding: 0 4px;
@@ -812,7 +812,7 @@
   }
 
   .empty {
-    color: #555;
+    color: var(--text-faint);
     font-size: 0.8rem;
     text-align: center;
     padding: 16px;
@@ -821,8 +821,8 @@
 
   /* ── Add form ── */
   .add-form {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 12px;
     display: flex;
@@ -832,7 +832,7 @@
 
   .form-title {
     font-size: 0.8rem;
-    color: #e0e0e0;
+    color: var(--text);
     margin: 0;
     font-weight: 500;
   }
@@ -845,7 +845,7 @@
 
   .form-group-label {
     font-size: 0.7rem;
-    color: #666;
+    color: var(--text-faint);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     min-width: 32px;
@@ -869,21 +869,21 @@
 
   .field-hint {
     font-size: 0.7rem;
-    color: #666;
+    color: var(--text-faint);
   }
 
   .input {
-    background: #0d0d1a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
     border-radius: 4px;
     padding: 5px 8px;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 0.8rem;
   }
 
   .input:focus {
     outline: none;
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .input-narrow {
@@ -917,13 +917,13 @@
 
   .action-to {
     font-size: 0.7rem;
-    color: #555;
+    color: var(--text-faint);
   }
 
   .btn-remove-action {
     background: transparent;
     border: none;
-    color: #555;
+    color: var(--text-faint);
     cursor: pointer;
     padding: 0 2px;
     font-size: 0.8rem;
@@ -937,7 +937,7 @@
   .btn-add-action {
     background: transparent;
     border: none;
-    color: #4fc3f7;
+    color: var(--accent);
     font-size: 0.7rem;
     cursor: pointer;
     padding: 0;
@@ -954,7 +954,7 @@
     justify-content: flex-end;
     gap: 6px;
     padding-top: 2px;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
   }
 
   /* ── Footer ── */
@@ -962,13 +962,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
     padding-top: 12px;
   }
 
   .status-label {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -995,7 +995,7 @@
   .btn-back {
     background: transparent;
     border: none;
-    color: #4fc3f7;
+    color: var(--accent);
     font-size: 0.8rem;
     cursor: pointer;
   }
@@ -1013,16 +1013,16 @@
     flex-direction: column;
     gap: 2px;
     padding: 8px 12px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     cursor: pointer;
     text-align: left;
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .profile-item:hover {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
     background: rgba(79, 195, 247, 0.05);
   }
 
@@ -1033,7 +1033,7 @@
 
   .profile-meta {
     font-size: 0.7rem;
-    color: #666;
+    color: var(--text-faint);
   }
 
   .schedule-item-btn {
@@ -1059,7 +1059,7 @@
   }
 
   .loading {
-    color: #888;
+    color: var(--text-muted);
   }
 
   .error {
@@ -1088,8 +1088,8 @@
   }
 
   .btn-secondary {
-    background: #2a2a4a;
-    color: #ccc;
+    background: var(--border);
+    color: var(--text-secondary);
     border: none;
     border-radius: 6px;
     padding: 8px 16px;
@@ -1098,7 +1098,7 @@
   }
 
   .btn-secondary:hover {
-    background: #3a3a5a;
+    background: var(--border-strong);
   }
 
   .btn-danger {
@@ -1117,8 +1117,8 @@
 
   .btn-add {
     background: transparent;
-    color: #4fc3f7;
-    border: 1px solid #4fc3f7;
+    color: var(--accent);
+    border: 1px solid var(--accent);
     border-radius: 6px;
     padding: 4px 12px;
     font-size: 0.75rem;

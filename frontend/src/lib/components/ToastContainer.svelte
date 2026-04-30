@@ -85,7 +85,7 @@
 
   .toast-info {
     background: #112e3e;
-    border: 1px solid #4fc3f7;
+    border: 1px solid var(--accent);
     color: #b3e5fc;
   }
 

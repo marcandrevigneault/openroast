@@ -491,8 +491,8 @@
 
 <style>
   .machine-panel {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 12px;
     display: flex;
@@ -517,7 +517,7 @@
   .machine-name {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #e0e0e0;
+    color: var(--text);
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -557,7 +557,7 @@
   .btn-settings {
     background: transparent;
     border: 1px solid transparent;
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.9rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -566,15 +566,15 @@
   }
 
   .btn-settings:hover {
-    color: #4fc3f7;
-    border-color: #4fc3f7;
+    color: var(--accent);
+    border-color: var(--accent);
     background: rgba(79, 195, 247, 0.1);
   }
 
   .btn-remove {
     background: transparent;
     border: 1px solid transparent;
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.9rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -609,9 +609,9 @@
 
   .btn-chart-tool {
     background: transparent;
-    border: 1px solid #2a2a4a;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.8rem;
     cursor: pointer;
     padding: 2px 5px;
@@ -619,8 +619,8 @@
   }
 
   .btn-chart-tool:hover {
-    color: #ccc;
-    border-color: #444;
+    color: var(--text-secondary);
+    border-color: var(--text-faint);
   }
 
   /* --- Actions row --- */
@@ -635,10 +635,10 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #2a2a4a;
+    background: var(--border);
     border: none;
     border-radius: 6px;
-    color: #ccc;
+    color: var(--text-secondary);
     font-size: 0.85rem;
     font-weight: 600;
     padding: 8px 18px;
@@ -650,7 +650,7 @@
   }
 
   .btn-automation:hover {
-    background: #3a3a5a;
+    background: var(--border-strong);
     transform: scale(1.02);
   }
 
@@ -674,7 +674,7 @@
 
   /* --- Controls --- */
   .controls-section {
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
     padding-top: 4px;
   }
 
@@ -696,9 +696,9 @@
     gap: 8px;
     padding: 6px 12px;
     border-radius: 4px;
-    border: 1px solid #555;
-    background: #2a2a4a;
-    color: #999;
+    border: 1px solid var(--text-faint);
+    background: var(--border);
+    color: var(--text-muted);
     cursor: pointer;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -709,11 +709,11 @@
   .standalone-toggle.on {
     background: rgba(102, 187, 106, 0.15);
     border-color: #66bb6a;
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .standalone-toggle:hover:not(:disabled) {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .standalone-toggle:disabled {
@@ -726,8 +726,8 @@
     font-size: 0.6rem;
     padding: 2px 6px;
     border-radius: 3px;
-    background: #1a1a2e;
-    color: #888;
+    background: var(--surface);
+    color: var(--text-muted);
   }
 
   .standalone-toggle.on .toggle-indicator {

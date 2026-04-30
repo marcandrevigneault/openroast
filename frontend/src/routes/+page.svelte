@@ -607,7 +607,7 @@
   .empty-state {
     text-align: center;
     padding: 80px 20px;
-    color: #666;
+    color: var(--text-faint);
   }
 
   .empty-state p {

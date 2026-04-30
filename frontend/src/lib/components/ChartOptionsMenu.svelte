@@ -176,9 +176,9 @@
 
   .gear-btn {
     background: transparent;
-    border: 1px solid #2a2a4a;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.8rem;
     padding: 2px 5px;
     cursor: pointer;
@@ -186,8 +186,8 @@
   }
 
   .gear-btn:hover {
-    color: #ccc;
-    border-color: #444;
+    color: var(--text-secondary);
+    border-color: var(--text-faint);
   }
 
   .popover {
@@ -195,8 +195,8 @@
     top: 100%;
     right: 0;
     margin-top: 4px;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 8px;
     z-index: 10;
@@ -208,7 +208,7 @@
 
   .section-divider {
     height: 1px;
-    background: #2a2a4a;
+    background: var(--border);
     margin: 4px 0;
   }
 
@@ -220,11 +220,11 @@
     padding: 3px 4px;
     border-radius: 3px;
     font-size: 0.8rem;
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .option-row:hover {
-    background: #2a2a4a;
+    background: var(--border);
   }
 
   .color-dot {
@@ -239,7 +239,7 @@
   }
 
   input[type="checkbox"] {
-    accent-color: #4fc3f7;
+    accent-color: var(--accent);
   }
 
   .smoothing-row {
@@ -249,14 +249,14 @@
     gap: 8px;
     padding: 3px 4px;
     font-size: 0.8rem;
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .smoothing-select {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 3px;
-    color: #ccc;
+    color: var(--text-secondary);
     font-size: 0.75rem;
     padding: 2px 4px;
     cursor: pointer;

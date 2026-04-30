@@ -364,8 +364,8 @@
   }
 
   .dialog {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px;
     width: 520px;
@@ -385,7 +385,7 @@
 
   .dialog-header h2 {
     font-size: 1rem;
-    color: #e0e0e0;
+    color: var(--text);
     margin: 0;
     flex: 1;
   }
@@ -393,7 +393,7 @@
   .btn-close {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     font-size: 1rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -424,14 +424,14 @@
 
   .section-header h3 {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin: 0;
   }
 
   .alarm-count {
-    color: #666;
+    color: var(--text-faint);
     font-weight: 400;
   }
 
@@ -448,11 +448,11 @@
     align-items: center;
     gap: 6px;
     padding: 6px 8px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     font-size: 0.8rem;
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .alarm-item.fired {
@@ -474,18 +474,18 @@
   }
 
   .alarm-number {
-    color: #666;
+    color: var(--text-faint);
     min-width: 18px;
   }
 
   .alarm-trigger {
-    color: #4fc3f7;
+    color: var(--accent);
     white-space: nowrap;
   }
 
   .alarm-meta {
     flex: 1;
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.7rem;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -515,7 +515,7 @@
   .btn-remove-alarm {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.75rem;
     cursor: pointer;
     padding: 0 4px;
@@ -527,7 +527,7 @@
   }
 
   .empty {
-    color: #555;
+    color: var(--text-faint);
     font-size: 0.8rem;
     text-align: center;
     padding: 16px;
@@ -536,8 +536,8 @@
 
   /* ── Add form ── */
   .add-form {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 12px;
     display: flex;
@@ -547,7 +547,7 @@
 
   .form-title {
     font-size: 0.8rem;
-    color: #e0e0e0;
+    color: var(--text);
     margin: 0;
     font-weight: 500;
   }
@@ -560,7 +560,7 @@
 
   .form-group-label {
     font-size: 0.7rem;
-    color: #666;
+    color: var(--text-faint);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     min-width: 42px;
@@ -583,17 +583,17 @@
   }
 
   .input {
-    background: #0d0d1a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
     border-radius: 4px;
     padding: 5px 8px;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 0.8rem;
   }
 
   .input:focus {
     outline: none;
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .input-narrow {
@@ -618,9 +618,9 @@
 
   .btn-preview {
     background: transparent;
-    border: 1px solid #2a2a4a;
+    border: 1px solid var(--border);
     border-radius: 4px;
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.85rem;
     cursor: pointer;
     padding: 3px 8px;
@@ -628,8 +628,8 @@
   }
 
   .btn-preview:hover {
-    color: #4fc3f7;
-    border-color: #4fc3f7;
+    color: var(--accent);
+    border-color: var(--accent);
   }
 
   .form-buttons {
@@ -637,7 +637,7 @@
     justify-content: flex-end;
     gap: 6px;
     padding-top: 2px;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
   }
 
   /* ── Footer ── */
@@ -645,13 +645,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
     padding-top: 12px;
   }
 
   .status-label {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -683,8 +683,8 @@
   }
 
   .btn-secondary {
-    background: #2a2a4a;
-    color: #ccc;
+    background: var(--border);
+    color: var(--text-secondary);
     border: none;
     border-radius: 6px;
     padding: 8px 16px;
@@ -693,7 +693,7 @@
   }
 
   .btn-secondary:hover {
-    background: #3a3a5a;
+    background: var(--border-strong);
   }
 
   .btn-danger {
@@ -712,8 +712,8 @@
 
   .btn-add {
     background: transparent;
-    color: #4fc3f7;
-    border: 1px solid #4fc3f7;
+    color: var(--accent);
+    border: 1px solid var(--accent);
     border-radius: 6px;
     padding: 4px 12px;
     font-size: 0.75rem;

@@ -343,15 +343,15 @@
 
   .page-header h2 {
     margin: 0;
-    color: #f5f0e8;
+    color: var(--text-strong);
     font-size: 1.2rem;
     font-weight: 700;
   }
 
   .btn-add {
     background: rgba(79, 195, 247, 0.1);
-    border: 1px solid #4fc3f7;
-    color: #4fc3f7;
+    border: 1px solid var(--accent);
+    color: var(--accent);
     border-radius: 6px;
     padding: 6px 14px;
     font-size: 0.8rem;
@@ -365,7 +365,7 @@
 
   .loading {
     text-align: center;
-    color: #888;
+    color: var(--text-muted);
     padding: 40px 20px;
   }
 
@@ -375,14 +375,14 @@
   }
 
   .empty-title {
-    color: #ccc;
+    color: var(--text-secondary);
     font-size: 1.1rem;
     font-weight: 600;
     margin: 0 0 8px;
   }
 
   .empty-desc {
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.85rem;
     margin: 0 0 20px;
     max-width: 400px;
@@ -399,8 +399,8 @@
   }
 
   .sim-card {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 16px;
     display: flex;
@@ -427,7 +427,7 @@
 
   .sim-name {
     margin: 0;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 1rem;
     font-weight: 600;
   }
@@ -437,7 +437,7 @@
     flex-direction: column;
     gap: 4px;
     padding: 8px 0;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
   }
 
   .detail-row {
@@ -447,11 +447,11 @@
   }
 
   .detail-label {
-    color: #888;
+    color: var(--text-muted);
   }
 
   .detail-value {
-    color: #ccc;
+    color: var(--text-secondary);
   }
 
   .detail-value.mono {
@@ -464,7 +464,7 @@
     align-items: center;
     gap: 8px;
     padding-top: 8px;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border);
   }
 
   .confirm-text {
@@ -500,9 +500,9 @@
   }
 
   .btn-cancel-stop {
-    background: #2a2a4a;
+    background: var(--border);
     border: none;
-    color: #ccc;
+    color: var(--text-secondary);
     border-radius: 6px;
     padding: 4px 12px;
     font-size: 0.8rem;
@@ -522,8 +522,8 @@
   }
 
   .dialog {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px;
     min-width: 360px;
@@ -536,13 +536,13 @@
 
   .dialog h3 {
     margin: 0;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 1rem;
   }
 
   .dialog-desc {
     margin: 0;
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.8rem;
   }
 
@@ -554,8 +554,8 @@
 
   .btn-back {
     background: transparent;
-    border: 1px solid #2a2a4a;
-    color: #ccc;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
     border-radius: 4px;
     padding: 2px 8px;
     font-size: 1rem;
@@ -563,8 +563,8 @@
   }
 
   .btn-back:hover {
-    border-color: #4fc3f7;
-    color: #4fc3f7;
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .list-scroll {
@@ -579,17 +579,17 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 10px 14px;
-    color: #e0e0e0;
+    color: var(--text);
     cursor: pointer;
     text-align: left;
   }
 
   .list-item:hover:not(:disabled) {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .list-item:disabled {
@@ -604,7 +604,7 @@
 
   .item-meta {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-muted);
   }
 
   .form-fields {
@@ -618,32 +618,32 @@
     flex-direction: column;
     gap: 4px;
     font-size: 0.8rem;
-    color: #b0b0b0;
+    color: var(--text-muted);
   }
 
   .form-input {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 8px 12px;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 0.85rem;
   }
 
   .form-input:focus {
     outline: none;
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .form-hint {
     font-size: 0.7rem;
-    color: #666;
+    color: var(--text-faint);
   }
 
   .btn-start {
     background: rgba(79, 195, 247, 0.15);
-    border: 1px solid #4fc3f7;
-    color: #4fc3f7;
+    border: 1px solid var(--accent);
+    color: var(--accent);
     border-radius: 6px;
     padding: 8px 16px;
     font-size: 0.85rem;
@@ -676,8 +676,8 @@
   }
 
   .btn-cancel {
-    background: #2a2a4a;
-    color: #ccc;
+    background: var(--border);
+    color: var(--text-secondary);
     border: none;
     border-radius: 6px;
     padding: 6px 14px;

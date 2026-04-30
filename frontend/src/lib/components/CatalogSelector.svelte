@@ -396,8 +396,8 @@
   }
 
   .dialog {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px;
     min-width: 360px;
@@ -410,7 +410,7 @@
 
   h3 {
     margin: 0;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 1rem;
   }
 
@@ -422,8 +422,8 @@
 
   .btn-back {
     background: transparent;
-    border: 1px solid #2a2a4a;
-    color: #ccc;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
     border-radius: 4px;
     padding: 2px 8px;
     font-size: 1rem;
@@ -431,8 +431,8 @@
   }
 
   .btn-back:hover {
-    border-color: #4fc3f7;
-    color: #4fc3f7;
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .choice-list {
@@ -445,17 +445,17 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 14px 16px;
-    color: #e0e0e0;
+    color: var(--text);
     cursor: pointer;
     text-align: left;
   }
 
   .choice-btn:hover:not(:disabled) {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .choice-btn:disabled {
@@ -479,7 +479,7 @@
 
   .choice-text small {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-muted);
   }
 
   .list-scroll {
@@ -494,17 +494,17 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 10px 14px;
-    color: #e0e0e0;
+    color: var(--text);
     cursor: pointer;
     text-align: left;
   }
 
   .list-item:hover:not(:disabled) {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .item-name {
@@ -514,7 +514,7 @@
 
   .item-meta {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-muted);
   }
 
   .confirm-details {
@@ -531,25 +531,25 @@
 
   .label {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   input,
   select {
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 8px 12px;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 0.9rem;
   }
 
   input:focus,
   select:focus {
     outline: none;
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .detail-row {
@@ -560,11 +560,11 @@
   }
 
   .detail-label {
-    color: #999;
+    color: var(--text-muted);
   }
 
   .detail-value {
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .actions {
@@ -574,8 +574,8 @@
   }
 
   .btn-cancel {
-    background: #2a2a4a;
-    color: #ccc;
+    background: var(--border);
+    color: var(--text-secondary);
     border: none;
     border-radius: 6px;
     padding: 6px 14px;

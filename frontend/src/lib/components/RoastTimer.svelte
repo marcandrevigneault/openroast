@@ -89,7 +89,7 @@
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #888;
+    color: var(--text-muted);
     opacity: 0.8;
   }
 

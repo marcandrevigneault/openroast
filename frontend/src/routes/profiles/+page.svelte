@@ -284,18 +284,18 @@
   .page-title {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #e0e0e0;
+    color: var(--text);
     margin: 0 0 4px;
   }
 
   .page-desc {
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.85rem;
     margin: 0 0 20px;
   }
 
   .loading {
-    color: #888;
+    color: var(--text-muted);
     text-align: center;
     padding: 40px;
   }
@@ -303,12 +303,12 @@
   .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: #666;
+    color: var(--text-faint);
   }
 
   .hint {
     font-size: 0.85rem;
-    color: #555;
+    color: var(--text-faint);
   }
 
   .profiles-list {
@@ -320,19 +320,19 @@
   .profile-card {
     display: flex;
     align-items: center;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
     transition: border-color 0.15s;
   }
 
   .profile-card:hover {
-    border-color: #3a3a5a;
+    border-color: var(--border-strong);
   }
 
   .profile-card.selected {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .card-body {
@@ -349,13 +349,13 @@
   .card-title {
     font-weight: 600;
     font-size: 0.95rem;
-    color: #e0e0e0;
+    color: var(--text);
     margin-bottom: 4px;
   }
 
   .card-meta {
     font-size: 0.8rem;
-    color: #888;
+    color: var(--text-muted);
   }
 
   .sep {
@@ -372,7 +372,7 @@
   .btn-delete {
     background: transparent;
     border: 1px solid transparent;
-    color: #666;
+    color: var(--text-faint);
     cursor: pointer;
     padding: 4px 6px;
     border-radius: 4px;
@@ -395,8 +395,8 @@
   }
 
   .btn-cancel-delete {
-    background: #2a2a4a;
-    color: #ccc;
+    background: var(--border);
+    color: var(--text-secondary);
     border: none;
     border-radius: 4px;
     padding: 4px 10px;
@@ -407,8 +407,8 @@
   /* Detail panel */
   .detail-panel {
     margin-top: 20px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px;
   }
@@ -423,20 +423,20 @@
   .detail-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .btn-close-detail {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     font-size: 1.4rem;
     cursor: pointer;
     padding: 2px 6px;
   }
 
   .btn-close-detail:hover {
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .detail-meta {
@@ -444,10 +444,10 @@
     flex-wrap: wrap;
     gap: 12px;
     font-size: 0.85rem;
-    color: #aaa;
+    color: var(--text-muted);
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #2a2a4a;
+    border-bottom: 1px solid var(--border);
   }
 
   .detail-image {
@@ -457,7 +457,7 @@
   .detail-image img {
     width: 100%;
     border-radius: 6px;
-    border: 1px solid #2a2a4a;
+    border: 1px solid var(--border);
   }
 
   .detail-section {
@@ -466,7 +466,7 @@
 
   .detail-section h4 {
     font-size: 0.9rem;
-    color: #b0b0b0;
+    color: var(--text-muted);
     margin: 0 0 8px;
     font-weight: 600;
   }
@@ -481,19 +481,19 @@
     display: flex;
     gap: 6px;
     align-items: center;
-    background: #1a1a3a;
+    background: var(--surface-alt);
     padding: 4px 10px;
     border-radius: 4px;
     font-size: 0.8rem;
   }
 
   .event-type {
-    color: #4fc3f7;
+    color: var(--accent);
     font-weight: 600;
   }
 
   .event-time {
-    color: #999;
+    color: var(--text-muted);
   }
 
   .event-auto {
@@ -514,8 +514,8 @@
 
   .btn-create-cp {
     background: rgba(79, 195, 247, 0.1);
-    border: 1px solid #4fc3f7;
-    color: #4fc3f7;
+    border: 1px solid var(--accent);
+    color: var(--accent);
     border-radius: 6px;
     padding: 4px 10px;
     font-size: 0.75rem;
@@ -549,7 +549,7 @@
   }
 
   .step {
-    background: #1a1a3a;
+    background: var(--surface-alt);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 0.75rem;
@@ -558,7 +558,7 @@
 
   .loading-overlay {
     text-align: center;
-    color: #888;
+    color: var(--text-muted);
     padding: 20px;
   }
 

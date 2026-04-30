@@ -498,18 +498,18 @@
   .page-title {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #e0e0e0;
+    color: var(--text);
     margin: 0 0 4px;
   }
 
   .page-desc {
-    color: #888;
+    color: var(--text-muted);
     font-size: 0.85rem;
     margin: 0 0 20px;
   }
 
   .loading {
-    color: #888;
+    color: var(--text-muted);
     text-align: center;
     padding: 40px;
   }
@@ -517,12 +517,12 @@
   .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: #666;
+    color: var(--text-faint);
   }
 
   .hint {
     font-size: 0.85rem;
-    color: #555;
+    color: var(--text-faint);
   }
 
   .schedule-list {
@@ -534,19 +534,19 @@
   .schedule-card {
     display: flex;
     align-items: center;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
     transition: border-color 0.15s;
   }
 
   .schedule-card:hover {
-    border-color: #3a3a5a;
+    border-color: var(--border-strong);
   }
 
   .schedule-card.selected {
-    border-color: #4fc3f7;
+    border-color: var(--accent);
   }
 
   .card-body {
@@ -563,13 +563,13 @@
   .card-title {
     font-weight: 600;
     font-size: 0.95rem;
-    color: #e0e0e0;
+    color: var(--text);
     margin-bottom: 4px;
   }
 
   .card-meta {
     font-size: 0.8rem;
-    color: #888;
+    color: var(--text-muted);
   }
 
   .sep {
@@ -586,7 +586,7 @@
   .btn-delete {
     background: transparent;
     border: 1px solid transparent;
-    color: #666;
+    color: var(--text-faint);
     cursor: pointer;
     padding: 4px 6px;
     border-radius: 4px;
@@ -609,8 +609,8 @@
   }
 
   .btn-cancel-delete {
-    background: #2a2a4a;
-    color: #ccc;
+    background: var(--border);
+    color: var(--text-secondary);
     border: none;
     border-radius: 4px;
     padding: 4px 10px;
@@ -621,8 +621,8 @@
   /* Detail panel */
   .detail-panel {
     margin-top: 20px;
-    background: #12122a;
-    border: 1px solid #2a2a4a;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 20px;
   }
@@ -638,16 +638,16 @@
   .detail-header h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .edit-name {
     flex: 1;
-    background: #0a0a1a;
-    border: 1px solid #4fc3f7;
+    background: var(--bg);
+    border: 1px solid var(--accent);
     border-radius: 6px;
     padding: 6px 10px;
-    color: #e0e0e0;
+    color: var(--text);
     font-size: 1rem;
     font-weight: 600;
   }
@@ -661,8 +661,8 @@
 
   .btn-edit {
     background: rgba(79, 195, 247, 0.1);
-    border: 1px solid #4fc3f7;
-    color: #4fc3f7;
+    border: 1px solid var(--accent);
+    color: var(--accent);
     border-radius: 6px;
     padding: 5px 12px;
     font-size: 0.8rem;
@@ -693,9 +693,9 @@
   }
 
   .btn-cancel {
-    background: #2a2a4a;
+    background: var(--border);
     border: none;
-    color: #ccc;
+    color: var(--text-secondary);
     border-radius: 6px;
     padding: 5px 12px;
     font-size: 0.8rem;
@@ -705,7 +705,7 @@
   .btn-close {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     font-size: 1.4rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -713,7 +713,7 @@
   }
 
   .btn-close:hover {
-    color: #e0e0e0;
+    color: var(--text);
   }
 
   .detail-meta {
@@ -721,15 +721,15 @@
     flex-wrap: wrap;
     gap: 12px;
     font-size: 0.85rem;
-    color: #aaa;
+    color: var(--text-muted);
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #2a2a4a;
+    border-bottom: 1px solid var(--border);
   }
 
   .steps-section h4 {
     font-size: 0.9rem;
-    color: #b0b0b0;
+    color: var(--text-muted);
     margin: 0 0 8px;
     font-weight: 600;
   }
@@ -745,19 +745,19 @@
     align-items: center;
     gap: 10px;
     padding: 6px 10px;
-    background: #1a1a3a;
+    background: var(--surface-alt);
     border-radius: 4px;
     font-size: 0.82rem;
   }
 
   .step-num {
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.75rem;
     min-width: 18px;
   }
 
   .step-trigger {
-    color: #4fc3f7;
+    color: var(--accent);
     font-weight: 500;
     min-width: 100px;
   }
@@ -773,8 +773,8 @@
   }
 
   .step-edit-card {
-    background: #1a1a3a;
-    border: 1px solid #2a2a4a;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 10px 12px;
     margin-bottom: 6px;
@@ -799,8 +799,8 @@
 
   .btn-toggle-enabled.off {
     background: rgba(102, 102, 102, 0.15);
-    border-color: #666;
-    color: #666;
+    border-color: var(--text-faint);
+    color: var(--text-faint);
   }
 
   .step-edit-trigger,
@@ -814,35 +814,35 @@
 
   .edit-label {
     font-size: 0.72rem;
-    color: #888;
+    color: var(--text-muted);
     min-width: 48px;
     font-weight: 600;
   }
 
   .edit-select {
-    background: #0a0a1a;
-    border: 1px solid #3a3a5a;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--text);
     padding: 3px 6px;
     font-size: 0.78rem;
   }
 
   .edit-input {
-    background: #0a0a1a;
-    border: 1px solid #3a3a5a;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--text);
     padding: 3px 6px;
     font-size: 0.78rem;
     width: 80px;
   }
 
   .edit-input-sm {
-    background: #0a0a1a;
-    border: 1px solid #3a3a5a;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
     border-radius: 4px;
-    color: #e0e0e0;
+    color: var(--text);
     padding: 3px 6px;
     font-size: 0.78rem;
     width: 50px;
@@ -850,7 +850,7 @@
 
   .edit-unit {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--text-muted);
   }
 
   .action-row {
@@ -862,7 +862,7 @@
   .btn-remove-action {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     cursor: pointer;
     font-size: 0.85rem;
     padding: 0 3px;
@@ -874,8 +874,8 @@
 
   .btn-add-action {
     background: transparent;
-    border: 1px dashed #3a3a5a;
-    color: #888;
+    border: 1px dashed var(--border-strong);
+    color: var(--text-muted);
     border-radius: 4px;
     padding: 2px 8px;
     font-size: 0.7rem;
@@ -883,14 +883,14 @@
   }
 
   .btn-add-action:hover {
-    border-color: #4fc3f7;
-    color: #4fc3f7;
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .btn-add-step {
     background: rgba(79, 195, 247, 0.08);
-    border: 1px dashed #4fc3f7;
-    color: #4fc3f7;
+    border: 1px dashed var(--accent);
+    color: var(--accent);
     border-radius: 6px;
     padding: 8px;
     font-size: 0.82rem;
@@ -906,7 +906,7 @@
   .btn-remove-step {
     background: transparent;
     border: none;
-    color: #666;
+    color: var(--text-faint);
     cursor: pointer;
     font-size: 0.9rem;
     padding: 0 4px;
@@ -918,7 +918,7 @@
   }
 
   .no-steps {
-    color: #666;
+    color: var(--text-faint);
     font-size: 0.85rem;
     text-align: center;
     padding: 16px;
@@ -926,7 +926,7 @@
 
   .loading-overlay {
     text-align: center;
-    color: #888;
+    color: var(--text-muted);
     padding: 20px;
   }
 

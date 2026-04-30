@@ -49,8 +49,8 @@
   ];
   const EXTRA_CHANNEL_COLOR = "#a5d6a7";
   const GRID_COLOR = "#1e1e3a";
-  const AXIS_COLOR = "#444";
-  const TEXT_COLOR = "#888";
+  const AXIS_COLOR = "var(--text-faint)";
+  const TEXT_COLOR = "var(--text-muted)";
 
   const Y_MIN = 0;
   const Y_MAX = 100;
@@ -170,7 +170,7 @@
 {#if allPaths.length > 0}
   <div class="chart-container" bind:clientWidth={containerWidth}>
     <svg {width} {height} viewBox="0 0 {width} {height}">
-      <rect x="0" y="0" {width} {height} fill="#0d0d1a" rx="8" />
+      <rect x="0" y="0" {width} {height} fill="var(--bg-deep)" rx="8" />
 
       <!-- Horizontal grid -->
       {#each [0, 25, 50, 75, 100] as val (val)}
@@ -269,7 +269,7 @@
   .chart-container {
     border-radius: 8px;
     overflow: hidden;
-    background: #0d0d1a;
+    background: var(--bg-deep);
   }
 
   svg {
